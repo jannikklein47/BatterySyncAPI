@@ -1,12 +1,12 @@
 {
-  "development": {
+  "production": {
     "username": "postgres",
     "password": "postgres",
     "database": "BatterySync",
     "host": "127.0.0.1",
     "dialect": "postgres"
   },
-  "production": {
+  "development": {
     "use_env_variable": "DATABASE_URL",
     "dialect": "postgres"
   }
