@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Startbefehl
-CMD ["npm", "run dev"]
+CMD ["node", "."]
