@@ -17,7 +17,11 @@ module.exports = (sequelize, DataTypes) => {
     userId: DataTypes.INTEGER,
     name: DataTypes.STRING,
     battery: DataTypes.DOUBLE,
-    isShown: DataTypes.BOOLEAN
+    isShown: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false
+    }
   }, {
     sequelize,
     modelName: 'Device',
