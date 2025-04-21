@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  batterysync:
+    build: .
+    container_name: batterysync
+    ports:
+      - "3000:3000" # oder dein Port
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - .:/app
+    restart: always # Automatisch beim Booten starten
