@@ -20,6 +20,8 @@ services:
       - db
     environment:
       - NODE_ENV=production
+    volumes:
+      - .:/app
 
 volumes:
   postgres_data:
