@@ -1,13 +1,25 @@
-version: "3.8"
-
 services:
-  batterysync:
-    build: .
-    container_name: batterysync
-    ports:
-      - "3000:3000" # oder dein Port
+  db:
+    image: postgres:15
+    container_name: batterysync-db
+    restart: always
     environment:
-      - NODE_ENV=production
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: BatterySync
+    ports:
+      - "5432:5432"
     volumes:
-      - .:/app
-    restart: always # Automatisch beim Booten starten
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: batterysync-server
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
