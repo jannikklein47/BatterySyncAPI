@@ -38,7 +38,7 @@ router.get("/", async (req, res) => {
                     where: {
                         userId: user.id
                     },
-                    attributes: ["name", "battery", "isShown"],
+                    attributes: ["name", "battery", "isShown", "chargingStatus"],
                     raw: true,
                     order: [
                         ["name", "ASC"]
@@ -63,22 +63,24 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-    console.log("POST: ", req.body)
 
     try {
-        let auth, name, deviceBattery;
+        let auth, name, deviceBattery, chargingStatus;
         
         if (req.body && req.headers.authorization) {
             auth = req.headers.authorization
             name = req.body.device;
             deviceBattery = req.body.battery;
+            chargingStatus = req.body.chargingStatus !== undefined ? req.body.chargingStatus : undefined
+
         } else if (req.query && req.headers.authorization){
             auth = req.headers.authorization
             name = req.query.device;
             deviceBattery = req.query.battery;
+            chargingStatus = req.query.chargingStatus !== undefined ? req.query.chargingStatus : undefined;
         }
 
-        console.log("Battery POST for ", req.headers.authorization)
+        console.log("Battery POST for ", req.headers.authorization, chargingStatus)
         
         name = name.replace("+", " ");
 
@@ -98,7 +100,8 @@ router.post("/", async (req, res) => {
                 }
             })) {
                 await devices.update({
-                    battery: deviceBattery
+                    battery: deviceBattery,
+                    chargingStatus: chargingStatus
                 },{
                     where: {
                         name: name,
@@ -109,7 +112,8 @@ router.post("/", async (req, res) => {
                 await devices.create({
                     userId: user.id,
                     name: name,
-                    battery: deviceBattery
+                    battery: deviceBattery,
+                    chargingStatus: chargingStatus
                 })
             }
 
@@ -124,6 +128,68 @@ router.post("/", async (req, res) => {
     } catch (error) {
         console.log(error)
         res.status(500).send("Error");
+    }
+})
+
+router.put("/", async (req, res) => {
+    try {
+        let auth, name, deviceBattery, chargingStatus;
+        
+        if (req.body && req.headers.authorization) {
+            auth = req.headers.authorization
+            name = req.body.device;
+            deviceBattery = req.body.battery;
+            chargingStatus = req.body.chargingStatus ? true : false
+        } else if (req.query && req.headers.authorization){
+            auth = req.headers.authorization
+            name = req.query.device;
+            deviceBattery = req.query.battery;
+            chargingStatus = req.query.chargingStatus ? true : false
+        }
+
+        let updateObject = { battery: deviceBattery ? deviceBattery : undefined, chargingStatus: chargingStatus}
+
+
+        console.log("Battery PUT for ", req.headers.authorization)
+        
+        name = name.replace("+", " ");
+
+        //console.log();
+
+        let user = await users.findOne({
+            where: {
+                password: auth
+            }
+        })
+        //console.log(user);
+        if (user) {
+            if (await devices.findOne({
+                where: {
+                    userId: user.id,
+                    name: name
+                }
+            })) {
+                await devices.update(updateObject,{
+                    where: {
+                        name: name,
+                        userId: user.id
+                    }
+                })
+            } else {
+                res.status(404).send("No device to update");
+                return;
+            }
+
+            res.status(200).send("Ok");
+        } else {
+            res.status(403).send("Access denied");
+            return;
+        }
+
+
+    } catch (error) {
+        res.status(500).send("Internal server error");
+        console.log(error);
     }
 })
 

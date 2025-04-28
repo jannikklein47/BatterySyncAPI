@@ -21,6 +21,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
       allowNull: false
+    },
+    chargingStatus: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false
     }
   }, {
     sequelize,
