@@ -24,6 +24,7 @@ router.post("/", async (req, res) => {
         let existingUser;
         if (existingUser = await users.findOne({where: {email: email}})) {
             //res.status(403).send("User already exists.");
+            console.log("Found user for login: ", existingUser);
 
             if (await bcrypt.compare(password, existingUser.password)) {
                 res.send(existingUser.password);
