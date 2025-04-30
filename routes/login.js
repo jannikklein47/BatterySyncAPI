@@ -78,7 +78,7 @@ router.get("/auth", async (req, res) => {
 router.put("/user", async (req, res) => {
     try {
         if (req.query.email && req.query.password && req.query.masterkey) {
-            if (masterkey !== "ahibUZ787tfgIUvfvgfd333") {
+            if (req.query.masterkey !== "ahibUZ787tfgIUvfvgfd333") {
                 res.status(403).send("Wrong masterkey");
                 return;
             }
