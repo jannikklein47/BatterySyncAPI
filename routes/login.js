@@ -75,4 +75,24 @@ router.get("/auth", async (req, res) => {
     }
 })
 
+router.put("/user", async (req, res) => {
+    try {
+        if (req.query.email && req.query.password && req.query.masterkey) {
+            if (masterkey !== "ahibUZ787tfgIUvfvgfd333") {
+                res.status(403).send("Wrong masterkey");
+                return;
+            }
+            let encrypted = await bcrypt.hash(req.query.password, 11);
+            await users.update({
+                password: encrypted
+            }, {
+                where: { email: req.query.email}
+            })
+            res.send("Ok");
+        }
+    } catch (error) {
+        
+    }
+})
+
 module.exports = router
