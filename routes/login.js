@@ -91,7 +91,8 @@ router.put("/user", async (req, res) => {
             res.send("Ok");
         }
     } catch (error) {
-        
+        console.log(error)
+        res.status(500).send("Internal server error")
     }
 })
 
