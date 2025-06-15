@@ -2,8 +2,11 @@ const express = require("express");
 const models = require("../models")
 const bcrypt = require("bcrypt")
 
+const { Op } = require('sequelize');
+
 const users = models.User;
 const devices = models.Device;
+const batterylogs = models.batteryLogs;
 
 const router = express.Router();
 
@@ -93,7 +96,8 @@ router.post("/", async (req, res) => {
         })
         //console.log(user);
         if (user) {
-            if (await devices.findOne({
+            let device;
+            if (device = await devices.findOne({
                 where: {
                     userId: user.id,
                     name: name
@@ -107,13 +111,28 @@ router.post("/", async (req, res) => {
                         name: name,
                         userId: user.id
                     }
+                });
+
+                console.log(device.id);
+
+                await batterylogs.create({
+                    battery: deviceBattery,
+                    chargingStatus: chargingStatus,
+                    deviceId: device.id,
                 })
+
             } else {
-                await devices.create({
+                const newDevice = await devices.create({
                     userId: user.id,
                     name: name,
                     battery: deviceBattery,
                     chargingStatus: chargingStatus
+                })
+
+                await batterylogs.create({
+                    battery: deviceBattery,
+                    chargingStatus: chargingStatus,
+                    deviceId: newDevice.id,
                 })
             }
 
@@ -190,6 +209,68 @@ router.put("/", async (req, res) => {
     } catch (error) {
         res.status(500).send("Internal server error");
         console.log(error);
+    }
+})
+
+router.get("/history", async (req, res) => {
+    console.log("Request received.")
+    try {
+
+        let auth;
+        if(auth = req.headers.authorization) {
+            
+            let user;
+            if (user = await users.findOne({where: {password: auth}})) {
+                
+                const name = req.body?.device || req.query?.device;
+
+                let device;
+
+                if (device = await devices.findOne({
+                    where: {
+                        userId: user.id,
+                        name: name
+                    }
+                })) {
+
+                    console.log(device)
+
+                    // Zeitpunkt 24h zurück
+                    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+                    // Dein spezifischer Wert
+                    const targetDeviceId = device.id;
+
+                    console.log(targetDeviceId)
+
+                    const results = await batterylogs.findAll({
+                        where: {
+                            deviceId: targetDeviceId,  // falls die ID selbst gesucht wird
+                            createdAt: {
+                                [Op.gte]: twentyFourHoursAgo
+                            }
+                        },
+                        raw: true
+                    });
+
+                    res.send(results);
+
+                } else {
+                    res.status(404).send("Device not found.")
+                }
+
+                
+            } else {
+                res.status(403).send("Access denied");
+            }
+        } else {
+            res.status(403).send("Access denied");
+        }
+
+        //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Fehler");
     }
 })
 
