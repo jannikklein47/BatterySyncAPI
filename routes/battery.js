@@ -314,6 +314,7 @@ router.get("/history/all", async (req, res) => {
                                     [Op.gte]: twentyFourHoursAgo
                                 }
                             },
+                            order: [['createdAt', 'DESC']],
                             raw: true
                         });
 
