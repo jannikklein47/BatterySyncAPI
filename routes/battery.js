@@ -312,7 +312,9 @@ router.get("/history/all", async (req, res) => {
                                 deviceId: targetDeviceId,  // falls die ID selbst gesucht wird
                                 createdAt: {
                                     [Op.gte]: twentyFourHoursAgo
-                                }
+                                },
+                                chargingStatus: { [Op.ne]: null },
+                                battery: { [Op.ne]: null }
                             },
                             order: [['createdAt', 'DESC']],
                             attributes: ['createdAt', 'chargingStatus', 'battery'],
