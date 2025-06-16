@@ -315,6 +315,7 @@ router.get("/history/all", async (req, res) => {
                                 }
                             },
                             order: [['createdAt', 'DESC']],
+                            attributes: ['createdAt', 'chargingStatus', 'battery'],
                             raw: true
                         });
 
