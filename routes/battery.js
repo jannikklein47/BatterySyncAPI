@@ -328,6 +328,12 @@ router.get("/history/all", async (req, res) => {
                             chargingStatus: result[0].chargingStatus,
                         })
 
+                        result.push({
+                            createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+                            battery: result[result.length -1].battery,
+                            chargingStatus: result[result.length -1].chargingStatus,
+                        })
+
                         results[foundDevices[i].id] = result;
                     }
 
