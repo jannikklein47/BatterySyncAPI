@@ -41,7 +41,7 @@ router.get("/", async (req, res) => {
                     where: {
                         userId: user.id
                     },
-                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type"],
+                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type", "color"],
                     raw: true,
                     order: [
                         ["name", "ASC"]
