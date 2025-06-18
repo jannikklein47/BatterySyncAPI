@@ -1,6 +1,8 @@
 # Wähle eine Node-Version
 FROM node:20.6.0
 
+RUN apk add --no-cache postgresql-client
+
 # Arbeitsverzeichnis im Container
 WORKDIR /app
 
