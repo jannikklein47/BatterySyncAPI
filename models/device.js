@@ -31,6 +31,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       defaultValue: 'laptop',
       allowNull: false
+    },
+    color: {
+      type: DataTypes.STRING,
+      defaultValue: '#ffffff',
+      allowNull: false,
     }
   }, {
     sequelize,
