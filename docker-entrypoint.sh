@@ -6,7 +6,7 @@
 # Dies ist ein einfaches Beispiel, in der Produktion sollten Sie ein robusteres "wait-for-it" Skript verwenden.
 echo "Waiting for database to be ready..."
 until pg_isready -h "$DB_HOST" -p "5432" -U "$DB_USER"; do
-  echo "Database is unavailable - sleeping"
+  echo "Database $DB_HOST $DB_USER is unavailable - sleeping"
   sleep 2
 done
 echo "Database is ready!"
