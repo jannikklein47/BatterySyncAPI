@@ -399,7 +399,6 @@ router.get("/history/all/fromStart", async (req, res) => {
                                 battery: { [Op.ne]: null }
                             },
                             order: [['createdAt', 'DESC']],
-                            attributes: ['createdAt', 'chargingStatus', 'battery'],
                             raw: true
                         });
 
