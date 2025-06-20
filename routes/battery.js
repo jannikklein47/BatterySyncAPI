@@ -359,4 +359,86 @@ router.get("/history/all", async (req, res) => {
     }
 })
 
+router.get("/history/all/fromStart", async (req, res) => {
+    console.log("Request received.")
+    try {
+
+        let auth;
+        if(auth = req.headers.authorization) {
+            
+            let user;
+            if (user = await users.findOne({where: {password: auth}})) {
+                
+                const name = req.body?.device || req.query?.device;
+
+                let foundDevices;
+
+
+                if (foundDevices = await devices.findAll({
+                    where: {
+                        userId: user.id
+                    }
+                })) {
+
+                    console.log(foundDevices, user.id)
+
+                    // Zeitpunkt 24h zurück
+                    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+                    const results = {};
+
+                    for (let i in foundDevices) {
+
+                        // Dein spezifischer Wert
+                        const targetDeviceId = foundDevices[i].id;
+
+                        const result = await batterylogs.findAll({
+                            where: {
+                                deviceId: targetDeviceId,
+                                chargingStatus: { [Op.ne]: null },
+                                battery: { [Op.ne]: null }
+                            },
+                            order: [['createdAt', 'DESC']],
+                            attributes: ['createdAt', 'chargingStatus', 'battery'],
+                            raw: true
+                        });
+
+
+                        result.unshift({
+                            createdAt: Date.now(),
+                            battery: result[0].battery,
+                            chargingStatus: result[0].chargingStatus,
+                        })
+
+                        result.push({
+                            createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+                            battery: result[result.length -1].battery,
+                            chargingStatus: result[result.length -1].chargingStatus,
+                        })
+
+                        results[foundDevices[i].id] = result;
+                    }
+
+                   
+                    res.send(results);
+
+                } else {
+                    res.status(404).send("Device not found.")
+                }
+
+                
+            } else {
+                res.status(403).send("Access denied");
+            }
+        } else {
+            res.status(403).send("Access denied");
+        }
+
+        //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Fehler");
+    }
+})
+
 module.exports = router;
