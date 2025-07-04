@@ -321,6 +321,7 @@ router.get("/history/all", async (req, res) => {
                             raw: true
                         });
 
+                        console.log("history result: ", result)
 
                         result.unshift({
                             createdAt: Date.now(),
