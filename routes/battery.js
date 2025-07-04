@@ -323,6 +323,8 @@ router.get("/history/all", async (req, res) => {
 
                         console.log("history result: ", result)
 
+                        if (result.length < 1) continue;
+
                         result.unshift({
                             createdAt: Date.now(),
                             battery: result[0].battery,
