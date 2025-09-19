@@ -85,7 +85,7 @@ router.post("/", async (req, res) => {
             isPluggedIn = req.query.isPluggedIn !== undefined ? req.query.isPluggedIn : undefined
         }
 
-        console.log("Battery POST for ", req.headers.authorization, chargingStatus)
+        console.log("Battery POST for ", req.headers.authorization, chargingStatus, isPluggedIn)
         
         name = name.replace("+", " ");
 
@@ -107,7 +107,8 @@ router.post("/", async (req, res) => {
             })) {
                 await devices.update({
                     battery: deviceBattery,
-                    chargingStatus: chargingStatus
+                    chargingStatus: chargingStatus,
+                    isPluggedIn: isPluggedIn
                 },{
                     where: {
                         name: name,
