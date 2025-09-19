@@ -75,14 +75,14 @@ router.post("/", async (req, res) => {
             name = req.body.device;
             deviceBattery = req.body.battery;
             chargingStatus = req.body.chargingStatus !== undefined ? req.body.chargingStatus : undefined
-            isPluggedIn = req.body.isPluggedIn !== undefined ? req.body.chargingStatus : undefined
+            isPluggedIn = req.body.isPluggedIn !== undefined ? req.body.isPluggedIn : undefined
 
         } else if (req.query && req.headers.authorization){
             auth = req.headers.authorization
             name = req.query.device;
             deviceBattery = req.query.battery;
             chargingStatus = req.query.chargingStatus !== undefined ? req.query.chargingStatus : undefined;
-            isPluggedIn = req.query.isPluggedIn !== undefined ? req.query.chargingStatus : undefined
+            isPluggedIn = req.query.isPluggedIn !== undefined ? req.query.isPluggedIn : undefined
         }
 
         console.log("Battery POST for ", req.headers.authorization, chargingStatus)
