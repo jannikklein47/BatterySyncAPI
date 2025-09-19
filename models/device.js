@@ -36,6 +36,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       defaultValue: '#ffffff',
       allowNull: false,
+    },
+    isPluggedIn: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
     }
   }, {
     sequelize,

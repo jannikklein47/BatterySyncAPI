@@ -41,7 +41,7 @@ router.get("/", async (req, res) => {
                     where: {
                         userId: user.id
                     },
-                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type", "color"],
+                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type", "color", "isPluggedIn"],
                     raw: true,
                     order: [
                         ["name", "ASC"]
@@ -68,19 +68,21 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
 
     try {
-        let auth, name, deviceBattery, chargingStatus;
+        let auth, name, deviceBattery, chargingStatus, isPluggedIn;
         
         if (req.body && req.headers.authorization) {
             auth = req.headers.authorization
             name = req.body.device;
             deviceBattery = req.body.battery;
             chargingStatus = req.body.chargingStatus !== undefined ? req.body.chargingStatus : undefined
+            isPluggedIn = req.body.isPluggedIn !== undefined ? req.body.chargingStatus : undefined
 
         } else if (req.query && req.headers.authorization){
             auth = req.headers.authorization
             name = req.query.device;
             deviceBattery = req.query.battery;
             chargingStatus = req.query.chargingStatus !== undefined ? req.query.chargingStatus : undefined;
+            isPluggedIn = req.query.isPluggedIn !== undefined ? req.query.chargingStatus : undefined
         }
 
         console.log("Battery POST for ", req.headers.authorization, chargingStatus)
@@ -118,6 +120,7 @@ router.post("/", async (req, res) => {
                 await batterylogs.create({
                     battery: deviceBattery,
                     chargingStatus: chargingStatus,
+                    isPluggedIn: isPluggedIn,
                     deviceId: device.id,
                 })
 
@@ -126,13 +129,15 @@ router.post("/", async (req, res) => {
                     userId: user.id,
                     name: name,
                     battery: deviceBattery,
-                    chargingStatus: chargingStatus
+                    chargingStatus: chargingStatus,
+                    isPluggedIn: isPluggedIn
                 })
 
                 await batterylogs.create({
                     battery: deviceBattery,
                     chargingStatus: chargingStatus,
                     deviceId: newDevice.id,
+                    isPluggedIn: isPluggedIn
                 })
             }
 
@@ -152,21 +157,24 @@ router.post("/", async (req, res) => {
 
 router.put("/", async (req, res) => {
     try {
-        let auth, name, deviceBattery, chargingStatus;
+        let auth, name, deviceBattery, chargingStatus, isPluggedIn;
         
         if (req.body && req.headers.authorization) {
             auth = req.headers.authorization
             name = req.body.device;
             deviceBattery = req.body.battery;
             chargingStatus = req.body.chargingStatus ? true : false
+            isPluggedIn = req.body.isPluggedIn ? true : false
+
         } else if (req.query && req.headers.authorization){
             auth = req.headers.authorization
             name = req.query.device;
             deviceBattery = req.query.battery;
             chargingStatus = req.query.chargingStatus ? true : false
+            isPluggedIn = req.query.isPluggedIn ? true : false
         }
 
-        let updateObject = { battery: deviceBattery ? deviceBattery : undefined, chargingStatus: chargingStatus}
+        let updateObject = { battery: deviceBattery ? deviceBattery : undefined, chargingStatus: chargingStatus, isPluggedIn: isPluggedIn}
 
 
         console.log("Battery PUT for ", req.headers.authorization)
@@ -314,10 +322,11 @@ router.get("/history/all", async (req, res) => {
                                     [Op.gte]: twentyFourHoursAgo
                                 },
                                 chargingStatus: { [Op.ne]: null },
-                                battery: { [Op.ne]: null }
+                                battery: { [Op.ne]: null },
+                                isPluggedIn: { [Op.ne]: null }
                             },
                             order: [['createdAt', 'DESC']],
-                            attributes: ['createdAt', 'chargingStatus', 'battery'],
+                            attributes: ['createdAt', 'chargingStatus', 'battery', 'isPluggedIn'],
                             raw: true
                         });
 
@@ -329,12 +338,14 @@ router.get("/history/all", async (req, res) => {
                             createdAt: Date.now(),
                             battery: result[0].battery,
                             chargingStatus: result[0].chargingStatus,
+                            isPluggedIn: result[0].isPluggedIn
                         })
 
                         result.push({
                             createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
                             battery: result[result.length -1].battery,
                             chargingStatus: result[result.length -1].chargingStatus,
+                            isPluggedIn: result[result.length - 1].isPluggedIn
                         })
 
                         results[foundDevices[i].id] = result;
@@ -399,7 +410,8 @@ router.get("/history/all/fromStart", async (req, res) => {
                             where: {
                                 deviceId: targetDeviceId,
                                 chargingStatus: { [Op.ne]: null },
-                                battery: { [Op.ne]: null }
+                                battery: { [Op.ne]: null },
+                                isPluggedIn: { [Op.ne]: null }
                             },
                             order: [['createdAt', 'DESC']],
                             raw: true
@@ -410,12 +422,14 @@ router.get("/history/all/fromStart", async (req, res) => {
                             createdAt: Date.now(),
                             battery: result[0].battery,
                             chargingStatus: result[0].chargingStatus,
+                            isPluggedIn: result[0].isPluggedIn,
                         })
 
                         result.push({
                             createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
                             battery: result[result.length -1].battery,
                             chargingStatus: result[result.length -1].chargingStatus,
+                            isPluggedIn: result[result.length -1].isPluggedIn,
                         })
 
                         results[foundDevices[i].id] = result;

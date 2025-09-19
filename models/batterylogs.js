@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
   batteryLogs.init({
     deviceId: DataTypes.INTEGER,
     battery: DataTypes.DOUBLE,
-    chargingStatus: DataTypes.BOOLEAN
+    chargingStatus: DataTypes.BOOLEAN,
+    isPluggedIn: DataTypes.BOOLEAN
   }, {
     sequelize,
     modelName: 'batteryLogs',
