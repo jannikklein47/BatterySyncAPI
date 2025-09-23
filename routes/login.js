@@ -27,7 +27,8 @@ router.post("/", async (req, res) => {
             console.log("Found user for login: ", existingUser);
 
             try {
-                if (await bcrypt.compare(password, existingUser.dataValues.password)) {
+                let access = bcrypt.compareSync(password, existingUser.dataValues.password)
+                if (access) {
                     res.send(existingUser.dataValues.password);
                     return
                 } else {
