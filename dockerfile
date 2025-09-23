@@ -2,6 +2,8 @@
 FROM node:22-alpine
 
 RUN apk add --no-cache postgresql-client
+RUN apk add --update python3 make g++\
+   && rm -rf /var/cache/apk/*
 
 # Arbeitsverzeichnis im Container
 WORKDIR /app
