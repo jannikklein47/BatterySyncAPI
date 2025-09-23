@@ -12,6 +12,9 @@ COPY package*.json ./
 # Abhängigkeiten installieren
 RUN npm install
 
+# bcrypt fix?
+RUN npm rebuild bcrypt
+
 # Den Rest des Anwendungs-Codes kopieren
 COPY . .
 
