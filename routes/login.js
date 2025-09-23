@@ -26,12 +26,18 @@ router.post("/", async (req, res) => {
             //res.status(403).send("User already exists.");
             console.log("Found user for login: ", existingUser);
 
-            if (await bcrypt.compare(password, existingUser.password)) {
-                res.send(existingUser.password);
-                return
-            } else {
+            try {
+                if (await bcrypt.compare(password, existingUser.password)) {
+                    res.send(existingUser.password);
+                    return
+                } else {
+                    res.status(403).send("Wrong credentials.")
+                }
+            } catch (error) {
+                console.error(error);
                 res.status(403).send("Wrong credentials.")
             }
+            
 
             return;
         }
