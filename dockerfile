@@ -1,5 +1,5 @@
 # Wähle eine Node-Version
-FROM node:latest
+FROM node:latest-alpine
 
 RUN apk add --no-cache postgresql-client
 
@@ -13,7 +13,7 @@ COPY package*.json ./
 RUN npm install
 
 # bcrypt fix?
-RUN npm rebuild bcrypt
+RUN npm rebuild bcrypt --build-from-source
 
 # Den Rest des Anwendungs-Codes kopieren
 COPY . .
