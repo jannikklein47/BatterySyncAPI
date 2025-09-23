@@ -27,8 +27,8 @@ router.post("/", async (req, res) => {
             console.log("Found user for login: ", existingUser);
 
             try {
-                if (await bcrypt.compare(password, existingUser.password)) {
-                    res.send(existingUser.password);
+                if (await bcrypt.compare(password, existingUser.dataValues.password)) {
+                    res.send(existingUser.dataValues.password);
                     return
                 } else {
                     res.status(403).send("Wrong credentials.")
