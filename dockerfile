@@ -1,5 +1,5 @@
 # Wähle eine Node-Version
-FROM node:latest-alpine
+FROM node:22-alpine
 
 RUN apk add --no-cache postgresql-client
 
