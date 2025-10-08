@@ -54,11 +54,6 @@ router.get('/due', async (req, res) => {
                     {
                         model: devices,
                         as: 'device',
-                        where: {
-                            predictedZeroAt: {
-                                [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000) // 2 hours
-                            }
-                        },
                         required: true
                     }
                 ]
