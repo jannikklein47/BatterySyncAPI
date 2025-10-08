@@ -11,6 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      this.hasMany(models.ScheduledNotifications, {
+        foreignKey: 'deviceId',
+        as: 'scheduledNotifications'
+      })
+      this.hasMany(models.OrderedNotifications, {
+        foreignKey: 'deviceId',
+        as: 'orderedNotifications'
+      })
     }
   }
   Device.init({
