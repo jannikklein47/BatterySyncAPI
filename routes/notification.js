@@ -49,16 +49,6 @@ router.get('/due', async (req, res) => {
                 ]
             })
 
-            console.log(JSON.stringify(await models.OrderedNotifications.findAll({
-                include: [
-                    {
-                        model: devices,
-                        as: 'device',
-                        required: true
-                    }
-                ]
-            }), 0, 2))
-
             const idsToDelete = scheduledNotificationsToDisplay.map(sn => sn.id);
             if (idsToDelete.length > 0) {
                 await models.ScheduledNotifications.destroy({
@@ -89,17 +79,17 @@ router.post('/new', async (req, res) => {
     if (auth) {
         let user = await users.findOne({where: {password: auth}});
         if (user) {
-            console.log("Creating new noti order")
+            //console.log("Creating new noti order")
             const newOrderedNotification = await models.OrderedNotifications.create({
                 deviceId: deviceId
             })
             const userDevices = await devices.findAll({where: {userId: user.id}})
-            console.log("User devices:", userDevices.length)
+            //console.log("User devices:", userDevices.length)
             if (userDevices.length > 0) {
                 const deviceThatNeedScheduling = userDevices.filter(dev => dev.id !== deviceId);
-                console.log("dev that need sched:", deviceThatNeedScheduling.length)
+                //console.log("dev that need sched:", deviceThatNeedScheduling.length)
                 for (const dev of deviceThatNeedScheduling) {
-                    console.log("Creating sched entry")
+                    //console.log("Creating sched entry")
 
                     await models.ScheduledNotifications.create({
                         deviceId: dev.id,
@@ -117,6 +107,8 @@ router.post('/new', async (req, res) => {
  
 })
 
+// These routes were to test the system
+/*
 router.post("/debug", async (req, res) => {
     await devices.update({predictedZeroAt: new Date(Date.now() + 1.5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
@@ -132,7 +124,7 @@ router.post("/debug4", async (req, res) => {
     res.send(await models.ScheduledNotifications.destroy({where: {id: {[Op.ne]: -1}}}))
     res.send(await models.OrderedNotifications.destroy({where: {id: {[Op.ne]: -1}}}))
     //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
-})
+})*/
 
 
 module.exports = router
