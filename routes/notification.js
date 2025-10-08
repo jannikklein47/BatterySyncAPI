@@ -49,7 +49,7 @@ router.get('/due', async (req, res) => {
                 ]
             })
 
-            console.log(await models.OrderedNotifications.findAll({
+            console.log(JSON.stringify(await models.OrderedNotifications.findAll({
                 include: [
                     {
                         model: devices,
@@ -57,7 +57,7 @@ router.get('/due', async (req, res) => {
                         required: true
                     }
                 ]
-            }))
+            }), _, 2))
 
             const idsToDelete = scheduledNotificationsToDisplay.map(sn => sn.id);
             if (idsToDelete.length > 0) {
