@@ -76,13 +76,17 @@ router.post('/new', async (req, res) => {
     if (auth) {
         let user = await users.findOne({where: {password: auth}});
         if (user) {
+            console.log("Creating new noti order")
             const newOrderedNotification = await models.OrderedNotifications.create({
                 deviceId: deviceId
             })
             const userDevices = await devices.findAll({where: {userId: user.id}})
+            console.log("User devices:", userDevices.length)
             if (userDevices.length > 0) {
                 const deviceThatNeedScheduling = userDevices.filter(dev => dev.id !== deviceId);
+                console.log("dev that need sched:", deviceThatNeedScheduling.length)
                 for (const dev of deviceThatNeedScheduling) {
+
                     await models.ScheduledNotifications.create({
                         deviceId: dev.id,
                         notificationId: newOrderedNotification.id
