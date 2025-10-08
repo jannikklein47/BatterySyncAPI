@@ -118,7 +118,7 @@ router.post('/new', async (req, res) => {
 })
 
 router.post("/debug", async (req, res) => {
-    await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
+    await devices.update({predictedZeroAt: new Date(Date.now() + 1.5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
 router.post("/debug2", async (req, res) => {
     res.send(await models.OrderedNotifications.findAll())
