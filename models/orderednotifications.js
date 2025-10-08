@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'notificationId',
         as: 'scheduledNotifications'
       })
-      OrderedNotifications.belongsTo(models.Devices, {
+      OrderedNotifications.belongsTo(models.Device, {
         foreignKey: 'deviceId',
         as: 'device'
       })
