@@ -1,0 +1,102 @@
+const express = require("express");
+const models = require("../models")
+const bcrypt = require("bcrypt")
+
+const { Op } = require('sequelize');
+
+const users = models.User;
+const devices = models.Device;
+const batterylogs = models.batteryLogs;
+
+const router = express.Router();
+
+router.get('/due', async (req, res) => {
+    let auth = req.headers.authorization;
+    let deviceToDisplay = req.query.deviceToDisplay;
+    if (auth) {
+        let user = users.findOne({where: {password: auth}});
+        if (user) {
+
+            const deviceId = devices.findOne({where: {
+                name: deviceToDisplay,
+                userId: user.id
+            }})
+
+            let scheduledNotificationsToDisplay = models.ScheduledNotifications.findAll({
+                where: {
+                    deviceId: deviceId
+                },
+                include: [
+                    {
+                        model: models.OrderedNotifications,
+                        as: 'notification',
+                        include: [
+                            {
+                                model: devices,
+                                as: 'device',
+                                where: {
+                                    predictedZeroAt: {
+                                        [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000) // 2 hours
+                                    }
+                                },
+                                required: true
+                            }
+                        ]
+                    }
+                ]
+            })
+
+            const idsToDelete = scheduledNotificationsToDisplay.map(sn => sn.id);
+            if (idsToDelete.length > 0) {
+                await models.ScheduledNotifications.destroy({
+                    where: {
+                        id: {
+                            [Op.in]: idsToDelete
+                        }
+                    }
+                })
+            }
+
+            res.send(scheduledNotificationsToDisplay.map(sn => sn.notification))
+
+
+
+        }
+    }
+})
+router.post('/new', async (req, res) => {
+    const auth = req.headers.authorization;
+    
+    const deviceId = req.body.deviceId;
+    if (!deviceId) {
+        res.status(400).send("No device id provided");
+        return;
+    }
+
+    if (auth) {
+        let user = users.findOne({where: {password: auth}});
+        if (user) {
+            const newOrderedNotification = models.OrderedNotifications.create({
+                deviceId: deviceId
+            })
+            const userDevices = devices.findAll({where: {userId: user.id}})
+            if (userDevices.length > 0) {
+                const deviceThatNeedScheduling = userDevices.filter(dev => dev.id !== deviceId);
+                for (const dev of deviceThatNeedScheduling) {
+                    models.ScheduledNotifications.create({
+                        deviceId: dev.id,
+                        notificationId: newOrderedNotification.id
+                    })
+                }
+            }
+            res.send('Ok');
+        } else {
+            res.status(403).send("Invalid authentication")
+        }
+    } else {
+        res.status(400).send("No authentication provided")
+    }
+ 
+})
+
+module.exports = router
