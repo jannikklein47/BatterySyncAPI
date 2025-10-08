@@ -115,6 +115,11 @@ router.post("/debug3", async (req, res) => {
     res.send(await models.ScheduledNotifications.findAll({where:{deviceId: 2}}))
     //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
+router.post("/debug4", async (req, res) => {
+    res.send(await models.ScheduledNotifications.destroy())
+    res.send(await models.OrderedNotifications.destroy())
+    //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
+})
 
 
 module.exports = router
