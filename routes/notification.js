@@ -57,7 +57,7 @@ router.get('/due', async (req, res) => {
                         required: true
                     }
                 ]
-            }), _, 2))
+            }), 0, 2))
 
             const idsToDelete = scheduledNotificationsToDisplay.map(sn => sn.id);
             if (idsToDelete.length > 0) {
