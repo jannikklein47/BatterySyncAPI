@@ -14,15 +14,15 @@ router.get('/due', async (req, res) => {
     let auth = req.headers.authorization;
     let deviceToDisplay = req.query.deviceToDisplay;
     if (auth) {
-        let user = users.findOne({where: {password: auth}});
+        let user = await users.findOne({where: {password: auth}});
         if (user) {
 
-            const deviceId = devices.findOne({where: {
+            const deviceId = await devices.findOne({where: {
                 name: deviceToDisplay,
                 userId: user.id
             }})
 
-            let scheduledNotificationsToDisplay = models.ScheduledNotifications.findAll({
+            let scheduledNotificationsToDisplay = await models.ScheduledNotifications.findAll({
                 where: {
                     deviceId: deviceId
                 },
@@ -74,16 +74,16 @@ router.post('/new', async (req, res) => {
     }
 
     if (auth) {
-        let user = users.findOne({where: {password: auth}});
+        let user = await users.findOne({where: {password: auth}});
         if (user) {
-            const newOrderedNotification = models.OrderedNotifications.create({
+            const newOrderedNotification = await models.OrderedNotifications.create({
                 deviceId: deviceId
             })
-            const userDevices = devices.findAll({where: {userId: user.id}})
+            const userDevices = await devices.findAll({where: {userId: user.id}})
             if (userDevices.length > 0) {
                 const deviceThatNeedScheduling = userDevices.filter(dev => dev.id !== deviceId);
                 for (const dev of deviceThatNeedScheduling) {
-                    models.ScheduledNotifications.create({
+                    await models.ScheduledNotifications.create({
                         deviceId: dev.id,
                         notificationId: newOrderedNotification.id
                     })
@@ -97,6 +97,10 @@ router.post('/new', async (req, res) => {
         res.status(400).send("No authentication provided")
     }
  
+})
+
+router.post("/debug", async (req, res) => {
+    await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
 
 module.exports = router
