@@ -49,6 +49,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       allowNull: false,
+    },
+    predictedZeroAt: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     sequelize,
