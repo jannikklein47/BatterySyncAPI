@@ -32,6 +32,7 @@ router.get('/due', async (req, res) => {
                     {
                         model: models.OrderedNotifications,
                         as: 'notification',
+                        required: true,
                         include: [
                             {
                                 model: devices,
