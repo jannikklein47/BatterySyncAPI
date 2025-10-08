@@ -49,6 +49,21 @@ router.get('/due', async (req, res) => {
                 ]
             })
 
+            console.log(await models.OrderedNotifications.findAll({
+                include: [
+                    {
+                        model: devices,
+                        as: 'device',
+                        where: {
+                            predictedZeroAt: {
+                                [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000) // 2 hours
+                            }
+                        },
+                        required: true
+                    }
+                ]
+            }))
+
             const idsToDelete = scheduledNotificationsToDisplay.map(sn => sn.id);
             if (idsToDelete.length > 0) {
                 await models.ScheduledNotifications.destroy({
