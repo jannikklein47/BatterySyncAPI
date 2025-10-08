@@ -17,10 +17,12 @@ router.get('/due', async (req, res) => {
         let user = await users.findOne({where: {password: auth}});
         if (user) {
 
-            const deviceId = await devices.findOne({where: {
+            
+            let deviceId = await devices.findOne({where: {
                 name: deviceToDisplay,
                 userId: user.id
             }})
+            if (req.query.deviceId) deviceId = req.query.deviceId
 
             let scheduledNotificationsToDisplay = await models.ScheduledNotifications.findAll({
                 where: {
