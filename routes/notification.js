@@ -108,11 +108,11 @@ router.post("/debug", async (req, res) => {
     await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
 router.post("/debug2", async (req, res) => {
-    res.send(await models.OrderedNotifications.findAll({where:{deviceId: 2}}))
+    res.send(await models.OrderedNotifications.findAll())
     //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
 router.post("/debug3", async (req, res) => {
-    res.send(await models.ScheduledNotifications.findAll({where:{deviceId: 2}}))
+    res.send(await models.ScheduledNotifications.findAll())
     //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
 router.post("/debug4", async (req, res) => {
