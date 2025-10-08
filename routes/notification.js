@@ -116,8 +116,8 @@ router.post("/debug3", async (req, res) => {
     //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
 router.post("/debug4", async (req, res) => {
-    res.send(await models.ScheduledNotifications.destroy())
-    res.send(await models.OrderedNotifications.destroy())
+    res.send(await models.ScheduledNotifications.destroy({where: {id: {[Op.ne]: -1}}}))
+    res.send(await models.OrderedNotifications.destroy({where: {id: {[Op.ne]: -1}}}))
     //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 })
 
