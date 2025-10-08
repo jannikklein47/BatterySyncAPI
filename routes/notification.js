@@ -59,7 +59,7 @@ router.get('/due', async (req, res) => {
                 })
             }
 
-            res.send(scheduledNotificationsToDisplay.map(sn => sn.notification))
+            res.send(scheduledNotificationsToDisplay)
 
 
 
