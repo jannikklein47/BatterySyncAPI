@@ -38,7 +38,10 @@ function analyzeSinceLastUnplug(log, device) {
 
   const startTime = new Date(startEntry.createdAt).getTime()
   const elapsedMs = now - startTime
-  if (elapsedMs <= 0) return null
+  if (elapsedMs <= 0) {
+    console.log("Device",device.name,"has no prediction because there seems to be no time between first and last measure")
+    return null
+  }
 
   const latest = log[0] // newest entry
   const latestBattery = Math.floor(latest.battery * 100)
@@ -50,6 +53,8 @@ function analyzeSinceLastUnplug(log, device) {
   if (ratePerMs < 0) {
     const timeToZeroMs = latestBattery / Math.abs(ratePerMs)
     predictedZeroAt = new Date(now + timeToZeroMs)
+  } else {
+    console.log("Device",device.name,'has no prediction because its rate per ms is greater than 0')
   }
 
   return {
@@ -109,11 +114,12 @@ module.exports = async function() {
   }
 
   await models.sequelize.transaction(async t => {
-    console.log("Creating predictions for following devices:", deviceList)
+    //console.log("Creating predictions for following devices:", deviceList)
     for (const device of deviceList) {
-      console.log("current device:", device)
+      //console.log("current device:", device)
       const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device)
       if (analysis && analysis.predictedZeroAt) {
+        console.log("Updating analysis for", device.name)
         await models.Device.update({predictedZeroAt: analysis.predictedZeroAt}, {where: {id: device.id}})
       }
     }
