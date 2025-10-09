@@ -127,6 +127,14 @@ router.post("/", async (req, res) => {
                     deviceId: device.id,
                 })
 
+                if (chargingStatus === true) {
+                    await models.OrderedNotifications.destroy({
+                        where: {
+                            deviceId: device.id
+                        }
+                    })
+                }
+
             } else {
                 const newDevice = await devices.create({
                     userId: user.id,
