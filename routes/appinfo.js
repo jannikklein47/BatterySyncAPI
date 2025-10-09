@@ -32,6 +32,9 @@ router.post("/", async (req, res) => {
 
             const recent = await AppInfos.findAll({order: [["id", "DESC"]]})[0]
 
+            console.log("Recent:", recent)
+            console.log("Create:", {...req.body, ...recent})
+
             await AppInfos.create({...req.body, ...recent})
             res.status(200).send("Ok")
 
