@@ -95,6 +95,8 @@ module.exports = async function() {
       const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device)
       if (analysis && analysis.predictedZeroAt) {
         await models.Device.update({predictedZeroAt: analysis.predictedZeroAt}, {where: {id: device.id}})
+      } else {
+        await models.Device.update({predictedZeroAt: null}, {where: {id: device.id}})
       }
     }
   })
