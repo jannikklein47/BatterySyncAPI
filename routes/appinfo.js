@@ -36,9 +36,9 @@ router.post("/", async (req, res) => {
             
             console.log("Recent:", recent)
             
-            console.log("Create:", {...recent.dataValues, ...req.body})
+            console.log("Create:", {...recent, ...req.body})
 
-            await AppInfos.create({...recent.dataValues, ...req.body})
+            await AppInfos.create({...recent, ...req.body})
             res.status(200).send("Ok")
 
         } else res.status(403).send("Access denied")
