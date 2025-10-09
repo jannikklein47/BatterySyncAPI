@@ -243,8 +243,6 @@ router.get("/history", async (req, res) => {
                     // Dein spezifischer Wert
                     const targetDeviceId = device.id;
 
-                    console.log(targetDeviceId)
-
                     const results = await batterylogs.findAll({
                         where: {
                             deviceId: targetDeviceId,  // falls die ID selbst gesucht wird
