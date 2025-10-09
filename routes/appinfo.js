@@ -30,7 +30,9 @@ router.post("/", async (req, res) => {
         const access = req.headers.adminCode
         if (access === process.env.adminCode) {
 
-            await AppInfos.create({...(await AppInfos.findAll({order: [["id", "DESC"]]})[0] ), ...req.body})
+            const recent = await AppInfos.findAll({order: [["id", "DESC"]]})[0]
+
+            await AppInfos.create({...req.body, ...recent})
             res.status(200).send("Ok")
 
         } else res.status(403).send("Access denied")
