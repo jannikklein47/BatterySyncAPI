@@ -33,13 +33,11 @@ function analyzeSinceLastUnplug(log, device) {
   // fallback: if never unplugged in log, use newest entry
   if (!startEntry) {
     startEntry = log[log.length - 1]
-    console.log("Selecting last entry for", device.name)
   }
 
   const startTime = new Date(startEntry.createdAt).getTime()
   const elapsedMs = now - startTime
   if (elapsedMs <= 0) {
-    console.log("Device",device.name,"has no prediction because there seems to be no time between first and last measure")
     return null
   }
 
@@ -53,8 +51,6 @@ function analyzeSinceLastUnplug(log, device) {
   if (ratePerMs < 0) {
     const timeToZeroMs = latestBattery / Math.abs(ratePerMs)
     predictedZeroAt = new Date(now + timeToZeroMs)
-  } else {
-    console.log("Device",device.name,'has no prediction because its rate per ms is greater than 0')
   }
 
   return {
@@ -67,14 +63,11 @@ function analyzeSinceLastUnplug(log, device) {
 
 module.exports = async function() {
 
-  console.log("Running generate predictions...")
-
   const deviceList = await models.Device.findAll({raw: true})
   const deviceHistory = []
 
   for (const device of deviceList) {
 
-    // Dein spezifischer Wert
     const targetDeviceId = device.id;
 
     const result = await models.batteryLogs.findAll({
@@ -93,32 +86,16 @@ module.exports = async function() {
     });
 
     if (result.length < 1) continue;
-    /*
-    result.push({
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
-      battery: result[result.length -1].battery,
-      chargingStatus: result[result.length -1].chargingStatus,
-      isPluggedIn: result[result.length - 1].isPluggedIn
-    })
-      */
-    
 
     deviceHistory[device.id] = result;
   }
 
   await models.sequelize.transaction(async t => {
-    //console.log("Creating predictions for following devices:", deviceList)
     for (const device of deviceList) {
-      //console.log("current device:", device)
-      console.log()
       const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device)
       if (analysis && analysis.predictedZeroAt) {
-        console.log("Updating analysis for", device.name)
         await models.Device.update({predictedZeroAt: analysis.predictedZeroAt}, {where: {id: device.id}})
       }
     }
-
-    //console.log("Filled predictions: ", (await models.Device.findAll({raw: true})))
-
   })
 }
