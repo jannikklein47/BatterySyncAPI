@@ -30,9 +30,12 @@ router.post("/", async (req, res) => {
         const access = req.headers.adminCode
         if (access === process.env.adminCode) {
 
-            const recent = await AppInfos.findOne({order: [['id', 'DESC']]})
-
+            const recent = await AppInfos.findOne({attributes: { exclude: ['createdAt', 'updatedAt']},order: [['id', 'DESC']]})
+            recent = recent.dataValues
+            delete recent.id
+            
             console.log("Recent:", recent)
+            
             console.log("Create:", {...req.body, ...recent.dataValues})
 
             await AppInfos.create({...req.body, ...recent.dataValues})
