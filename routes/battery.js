@@ -127,9 +127,10 @@ router.post("/", async (req, res) => {
                     deviceId: device.id,
                 })
 
-                console.log("chargingstatus:",chargingStatus)
+                console.log("chargingstatus:",chargingStatus,'deviceid',device.id)
 
                 if (chargingStatus === true) {
+                    
                     await models.OrderedNotifications.destroy({
                         where: {
                             deviceId: device.id
