@@ -112,7 +112,7 @@ module.exports = async function() {
     console.log("Creating predictions for following devices:", deviceList)
     for (const device of deviceList) {
       console.log("current device:", device)
-      const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device.name)
+      const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device)
       if (analysis && analysis.predictedZeroAt) {
         await models.Device.update({predictedZeroAt: analysis.predictedZeroAt}, {where: {id: device.id}})
       }
