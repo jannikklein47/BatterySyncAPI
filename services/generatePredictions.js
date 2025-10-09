@@ -109,7 +109,9 @@ module.exports = async function() {
   }
 
   await models.sequelize.transaction(async t => {
+    console.log("Creating predictions for following devices:", deviceList)
     for (const device of deviceList) {
+      console.log("current device:", device)
       const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device.name)
       if (analysis && analysis.predictedZeroAt) {
         await models.Device.update({predictedZeroAt: analysis.predictedZeroAt}, {where: {id: device.id}})
