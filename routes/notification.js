@@ -2,7 +2,7 @@ const express = require("express");
 const models = require("../models")
 const bcrypt = require("bcrypt")
 
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 
 const users = models.User;
 const devices = models.Device;
@@ -86,13 +86,23 @@ router.get('/due', async (req, res) => {
 
             const idsToDelete = scheduledNotificationsToDisplay.map(sn => sn.id);
             if (idsToDelete.length > 0) {
-                await models.ScheduledNotifications.destroy({
-                    where: {
-                        id: {
-                            [Op.in]: idsToDelete
+                await models.sequelize.transaction(async t => {
+                    await models.ScheduledNotifications.destroy({
+                        where: {
+                            id: {
+                                [Op.in]: idsToDelete
+                            }
                         }
-                    }
+                    }, { transaction: t })
+                    await models.OrderedNotifications.destroy({
+                        where: {
+                            id: {
+                            [Op.notIn]: Sequelize.literal('(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")')
+                            }
+                        }
+                    }, { transaction: t });
                 })
+                
             }
 
             res.send(scheduledNotificationsToDisplay.map(sched => {
@@ -116,30 +126,32 @@ router.post('/new', async (req, res) => {
     }
 
     if (auth) {
-        let user = await users.findOne({where: {password: auth}});
-        if (user) {
-            //console.log("Creating new noti order")
-            const newOrderedNotification = await models.OrderedNotifications.create({
-                deviceId: deviceId
-            })
-            const userDevices = await devices.findAll({where: {userId: user.id}})
-            //console.log("User devices:", userDevices.length)
-            if (userDevices.length > 0) {
-                const deviceThatNeedScheduling = userDevices.filter(dev => dev.id !== deviceId);
-                //console.log("dev that need sched:", deviceThatNeedScheduling.length)
-                for (const dev of deviceThatNeedScheduling) {
-                    //console.log("Creating sched entry")
+        await models.sequelize.transaction(async t => {
+            let user = await users.findOne({where: {password: auth}});
+            if (user) {
+                //console.log("Creating new noti order")
+                const newOrderedNotification = await models.OrderedNotifications.create({
+                    deviceId: deviceId
+                }, { transaction: t})
+                const userDevices = await devices.findAll({where: {userId: user.id}}, {transaction: t})
+                //console.log("User devices:", userDevices.length)
+                if (userDevices.length > 0) {
+                    const deviceThatNeedScheduling = userDevices.filter(dev => dev.id !== deviceId);
+                    //console.log("dev that need sched:", deviceThatNeedScheduling.length)
+                    for (const dev of deviceThatNeedScheduling) {
+                        //console.log("Creating sched entry")
 
-                    await models.ScheduledNotifications.create({
-                        deviceId: dev.id,
-                        notificationId: newOrderedNotification.id
-                    })
+                        await models.ScheduledNotifications.create({
+                            deviceId: dev.id,
+                            notificationId: newOrderedNotification.id
+                        }, { transaction: t })
+                    }
                 }
+                res.send('Ok');
+            } else {
+                res.status(403).send("Invalid authentication")
             }
-            res.send('Ok');
-        } else {
-            res.status(403).send("Invalid authentication")
-        }
+        })
     } else {
         res.status(400).send("No authentication provided")
     }
