@@ -323,7 +323,7 @@ router.get("/history/all", async (req, res) => {
                                 isPluggedIn: { [Op.ne]: null }
                             },
                             order: [['createdAt', 'DESC']],
-                            attributes: ['createdAt', 'chargingStatus', 'battery', 'isPluggedIn'],
+                            attributes: ['createdAt', 'chargingStatus', 'battery', 'isPluggedIn', 'predictedZeroAt'],
                             raw: true
                         });
 
