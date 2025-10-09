@@ -43,7 +43,7 @@ router.get("/", async (req, res) => {
                     where: {
                         userId: user.id
                     },
-                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type", "color", "isPluggedIn"],
+                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type", "color", "isPluggedIn", 'predictedZeroAt'],
                     raw: true,
                     order: [
                         ["name", "ASC"]
@@ -323,7 +323,7 @@ router.get("/history/all", async (req, res) => {
                                 isPluggedIn: { [Op.ne]: null }
                             },
                             order: [['createdAt', 'DESC']],
-                            attributes: ['createdAt', 'chargingStatus', 'battery', 'isPluggedIn', 'predictedZeroAt'],
+                            attributes: ['createdAt', 'chargingStatus', 'battery', 'isPluggedIn'],
                             raw: true
                         });
 
