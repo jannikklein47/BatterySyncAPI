@@ -12,8 +12,9 @@ const router = express.Router();
 router.get("/", async (req, res) => {
     try {
         const auth = req.headers.authorization
-        const user = Users.findOne({where: {password: auth}})
+        const user = await Users.findOne({where: {password: auth}})
         if (user) {
+            console.log(await AppInfos.findAll({raw: true}))
             const currentInfo = AppInfos.findAll({order: [['id', 'DESC']]})[0]
             res.send(currentInfo)
         } else {
