@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
         const auth = req.headers.authorization
         const user = Users.findOne({where: {password: auth}})
         if (user) {
-            const currentInfo = AppInfos.findOne({order: [['id', 'DESC']]})
+            const currentInfo = AppInfos.findAll({order: [['id', 'DESC']]})[0]
             res.send(currentInfo)
         } else {
             res.status(403).send("Invalid access token")
@@ -30,7 +30,8 @@ router.post("/", async (req, res) => {
         const access = req.headers.adminCode
         if (access === process.env.adminCode) {
 
-            await AppInfos.create({...(await AppInfos.findOne({order: [["id", "DESC"]]})), ...req.body})
+            await AppInfos.create({...(await AppInfos.findAll({order: [["id", "DESC"]]})[0] ), ...req.body})
+            res.status(200).send("Ok")
 
         } else res.status(403).send("Access denied")
     } catch (error) {
