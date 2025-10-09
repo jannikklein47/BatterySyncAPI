@@ -93,27 +93,15 @@ module.exports = async function() {
     });
 
     if (result.length < 1) continue;
-
-    let lastEntry = await models.batteryLogs.findOne({
-      where: {
-        createdAt: {
-          [Op.lte]: new Date(Date.now() - 24 * 60 * 60 * 1000)
-        }
-      },
-      order: [['createdAt', 'DESC']],
-      attributes: ['createdAt', 'chargingStatus', 'battery', 'isPluggedIn'],
+    /*
+    result.push({
+      createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+      battery: result[result.length -1].battery,
+      chargingStatus: result[result.length -1].chargingStatus,
+      isPluggedIn: result[result.length - 1].isPluggedIn
     })
-
-    if (lastEntry && lastEntry.dataValues && false) {
-      result.push(lastEntry.dataValues)
-    } else {
-      result.push({
-        createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
-        battery: result[result.length -1].battery,
-        chargingStatus: result[result.length -1].chargingStatus,
-        isPluggedIn: result[result.length - 1].isPluggedIn
-      })
-    }
+      */
+    
 
     deviceHistory[device.id] = result;
   }
