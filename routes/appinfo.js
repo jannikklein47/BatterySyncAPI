@@ -33,9 +33,9 @@ router.post("/", async (req, res) => {
             const recent = await AppInfos.findOne({order: [['id', 'DESC']]})
 
             console.log("Recent:", recent)
-            console.log("Create:", {...req.body, ...recent})
+            console.log("Create:", {...req.body, ...recent.dataValues})
 
-            await AppInfos.create({...req.body, ...recent})
+            await AppInfos.create({...req.body, ...recent.dataValues})
             res.status(200).send("Ok")
 
         } else res.status(403).send("Access denied")
