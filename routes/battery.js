@@ -127,7 +127,7 @@ router.post("/", async (req, res) => {
                     deviceId: device.id,
                 })
 
-                if ((chargingStatus === 'true' || chargingStatus === true || isPluggedIn === 'true' || isPluggedIn === true ) && device.predictedZeroAt < new Date(Date.now() - 2 * 60 * 60 * 1000)) {
+                if ((chargingStatus === 'true' || chargingStatus === true || isPluggedIn === 'true' || isPluggedIn === true ) && device.predictedZeroAt < new Date(Date.now() + 2 * 60 * 60 * 1000)) {
                     await models.OrderedNotifications.destroy({
                         where: {
                             deviceId: device.id
