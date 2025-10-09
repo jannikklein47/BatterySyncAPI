@@ -10,6 +10,41 @@ const batterylogs = models.batteryLogs;
 
 const router = express.Router();
 
+/**
+ * 
+ * Returns:
+[
+    {
+        "id": 22,
+        "notificationId": 6,
+        "deviceId": 8,
+        "createdAt": "2025-10-08T17:42:11.692Z",
+        "updatedAt": "2025-10-08T17:42:11.692Z",
+        "notification": {
+            "id": 6,
+            "deviceId": 2,
+            "createdAt": "2025-10-08T17:42:11.683Z",
+            "updatedAt": "2025-10-08T17:42:11.683Z",
+            "device": {
+                "id": 2,
+                "userId": 3,
+                "name": "Macbook Pro von Jannik",
+                "battery": 0.58,
+                "isShown": true,
+                "chargingStatus": false,
+                "type": "laptop",
+                "color": "#4dc900",
+                "isPluggedIn": true,
+                "predictedZeroAt": "2025-10-08T19:11:54.843Z",
+                "createdAt": "2025-06-15T20:05:18.305Z",
+                "updatedAt": "2025-10-09T06:12:14.710Z"
+            }
+        }
+    }
+]
+    With .map(sched => sched.notification.device.name) you can access just the device name from this.
+    sched.notification and sched.notification.device will never be null!
+ */
 router.get('/due', async (req, res) => {
     let auth = req.headers.authorization;
     let deviceToDisplay = req.query.deviceToDisplay || "";
@@ -60,7 +95,7 @@ router.get('/due', async (req, res) => {
                 })
             }
 
-            res.send(scheduledNotificationsToDisplay)
+            res.send(scheduledNotificationsToDisplay.map(sched => sched.notification.device.name))
 
 
 
