@@ -104,7 +104,7 @@ module.exports = async function() {
       attributes: ['createdAt', 'chargingStatus', 'battery', 'isPluggedIn'],
     })
 
-    if (lastEntry && lastEntry.dataValues) {
+    if (lastEntry && lastEntry.dataValues && false) {
       result.push(lastEntry.dataValues)
     } else {
       result.push({
@@ -122,6 +122,7 @@ module.exports = async function() {
     //console.log("Creating predictions for following devices:", deviceList)
     for (const device of deviceList) {
       //console.log("current device:", device)
+      console.log()
       const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device)
       if (analysis && analysis.predictedZeroAt) {
         console.log("Updating analysis for", device.name)
@@ -129,7 +130,7 @@ module.exports = async function() {
       }
     }
 
-    console.log("Filled predictions: ", (await models.Device.findAll({raw: true})))
+    //console.log("Filled predictions: ", (await models.Device.findAll({raw: true})))
 
   })
 }
