@@ -127,16 +127,12 @@ router.post("/", async (req, res) => {
                     deviceId: device.id,
                 })
 
-                console.log("chargingstatus:",chargingStatus,'deviceid',device.id)
-
-                if (chargingStatus === 'true' || chargingStatus === true) {
-                    console.log("Delete notifications for device", device.id)
-                    let result = await models.OrderedNotifications.destroy({
+                if (chargingStatus === 'true' || chargingStatus === true || isPluggedIn === 'true' || isPluggedIn === true) {
+                    await models.OrderedNotifications.destroy({
                         where: {
                             deviceId: device.id
                         }
                     })
-                    console.log("result", result)
                 }
 
             } else {
