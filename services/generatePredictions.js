@@ -100,15 +100,20 @@ module.exports = async function() {
           [Op.lte]: new Date(Date.now() - 24 * 60 * 60 * 1000)
         }
       },
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      attributes: ['createdAt', 'chargingStatus', 'battery', 'isPluggedIn'],
     })
 
-    result.push(lastEntry.dataValues || {
-      createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
-      battery: result[result.length -1].battery,
-      chargingStatus: result[result.length -1].chargingStatus,
-      isPluggedIn: result[result.length - 1].isPluggedIn
-    })
+    if (lastEntry && lastEntry.dataValues) {
+      result.push(lastEntry.dataValues)
+    } else {
+      result.push({
+        createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+        battery: result[result.length -1].battery,
+        chargingStatus: result[result.length -1].chargingStatus,
+        isPluggedIn: result[result.length - 1].isPluggedIn
+      })
+    }
 
     deviceHistory[device.id] = result;
   }
