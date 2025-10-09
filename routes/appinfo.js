@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
         const auth = req.headers.authorization
         const user = await Users.findOne({where: {password: auth}})
         if (user) {
-            console.log(await AppInfos.findAll({raw: true}))
+            console.log(await AppInfos.findAll({raw: true, order: [['id', 'DESC']]}))
             const currentInfo = AppInfos.findAll({order: [['id', 'DESC']]})[0]
             res.send(currentInfo)
         } else {
