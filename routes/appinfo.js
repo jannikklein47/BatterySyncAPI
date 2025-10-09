@@ -14,8 +14,7 @@ router.get("/", async (req, res) => {
         const auth = req.headers.authorization
         const user = await Users.findOne({where: {password: auth}})
         if (user) {
-            console.log(await AppInfos.findOne({order: [['id', 'DESC']]}))
-            const currentInfo = await AppInfos.findAll({order: [['id', 'DESC']]})[0]
+            const currentInfo = await AppInfos.findOne({order: [['id', 'DESC']]})
             res.send(currentInfo)
         } else {
             res.status(403).send("Invalid access token")
@@ -31,7 +30,7 @@ router.post("/", async (req, res) => {
         const access = req.headers.adminCode
         if (access === process.env.adminCode) {
 
-            const recent = await AppInfos.findAll({order: [["id", "DESC"]]})[0]
+            const recent = await AppInfos.findOne({order: [['id', 'DESC']]})
 
             console.log("Recent:", recent)
             console.log("Create:", {...req.body, ...recent})
