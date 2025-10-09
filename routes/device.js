@@ -8,6 +8,7 @@ const devices = models.Device;
 const router = express.Router();
 
 router.put("/", async (req, res) => {
+    console.log("PUT /device")
     try {
         if (req.headers.authorization && req.body) {
             let user;
@@ -43,6 +44,7 @@ router.put("/", async (req, res) => {
 })
 
 router.delete("/", async (req, res) => {
+    console.log("DELETE /device")
     try {
         let user;
         if (user = await users.findOne({where: {password: req.headers.authorization}})) {

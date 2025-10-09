@@ -46,6 +46,7 @@ const router = express.Router();
     sched.notification and sched.notification.device will never be null!
  */
 router.get('/due', async (req, res) => {
+    console.log("GET /notification/due")
     let auth = req.headers.authorization;
     let deviceToDisplay = req.query.deviceToDisplay || "";
     if (auth) {
@@ -117,6 +118,7 @@ router.get('/due', async (req, res) => {
     }
 })
 router.post('/new', async (req, res) => {
+    console.log("/notification/new")
     const auth = req.headers.authorization;
     
     const deviceId = req.body.deviceId;

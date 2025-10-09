@@ -11,7 +11,7 @@ const batterylogs = models.batteryLogs;
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-    console.log("Request received.")
+    console.log("GET /battery")
     try {
 
         if (!(await users.findOne())) {
@@ -66,6 +66,7 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
+    console.log("POST /battery")
 
     try {
         let auth, name, deviceBattery, chargingStatus, isPluggedIn;
@@ -157,6 +158,7 @@ router.post("/", async (req, res) => {
 })
 
 router.put("/", async (req, res) => {
+    console.log("PUT /battery")
     try {
         let auth, name, deviceBattery, chargingStatus, isPluggedIn;
         
@@ -176,9 +178,6 @@ router.put("/", async (req, res) => {
         }
 
         let updateObject = { battery: deviceBattery ? deviceBattery : undefined, chargingStatus: chargingStatus, isPluggedIn: isPluggedIn}
-
-
-        console.log("Battery PUT for ", req.headers.authorization)
         
         name = name.replace("+", " ");
 
@@ -222,7 +221,7 @@ router.put("/", async (req, res) => {
 })
 
 router.get("/history", async (req, res) => {
-    console.log("Request received.")
+    console.log("GET /battery/history")
     try {
 
         let auth;
@@ -284,7 +283,7 @@ router.get("/history", async (req, res) => {
 })
 
 router.get("/history/all", async (req, res) => {
-    console.log("Request received.")
+    console.log("GET /battery/history/all")
     try {
 
         let auth;
@@ -331,8 +330,6 @@ router.get("/history/all", async (req, res) => {
                             raw: true
                         });
 
-                        console.log("history result: ", result)
-
                         if (result.length < 1) continue;
 
                         result.unshift({
@@ -375,7 +372,7 @@ router.get("/history/all", async (req, res) => {
 })
 
 router.get("/history/all/fromStart", async (req, res) => {
-    console.log("Request received.")
+    console.log("GET /battery/history/all/fromStart")
     try {
 
         let auth;
@@ -394,8 +391,6 @@ router.get("/history/all/fromStart", async (req, res) => {
                         userId: user.id
                     }
                 })) {
-
-                    console.log(foundDevices, user.id)
 
                     // Zeitpunkt 24h zurück
                     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

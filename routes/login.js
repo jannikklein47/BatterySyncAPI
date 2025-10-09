@@ -7,6 +7,8 @@ const users = models.User;
 const router = express.Router();
 
 router.post("/", async (req, res) => {
+
+    console.log("POST /login")
     
     try {
         let email, password;
@@ -24,12 +26,10 @@ router.post("/", async (req, res) => {
         let existingUser;
         if (existingUser = await users.findOne({where: {email: email}})) {
             //res.status(403).send("User already exists.");
-            console.log("Found user for login: ", existingUser);
 
             try {
-                console.log("Before compare")
                 let access = bcrypt.compareSync(password, existingUser.dataValues.password)
-                console.log("After compare")
+
                 if (access) {
                     res.send(existingUser.dataValues.password);
                     return
@@ -63,6 +63,7 @@ router.post("/", async (req, res) => {
 })
 
 router.get("/auth", async (req, res) => {
+    console.log("GET /login/auth")
     try {
         if (req.headers.authorization) {
             let user;
@@ -70,11 +71,9 @@ router.get("/auth", async (req, res) => {
                 //console.log("Acces granted for user ", user)
                 res.send(user.email);
             } else {
-                console.log("User not found")
                 res.status(403).send("Invalid access token");
             }
         } else {
-            console.log("The auth req is wrong")
             res.status(400).send("Bad request")
         }
         
@@ -85,6 +84,7 @@ router.get("/auth", async (req, res) => {
 })
 
 router.put("/user", async (req, res) => {
+    console.log("PUT /login/user")
     try {
         if (req.query.email && req.query.password && req.query.masterkey) {
             if (req.query.masterkey !== "ahibUZ787tfgIUvfvgfd333") {
