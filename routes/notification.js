@@ -118,7 +118,7 @@ router.get('/due', async (req, res) => {
     }
 })
 router.post('/new', async (req, res) => {
-    console.log("/notification/new")
+    console.log("POST /notification/new")
     const auth = req.headers.authorization;
     
     const deviceId = req.body.deviceId;
