@@ -85,8 +85,6 @@ router.post("/", async (req, res) => {
             chargingStatus = req.query.chargingStatus !== undefined ? req.query.chargingStatus : undefined;
             isPluggedIn = req.query.isPluggedIn !== undefined ? req.query.isPluggedIn : undefined
         }
-
-        console.log("Battery POST for ", req.headers.authorization, chargingStatus, isPluggedIn)
         
         name = name.replace("+", " ");
 
@@ -116,8 +114,6 @@ router.post("/", async (req, res) => {
                         userId: user.id
                     }
                 });
-
-                console.log(device.id);
 
                 await batterylogs.create({
                     battery: deviceBattery,
@@ -240,8 +236,6 @@ router.get("/history", async (req, res) => {
                         name: name
                     }
                 })) {
-
-                    console.log(device)
 
                     // Zeitpunkt 24h zurück
                     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
