@@ -95,7 +95,11 @@ router.get('/due', async (req, res) => {
                 })
             }
 
-            res.send(scheduledNotificationsToDisplay.map(sched => sched.notification.device.name))
+            res.send(scheduledNotificationsToDisplay.map(sched => {
+                return { 
+                    targetName: sched.notification.device.name
+                }
+            }))
 
 
 
