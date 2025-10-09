@@ -11,7 +11,7 @@ function sameDay(d1, d2) {
   )
 }
 
-function analyzeSinceLastUnplug(log) {
+function analyzeSinceLastUnplug(log, device) {
   if (!log || !log.length || log[0].isPluggedIn) return null
 
   const now = new Date(log[0].createdAt).getTime()
@@ -25,7 +25,7 @@ function analyzeSinceLastUnplug(log) {
     // detect unplug (charging ended)
     if (older.isPluggedIn === true && newer.isPluggedIn === false) {
       startEntry = newer
-      console.log(i)
+      //console.log(i)
       break
     }
   }
@@ -33,6 +33,7 @@ function analyzeSinceLastUnplug(log) {
   // fallback: if never unplugged in log, use newest entry
   if (!startEntry) {
     startEntry = log[log.length - 1]
+    console.log("Selecting last entry for", device.name)
   }
 
   const startTime = new Date(startEntry.createdAt).getTime()
@@ -63,7 +64,7 @@ module.exports = async function() {
 
   console.log("Running generate predictions...")
 
-  const deviceList = await models.Device.findAll()
+  const deviceList = await models.Device.findAll({raw: true})
   const deviceHistory = []
 
   for (const device of deviceList) {
@@ -109,7 +110,7 @@ module.exports = async function() {
 
   await models.sequelize.transaction(async t => {
     for (const device of deviceList) {
-      const analysis = analyzeSinceLastUnplug(deviceHistory[device.id])
+      const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device.name)
       if (analysis && analysis.predictedZeroAt) {
         await models.Device.update({predictedZeroAt: analysis.predictedZeroAt}, {where: {id: device.id}})
       }
