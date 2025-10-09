@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
         const auth = req.headers.authorization
         const user = await Users.findOne({where: {password: auth}})
         if (user) {
-            const currentInfo = await AppInfos.findOne({order: [['id', 'DESC']]})
+            const currentInfo = await AppInfos.findOne({order: [['id', 'DESC']], attributes: { exclude: ['createdAt', 'updatedAt']}})
             res.send(currentInfo)
         } else {
             res.status(403).send("Invalid access token")
@@ -33,10 +33,6 @@ router.post("/", async (req, res) => {
             let recent = await AppInfos.findOne({attributes: { exclude: ['createdAt', 'updatedAt']},order: [['id', 'DESC']]})
             recent = recent.dataValues
             delete recent.id
-            
-            console.log("Recent:", recent)
-            
-            console.log("Create:", {...recent, ...req.body})
 
             await AppInfos.create({...recent, ...req.body})
             res.status(200).send("Ok")
