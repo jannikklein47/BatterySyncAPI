@@ -2,7 +2,7 @@ const express = require("express");
 const models = require("../models")
 const bcrypt = require("bcrypt")
 
-const { Op, fn } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 
 const users = models.User;
 const devices = models.Device;
