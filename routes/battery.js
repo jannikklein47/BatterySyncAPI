@@ -66,6 +66,68 @@ router.get("/", async (req, res) => {
         res.status(500).send("Fehler");
     }
 });
+router.get("/withNotificationInfo", async (req, res) => {
+    console.log("GET /battery/withNotificationInfo")
+    try {
+
+        if (!(await users.findOne())) {
+            await users.create({
+                email: "test",
+                password: await bcrypt.hash("test", 11),
+            })
+        }
+        if (!(await devices.findOne({
+            where: {
+                name: "Testgerät"
+            }
+        }))) {
+            await devices.create({
+                userId: 2,
+                name: "Testgerät",
+                battery: 0.47
+            })
+        }
+        let auth;
+        if(auth = req.headers.authorization) {
+            
+            let user;
+            if (user = await users.findOne({where: {password: auth}})) {
+                let result;
+                result = await devices.findAll({
+                    where: {
+                        userId: user.id
+                    },
+                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type", "color", "isPluggedIn", 'predictedZeroAt'],
+                    include: [
+                        {
+                            model: models.OrderedNotifications,
+                            as: 'notifications',
+                            attributes: ['id'],
+                        }
+                    ],
+                    raw: true,
+                    order: [
+                        ["name", "ASC"]
+                    ]
+                })
+                
+                
+                //console.log("Ergebnis von GET: ", result);
+                res.send(result)
+            } else {
+                res.status(403).send("Access denied");
+            }
+        } else {
+            res.status(403).send("Access denied");
+        }
+
+        //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Fehler");
+    }
+});
+
 
 router.post("/", async (req, res) => {
     console.log("POST /battery")
