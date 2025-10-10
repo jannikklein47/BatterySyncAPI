@@ -101,7 +101,7 @@ router.get("/withNotificationInfo", async (req, res) => {
                     include: [
                         {
                             model: models.OrderedNotifications,
-                            as: 'notifications',
+                            as: 'orderedNotifications',
                             attributes: ['id'],
                         }
                     ],
