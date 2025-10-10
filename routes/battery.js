@@ -97,7 +97,7 @@ router.get("/withNotificationInfo", async (req, res) => {
                     where: {
                         userId: user.id
                     },
-                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type", "color", "isPluggedIn", 'predictedZeroAt', [fn('ARRAY_AGG', col('notifications.id')), 'notificationIds']],
+                    attributes: ["name", "battery", "isShown", "chargingStatus", 'id', "type", "color", "isPluggedIn", 'predictedZeroAt', [fn('ARRAY_AGG', col('orderedNotifications.id')), 'notificationIds']],
                     
                     include: [
                         {
