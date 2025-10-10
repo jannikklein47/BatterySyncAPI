@@ -103,7 +103,7 @@ router.get("/withNotificationInfo", async (req, res) => {
                         {
                             model: models.OrderedNotifications,
                             as: 'orderedNotifications',
-                            attributes: ['id'],
+                            attributes: [],
                         }
                     ],
                     group: ['Device.id'],
