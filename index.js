@@ -23,8 +23,8 @@ app.use(express.json())
 app.use(routes);
 
 const options = {
-  key: fs.readFileSync(path.join(__dirname, "localhost-key.pem")),
-  cert: fs.readFileSync(path.join(__dirname, "localhost.pem")),
+  key: fs.readFileSync('/etc/letsencrypt/live/batterysync.chickenkiller.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/batterysync.chickenkiller.com/fullchain.pem'),
 };
 
 const server = https.createServer(options, app);
