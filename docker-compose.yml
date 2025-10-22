@@ -20,7 +20,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /opt/ssl/batterysync:/etc/ssl/batterysync:ro
+      - /srv/ssl/batterysync:/etc/ssl/batterysync:ro
     depends_on:
       - db
     environment:
