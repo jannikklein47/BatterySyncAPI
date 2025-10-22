@@ -20,8 +20,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-
+      - /etc/letsencrypt/live:/etc/letsencrypt/live:ro
+      - /etc/letsencrypt/archive:/etc/letsencrypt/archive:ro
     depends_on:
       - db
     environment:
