@@ -20,7 +20,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /etc/letsencrypt:/etc/letsencrypt
+      - /etc/letsencrypt/live/batterysync.crabdance.com/privkey.pem:/etc/letsencrypt/live/batterysync.crabdance.com/privkey.pem
+      - /etc/letsencrypt/live/batterysync.crabdance.com/fullchain.pem:/etc/letsencrypt/live/batterysync.crabdance.com/fullchain.pem
     depends_on:
       - db
     environment:
