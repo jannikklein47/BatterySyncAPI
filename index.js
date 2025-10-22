@@ -22,7 +22,7 @@ app.use(express.json())
 
 app.use(routes);
 
-const certPath = '/etc/letsencrypt/live/batterysync.chickenkiller.com';
+const certPath = '/etc/ssl/batterysync';
 
 let options;
 try {
