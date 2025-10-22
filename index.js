@@ -22,6 +22,7 @@ app.use(express.json())
 
 app.use(routes);
 
+// When creating the SSL certificates, they need to be moved to home/ssl/batterysync!
 const certPath = '/etc/ssl/batterysync';
 
 let options;

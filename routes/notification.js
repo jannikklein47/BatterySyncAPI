@@ -54,10 +54,10 @@ router.get('/due', async (req, res) => {
         if (user) {
 
             
-            let deviceId = await devices.findOne({where: {
+            let deviceId = (await devices.findOne({where: {
                 name: deviceToDisplay,
                 userId: user.id
-            }})
+            }})).dataValues.id
             if (req.query.deviceId) deviceId = req.query.deviceId
 
             let scheduledNotificationsToDisplay = await models.ScheduledNotifications.findAll({
@@ -108,7 +108,8 @@ router.get('/due', async (req, res) => {
 
             res.send(scheduledNotificationsToDisplay.map(sched => {
                 return { 
-                    targetName: sched.notification.device.name
+                    targetName: sched.notification.device.name,
+                    predictedZeroAt: sched.notification.device.predictedZeroAt
                 }
             }))
 
