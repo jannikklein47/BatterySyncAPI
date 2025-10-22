@@ -20,8 +20,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /etc/letsencrypt/live/batterysync.chickenkiller.com/privkey.pem:/etc/letsencrypt/live/batterysync.chickenkiller.com/privkey.pem
-      - /etc/letsencrypt/live/batterysync.chickenkiller.com/fullchain.pem:/etc/letsencrypt/live/batterysync.chickenkiller.com/fullchain.pem
+      - /etc/letsencrypt/live/batterysync.chickenkiller.com:/etc/letsencrypt/live/batterysync.chickenkiller.com
     depends_on:
       - db
     environment:
