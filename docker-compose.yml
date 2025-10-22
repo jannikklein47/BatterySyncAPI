@@ -20,8 +20,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /etc/letsencrypt/live/batterysync.chickenkiller.com:/etc/letsencrypt/live/batterysync.chickenkiller.com:ro
-      - /etc/letsencrypt/archive/batterysync.chickenkiller.com:/etc/letsencrypt/archive/batterysync.chickenkiller.com:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+
     depends_on:
       - db
     environment:
