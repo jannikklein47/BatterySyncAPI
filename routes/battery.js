@@ -536,7 +536,7 @@ router.get("/history/all/week", async (req, res) => {
             });
 
             result.push({
-              createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+              createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7 - 1,
               battery: result[result.length - 1].battery,
               chargingStatus: result[result.length - 1].chargingStatus,
               isPluggedIn: result[result.length - 1].isPluggedIn,
