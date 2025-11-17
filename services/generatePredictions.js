@@ -61,6 +61,10 @@ function analyzeSinceLastUnplug(log, device) {
   }
 }
 
+// When this is executed, the predicted Zero for the entire Database is calculated. This is fine for a very small userbase.
+// But lets say we manage 1000 devices. Every device will have an average lifespan of 2 days. This means 100 Post requests in 2 Days.
+// This is around 2.1 Post requests per hour per device. 2100 Requests per hour. 35 Requests per minute or a request every 2 seconds.
+// --> The entire 24-hour history of 500 devices is processed PER SECOND! Only 1000 Devices, or 500 Users best case!
 module.exports = async function() {
 
   const deviceList = await models.Device.findAll({raw: true})
