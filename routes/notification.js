@@ -51,6 +51,12 @@ router.get("/due", async (req, res) => {
   let deviceToDisplay = req.query.deviceToDisplay || "";
   if (auth) {
     let user = await users.findOne({ where: { password: auth } });
+    console.log(
+      "Notification get: deviceToDisplay " +
+        deviceToDisplay +
+        " userId " +
+        user.id
+    );
     if (user) {
       let deviceId = (
         await devices.findOne({
