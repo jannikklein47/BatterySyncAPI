@@ -94,7 +94,7 @@ router.delete("/", async (req, res) => {
       }))
     ) {
       let deleted = await devices.destroy({
-        where: { name: req.body.name, userId: user.id },
+        where: { id: req.body.deviceId, userId: user.id },
       });
       if (deleted > 0) {
         res.send("Ok");
