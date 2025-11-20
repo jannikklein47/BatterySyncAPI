@@ -1,6 +1,6 @@
 const express = require("express");
 const models = require("../models");
-const bcrypt = require("bcrypt");
+const downsampler = require("downsample-lttb");
 
 const { Op, fn, col } = require("sequelize");
 
@@ -11,6 +11,26 @@ const batterylogs = models.batteryLogs;
 const generatePredictions = require("../services/generatePredictions.js");
 
 const router = express.Router();
+
+function downsample(data) {
+  const mapped = data.map((entry) => ({
+    x: new Date(entry.createdAt).getTime(),
+    y: entry.battery * 100,
+    //charging: entry.chargingStatus,
+  }));
+
+  const standardized = mapped.map((entry) => [entry.x, entry.y]);
+
+  const reduced = downsampler.processData(
+    standardized,
+    Math.floor(
+      Math.sqrt(standardized.length) + 100 / (standardized.length + 10) + 10
+    )
+    //20,
+  );
+
+  return reduced;
+}
 
 router.get("/", async (req, res) => {
   console.log("GET /battery");
@@ -418,7 +438,7 @@ router.get("/history/all", async (req, res) => {
               isPluggedIn: result[result.length - 1].isPluggedIn,
             });
 
-            results[foundDevices[i].id] = result;
+            results[foundDevices[i].id] = downsample(result);
           }
 
           res.send(results);
@@ -506,7 +526,7 @@ router.get("/history/all/week", async (req, res) => {
               isPluggedIn: result[result.length - 1].isPluggedIn,
             });
 
-            results[foundDevices[i].id] = result;
+            results[foundDevices[i].id] = downsample(result);
           }
 
           res.send(results);
