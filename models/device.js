@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Device extends Model {
     /**
@@ -12,51 +10,59 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       Device.hasMany(models.ScheduledNotifications, {
-        foreignKey: 'deviceId',
-        as: 'scheduledNotifications'
-      })
+        foreignKey: "deviceId",
+        as: "scheduledNotifications",
+      });
       Device.hasMany(models.OrderedNotifications, {
-        foreignKey: 'deviceId',
-        as: 'orderedNotifications'
-      })
+        foreignKey: "deviceId",
+        as: "orderedNotifications",
+      });
     }
   }
-  Device.init({
-    userId: DataTypes.INTEGER,
-    name: DataTypes.STRING,
-    battery: DataTypes.DOUBLE,
-    isShown: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-      allowNull: false
+  Device.init(
+    {
+      userId: DataTypes.INTEGER,
+      name: DataTypes.STRING,
+      battery: DataTypes.DOUBLE,
+      isShown: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        allowNull: false,
+      },
+      chargingStatus: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
+      type: {
+        type: DataTypes.STRING,
+        defaultValue: "laptop",
+        allowNull: false,
+      },
+      color: {
+        type: DataTypes.STRING,
+        defaultValue: "#ffffff",
+        allowNull: false,
+      },
+      isPluggedIn: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
+      predictedZeroAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      favorite: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
-    chargingStatus: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      allowNull: false
-    },
-    type: {
-      type: DataTypes.STRING,
-      defaultValue: 'laptop',
-      allowNull: false
-    },
-    color: {
-      type: DataTypes.STRING,
-      defaultValue: '#ffffff',
-      allowNull: false,
-    },
-    isPluggedIn: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      allowNull: false,
-    },
-    predictedZeroAt: {
-      type: DataTypes.DATE,
-      allowNull: true
+    {
+      sequelize,
+      modelName: "Device",
     }
-  }, {
-    sequelize,
-    modelName: 'Device',
-  });
+  );
   return Device;
 };
