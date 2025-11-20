@@ -114,6 +114,7 @@ router.get("/withNotificationInfo", async (req, res) => {
             "color",
             "isPluggedIn",
             "predictedZeroAt",
+            "favorite",
             [
               fn("ARRAY_AGG", col("orderedNotifications.id")),
               "notificationIds",
