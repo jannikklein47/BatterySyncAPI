@@ -19,4 +19,4 @@ npx sequelize-cli db:migrate --url postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOS
 echo "Migrations applied!"
 
 # Starten des Node.js-Servers
-# exec "$@"
+exec "$@"
