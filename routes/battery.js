@@ -15,25 +15,6 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   console.log("GET /battery");
   try {
-    if (!(await users.findOne())) {
-      await users.create({
-        email: "test",
-        password: await bcrypt.hash("test", 11),
-      });
-    }
-    if (
-      !(await devices.findOne({
-        where: {
-          name: "Testgerät",
-        },
-      }))
-    ) {
-      await devices.create({
-        userId: 2,
-        name: "Testgerät",
-        battery: 0.47,
-      });
-    }
     let auth;
     if ((auth = req.headers.authorization)) {
       let user;
@@ -53,9 +34,10 @@ router.get("/", async (req, res) => {
             "color",
             "isPluggedIn",
             "predictedZeroAt",
+            "favorite",
           ],
           raw: true,
-          order: [["name", "ASC"]],
+          order: [["favorite", "DESC"]],
         });
 
         //console.log("Ergebnis von GET: ", result);
@@ -76,25 +58,6 @@ router.get("/", async (req, res) => {
 router.get("/withNotificationInfo", async (req, res) => {
   console.log("GET /battery/withNotificationInfo");
   try {
-    if (!(await users.findOne())) {
-      await users.create({
-        email: "test",
-        password: await bcrypt.hash("test", 11),
-      });
-    }
-    if (
-      !(await devices.findOne({
-        where: {
-          name: "Testgerät",
-        },
-      }))
-    ) {
-      await devices.create({
-        userId: 2,
-        name: "Testgerät",
-        battery: 0.47,
-      });
-    }
     let auth;
     if ((auth = req.headers.authorization)) {
       let user;
@@ -130,7 +93,7 @@ router.get("/withNotificationInfo", async (req, res) => {
           ],
           group: ["Device.id"],
           raw: true,
-          order: [["name", "ASC"]],
+          order: [["favorite", "DESC"]],
         });
 
         //console.log("Ergebnis von GET: ", result);
