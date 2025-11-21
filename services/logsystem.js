@@ -20,8 +20,8 @@ module.exports = async function (
       second: "2-digit",
     });
 
-  if (route) builder += " | " + route;
   if (method) builder += " " + method.toUpperCase();
+  if (route) builder += " | " + route;
   if (reqSize) builder += " Req: " + reqSize;
   if (resSize) builder += " Res: " + resSize;
   if (text) builder += " | " + text;
