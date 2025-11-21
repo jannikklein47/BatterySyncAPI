@@ -96,19 +96,17 @@ module.exports = async function (deviceId) {
   deviceHistory[device.id] = result;
 
   await models.sequelize.transaction(async (t) => {
-    for (const device of deviceList) {
-      const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device);
-      if (analysis && analysis.predictedZeroAt) {
-        await models.Device.update(
-          { predictedZeroAt: analysis.predictedZeroAt },
-          { where: { id: device.id } }
-        );
-      } else {
-        await models.Device.update(
-          { predictedZeroAt: null },
-          { where: { id: device.id } }
-        );
-      }
+    const analysis = analyzeSinceLastUnplug(deviceHistory[device.id], device);
+    if (analysis && analysis.predictedZeroAt) {
+      await models.Device.update(
+        { predictedZeroAt: analysis.predictedZeroAt },
+        { where: { id: device.id } }
+      );
+    } else {
+      await models.Device.update(
+        { predictedZeroAt: null },
+        { where: { id: device.id } }
+      );
     }
   });
 };
