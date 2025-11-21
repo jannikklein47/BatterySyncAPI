@@ -213,8 +213,6 @@ router.post("/", async (req, res) => {
     });
     //console.log(user);
     if (user) {
-      await generatePredictions();
-
       let device;
       if (
         (device = await devices.findOne({
@@ -244,6 +242,8 @@ router.post("/", async (req, res) => {
           isPluggedIn: isPluggedIn,
           deviceId: device.id,
         });
+
+        await generatePredictions(device.id);
 
         if (
           (chargingStatus === "true" ||
