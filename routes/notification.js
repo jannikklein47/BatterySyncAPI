@@ -4,6 +4,8 @@ const bcrypt = require("bcrypt");
 
 const { Op, Sequelize } = require("sequelize");
 
+const log = require("../services/logsystem");
+
 const users = models.User;
 const devices = models.Device;
 const batterylogs = models.batteryLogs;
@@ -46,7 +48,6 @@ const router = express.Router();
     sched.notification and sched.notification.device will never be null!
  */
 router.get("/due", async (req, res) => {
-  console.log("GET /notification/due");
   let auth = req.headers.authorization;
   let deviceToDisplay = req.query.deviceToDisplay || "";
   if (auth) {
@@ -130,89 +131,176 @@ router.get("/due", async (req, res) => {
           };
         })
       );
+
+      log(
+        _,
+        "/notification/due",
+        "GET",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
   }
 });
 router.post("/new", async (req, res) => {
-  console.log("POST /notification/new");
-  const auth = req.headers.authorization;
+  try {
+    const auth = req.headers.authorization;
 
-  const deviceId = req.body.deviceId;
-  if (!deviceId) {
-    res.status(400).send("No device id provided");
-    return;
-  }
+    const deviceId = req.body.deviceId;
+    if (!deviceId) {
+      res.status(400).send("No device id provided");
+      log(
+        "Device not found",
+        "/notification/new",
+        "POST",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
+      return;
+    }
 
-  if (auth) {
-    await models.sequelize.transaction(async (t) => {
-      let user = await users.findOne({ where: { password: auth } });
-      if (user) {
-        //console.log("Creating new noti order")
-        const newOrderedNotification = await models.OrderedNotifications.create(
-          {
-            deviceId: deviceId,
-          },
-          { transaction: t }
-        );
-        const userDevices = await devices.findAll(
-          { where: { userId: user.id } },
-          { transaction: t }
-        );
-        //console.log("User devices:", userDevices.length)
-        if (userDevices.length > 0) {
-          const deviceThatNeedScheduling = userDevices.filter(
-            (dev) => dev.id !== deviceId
-          );
-          //console.log("dev that need sched:", deviceThatNeedScheduling.length)
-          for (const dev of deviceThatNeedScheduling) {
-            //console.log("Creating sched entry")
-
-            await models.ScheduledNotifications.create(
+    if (auth) {
+      await models.sequelize.transaction(async (t) => {
+        let user = await users.findOne({ where: { password: auth } });
+        if (user) {
+          //console.log("Creating new noti order")
+          const newOrderedNotification =
+            await models.OrderedNotifications.create(
               {
-                deviceId: dev.id,
-                notificationId: newOrderedNotification.id,
+                deviceId: deviceId,
               },
               { transaction: t }
             );
+          const userDevices = await devices.findAll(
+            { where: { userId: user.id } },
+            { transaction: t }
+          );
+          //console.log("User devices:", userDevices.length)
+          if (userDevices.length > 0) {
+            const deviceThatNeedScheduling = userDevices.filter(
+              (dev) => dev.id !== deviceId
+            );
+            //console.log("dev that need sched:", deviceThatNeedScheduling.length)
+            for (const dev of deviceThatNeedScheduling) {
+              //console.log("Creating sched entry")
+
+              await models.ScheduledNotifications.create(
+                {
+                  deviceId: dev.id,
+                  notificationId: newOrderedNotification.id,
+                },
+                { transaction: t }
+              );
+            }
           }
+          res.send("Ok");
+          log(
+            _,
+            "/notification/new",
+            "POST",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
+        } else {
+          res.status(403).send("Access denied");
+          log(
+            "Access denied",
+            "/notification/new",
+            "POST",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         }
-        res.send("Ok");
-      } else {
-        res.status(403).send("Invalid authentication");
-      }
-    });
-  } else {
-    res.status(400).send("No authentication provided");
+      });
+    } else {
+      res.status(400).send("No authentication provided");
+      log(
+        "Access denied",
+        "/notification/new",
+        "POST",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/notification/new",
+      "POST",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.post("/off", async (req, res) => {
-  console.log("POST /notification/off");
-  const auth = req.headers.authorization;
+  try {
+    const auth = req.headers.authorization;
 
-  const deviceId = req.body.deviceId;
-  if (!deviceId) {
-    res.status(400).send("No device id provided");
-    return;
-  }
+    const deviceId = req.body.deviceId;
+    if (!deviceId) {
+      res.status(400).send("No device id provided");
+      log(
+        "Device not found",
+        "/notification/off",
+        "POST",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
+      return;
+    }
 
-  if (auth) {
-    await models.sequelize.transaction(async (t) => {
-      let user = await users.findOne({ where: { password: auth } });
-      if (user) {
-        await models.OrderedNotifications.destroy({
-          where: {
-            deviceId: deviceId,
-          },
-        });
+    if (auth) {
+      await models.sequelize.transaction(async (t) => {
+        let user = await users.findOne({ where: { password: auth } });
+        if (user) {
+          await models.OrderedNotifications.destroy({
+            where: {
+              deviceId: deviceId,
+            },
+          });
 
-        res.send("Ok");
-      } else {
-        res.status(403).send("Invalid authentication");
-      }
-    });
-  } else {
-    res.status(400).send("No authentication provided");
+          res.send("Ok");
+          log(
+            _,
+            "/notification/off",
+            "POST",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
+        } else {
+          res.status(403).send("Invalid authentication");
+          log(
+            "Access denied",
+            "/notification/off",
+            "POST",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
+        }
+      });
+    } else {
+      res.status(400).send("No authentication provided");
+      log(
+        "Access denied",
+        "/notification/off",
+        "POST",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/notification/off",
+      "POST",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 

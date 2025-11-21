@@ -8,7 +8,6 @@ const devices = models.Device;
 const router = express.Router();
 
 router.put("/", async (req, res) => {
-  console.log("PUT /device");
   try {
     if (req.headers.authorization && req.body) {
       let user;
@@ -30,32 +29,81 @@ router.put("/", async (req, res) => {
           // console.log("Device update: ", device)
           if (updated > 0) {
             res.status(200).send("Ok");
+            log(
+              _,
+              "/device",
+              "PUT",
+              req.socket.bytesRead,
+              res.socket.bytesWritten
+            );
           } else {
             res.status(404).send("Device not found");
+            log(
+              "Device not found",
+              "/device",
+              "PUT",
+              req.socket.bytesRead,
+              res.socket.bytesWritten
+            );
           }
         } else {
           res.status(400).send("Update failed");
+          log(
+            "Update failed",
+            "/device",
+            "PUT",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         }
       } else {
-        res.status(403).send("Invalid authToke");
+        res.status(403).send("Invalid authToken");
+        log(
+          "Access denied",
+          "/device",
+          "PUT",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(400).send("No authToken included");
+      log(
+        "Access denied",
+        "/device",
+        "PUT",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
   } catch (error) {
-    console.log("Update device error: ", error);
     res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/device",
+      "PUT",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.post("/favorite", async (req, res) => {
-  console.log("POST /device/favorite");
   try {
     const deviceId = req.body.deviceId;
     const set = req.body.set;
 
     if (!deviceId || typeof set != "boolean") {
-      return res.status(400).send("Invalid body");
+      res.status(400).send("Invalid body");
+      log(
+        "Invalid body",
+        "/device/favorite",
+        "POST",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
+      return;
     }
 
     if (req.headers.authorization && req.body) {
@@ -69,23 +117,57 @@ router.post("/favorite", async (req, res) => {
         if ((device = await devices.findOne({ where: { id: deviceId } }))) {
           await device.update({ favorite: set });
           res.status(200).send("Ok");
+          log(
+            _,
+            "/device/favorite",
+            "POST",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         } else {
           res.status(404).send("Device not found");
+          log(
+            "Device not found",
+            "/device/favorite",
+            "POST",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         }
       } else {
         res.status(403).send("Invalid authToke");
+        log(
+          "Access denied",
+          "/device/favorite",
+          "POST",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(400).send("No authToken included");
+      log(
+        "Access denied",
+        "/device/favorite",
+        "POST",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
   } catch (error) {
-    console.log("Update device error: ", error);
     res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/device/favorite",
+      "POST",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.delete("/", async (req, res) => {
-  console.log("DELETE /device");
   try {
     let user;
     if (
@@ -98,15 +180,43 @@ router.delete("/", async (req, res) => {
       });
       if (deleted > 0) {
         res.send("Ok");
+        log(
+          _,
+          "/device/favorite",
+          "DELETE",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       } else {
         res.status(404).send("Device not found");
+        log(
+          "Device not found",
+          "/device/favorite",
+          "DELETE",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(403).send("Invalid authToken");
+      log(
+        "Access denied",
+        "/device/favorite",
+        "DELETE",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
   } catch (error) {
-    console.log("Error deleting device: ", error);
     res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/device/favorite",
+      "DELETE",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 

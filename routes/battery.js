@@ -2,6 +2,8 @@ const express = require("express");
 const models = require("../models");
 const downsampler = require("downsample-lttb");
 
+const log = require("../services/logsystem.js");
+
 const { Op, fn, col } = require("sequelize");
 
 const users = models.User;
@@ -33,7 +35,6 @@ function downsample(data) {
 }
 
 router.get("/", async (req, res) => {
-  console.log("GET /battery");
   try {
     let auth;
     if ((auth = req.headers.authorization)) {
@@ -62,17 +63,46 @@ router.get("/", async (req, res) => {
 
         //console.log("Ergebnis von GET: ", result);
         res.send(result);
+        log(
+          _,
+          "/battery",
+          "GET",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       } else {
         res.status(403).send("Access denied");
+        log(
+          "Access denied",
+          "/battery",
+          "GET",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/battery",
+        "GET",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
     console.log(error);
-    res.status(500).send("Fehler");
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/battery",
+      "GET",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.messsage
+    );
   }
 });
 router.get("/withNotificationInfo", async (req, res) => {
@@ -118,23 +148,50 @@ router.get("/withNotificationInfo", async (req, res) => {
 
         //console.log("Ergebnis von GET: ", result);
         res.send(result);
+        log(
+          _,
+          "/battery/withNotificationInfo",
+          "GET",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       } else {
         res.status(403).send("Access denied");
+        log(
+          "Access denied",
+          "/battery/withNotificationInfo",
+          "GET",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/battery/withNotificationInfo",
+        "GET",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
     console.log(error);
     res.status(500).send("Fehler");
+    log(
+      "Internal Server Error",
+      "/battery/withNotificationInfo",
+      "GET",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.post("/", async (req, res) => {
-  console.log("POST /battery");
-
   try {
     let auth, name, deviceBattery, chargingStatus, isPluggedIn;
 
@@ -234,18 +291,32 @@ router.post("/", async (req, res) => {
       }
 
       res.send("Ok");
+      log(_, "/battery", "POST", req.socket.bytesRead, res.socket.bytesWritten);
     } else {
       res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/battery",
+        "POST",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
       return;
     }
   } catch (error) {
-    console.log(error);
     res.status(500).send("Error");
+    log(
+      "Internal Server Error",
+      "/battery",
+      "POST",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.put("/", async (req, res) => {
-  console.log("PUT /battery");
   try {
     let auth, name, deviceBattery, chargingStatus, isPluggedIn;
 
@@ -296,22 +367,43 @@ router.put("/", async (req, res) => {
         });
       } else {
         res.status(404).send("No device to update");
+        log(
+          "Device not found",
+          "/battery",
+          "PUT",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
         return;
       }
 
       res.status(200).send("Ok");
+      log(_, "/battery", "PUT", req.socket.bytesRead, res.socket.bytesWritten);
     } else {
       res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/battery",
+        "PUT",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
       return;
     }
   } catch (error) {
     res.status(500).send("Internal server error");
-    console.log(error);
+    log(
+      "Internal Server Error",
+      "/battery",
+      "PUT",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.get("/history", async (req, res) => {
-  console.log("GET /battery/history");
   try {
     let auth;
     if ((auth = req.headers.authorization)) {
@@ -356,25 +448,60 @@ router.get("/history", async (req, res) => {
           });
 
           res.send(results);
+          log(
+            _,
+            "/battery/history",
+            "GET",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         } else {
           res.status(404).send("Device not found.");
+          log(
+            "Device not found",
+            "/battery/history",
+            "GET",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         }
       } else {
         res.status(403).send("Access denied");
+        log(
+          "Access denied",
+          "/battery/history",
+          "GET",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/battery/history",
+        "GET",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
     console.log(error);
     res.status(500).send("Fehler");
+    log(
+      "Internal Server Error",
+      "/battery/history",
+      "GET",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.get("/history/all", async (req, res) => {
-  console.log("GET /battery/history/all");
   try {
     let auth;
     if ((auth = req.headers.authorization)) {
@@ -391,8 +518,6 @@ router.get("/history/all", async (req, res) => {
             },
           }))
         ) {
-          console.log(foundDevices, user.id);
-
           // Zeitpunkt 24h zurück
           const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -442,25 +567,59 @@ router.get("/history/all", async (req, res) => {
           }
 
           res.send(results);
+          log(
+            _,
+            "/battery/history/all",
+            "GET",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         } else {
           res.status(404).send("Device not found.");
+          log(
+            "Device not found",
+            "/battery/history/all",
+            "GET",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         }
       } else {
         res.status(403).send("Access denied");
+        log(
+          "Access denied",
+          "/battery/history/all",
+          "GET",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/battery/history/all",
+        "GET",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
-    console.log(error);
-    res.status(500).send("Fehler");
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/battery/history/all",
+      "GET",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.get("/history/all/week", async (req, res) => {
-  console.log("GET /battery/history/all/week");
   try {
     let auth;
     if ((auth = req.headers.authorization)) {
@@ -477,8 +636,6 @@ router.get("/history/all/week", async (req, res) => {
             },
           }))
         ) {
-          console.log(foundDevices, user.id);
-
           // Zeitpunkt 24h zurück
           const twentyFourHoursAgo = new Date(
             Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -530,25 +687,59 @@ router.get("/history/all/week", async (req, res) => {
           }
 
           res.send(results);
+          log(
+            _,
+            "/battery/history/all/week",
+            "GET",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         } else {
           res.status(404).send("Device not found.");
+          log(
+            "Device not found",
+            "/battery/history/all/week",
+            "GET",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         }
       } else {
         res.status(403).send("Access denied");
+        log(
+          "Access denied",
+          "/battery/history/all/week",
+          "GET",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/battery/history/all/week",
+        "GET",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
-    console.log(error);
-    res.status(500).send("Fehler");
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/battery/history/all/week",
+      "GET",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
 router.get("/history/all/fromStart", async (req, res) => {
-  console.log("GET /battery/history/all/fromStart");
   try {
     let auth;
     if ((auth = req.headers.authorization)) {
@@ -603,20 +794,55 @@ router.get("/history/all/fromStart", async (req, res) => {
           }
 
           res.send(results);
+          log(
+            _,
+            "/battery/history/all/fromStart",
+            "GET",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         } else {
           res.status(404).send("Device not found.");
+          log(
+            "Device not found",
+            "/battery/history/all/week",
+            "GET",
+            req.socket.bytesRead,
+            res.socket.bytesWritten
+          );
         }
       } else {
         res.status(403).send("Access denied");
+        log(
+          "Access denied",
+          "/battery/history/all/week",
+          "GET",
+          req.socket.bytesRead,
+          res.socket.bytesWritten
+        );
       }
     } else {
       res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/battery/history/all/week",
+        "GET",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
-    console.log(error);
-    res.status(500).send("Fehler");
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/battery/history/all/week",
+      "GET",
+      req.socket.bytesRead,
+      res.socket.bytesWritten,
+      error.message
+    );
   }
 });
 
