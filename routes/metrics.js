@@ -1,7 +1,10 @@
 const express = require("express");
 const models = require("../models");
+const users = models.User;
 const sequelize = models.sequelize;
 const { QueryTypes } = require("sequelize");
+
+const log = require("../services/logsystem");
 
 const logs = models.logs;
 
@@ -9,8 +12,13 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const requestCounts = await sequelize.query(
-      `
+    let auth;
+    if ((auth = req.headers.authorization)) {
+      let user;
+      if ((user = await users.findOne({ where: { password: auth } }))) {
+        let result = {};
+        const requestCounts = await sequelize.query(
+          `
         SELECT
           DATE_TRUNC('minute', "createdAt") - 
           MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
@@ -21,11 +29,11 @@ router.get("/", async (req, res) => {
         GROUP BY interval_start, method
         ORDER BY interval_start ASC;
         `,
-      { type: QueryTypes.SELECT }
-    );
+          { type: QueryTypes.SELECT }
+        );
 
-    const responseSizes = await sequelize.query(
-      `
+        const responseSizes = await sequelize.query(
+          `
         SELECT
           DATE_TRUNC('minute', "createdAt") - 
             MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
@@ -35,11 +43,11 @@ router.get("/", async (req, res) => {
         GROUP BY interval_start
         ORDER BY interval_start ASC;
       `,
-      { type: QueryTypes.SELECT }
-    );
+          { type: QueryTypes.SELECT }
+        );
 
-    const errorCounts = await sequelize.query(
-      `
+        const errorCounts = await sequelize.query(
+          `
       SELECT
         DATE_TRUNC('minute', "createdAt") - 
           MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
@@ -49,26 +57,26 @@ router.get("/", async (req, res) => {
       WHERE error IS NOT NULL
       GROUP BY interval_start
       ORDER BY interval_start ASC;`,
-      { type: QueryTypes.SELECT }
-    );
+          { type: QueryTypes.SELECT }
+        );
 
-    const blockedCounts = await sequelize.query(
-      `
-      SELECT
-        DATE_TRUNC('minute', "createdAt") - 
-          MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
-            AS interval_start,
-        COUNT(*) AS text_present_count
-      FROM logs
-      WHERE text IS NOT NULL
-      GROUP BY interval_start
-      ORDER BY interval_start ASC;
-    `,
-      { type: QueryTypes.SELECT }
-    );
+        const blockedCounts = await sequelize.query(
+          `
+          SELECT
+            DATE_TRUNC('minute', "createdAt") - 
+              MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
+                AS interval_start,
+            COUNT(*) AS text_present_count
+          FROM logs
+          WHERE text IS NOT NULL
+          GROUP BY interval_start
+          ORDER BY interval_start ASC;
+        `,
+          { type: QueryTypes.SELECT }
+        );
 
-    const successCounts = await sequelize.query(
-      `
+        const successCounts = await sequelize.query(
+          `
       SELECT
         DATE_TRUNC('minute', "createdAt") - 
           MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
@@ -79,19 +87,51 @@ router.get("/", async (req, res) => {
       GROUP BY interval_start
       ORDER BY interval_start ASC;
     `,
-      { type: QueryTypes.SELECT }
-    );
+          { type: QueryTypes.SELECT }
+        );
 
-    console.log(
-      requestCounts,
-      responseSizes,
-      errorCounts,
-      blockedCounts,
-      successCounts
-    );
+        result = {
+          requestCounts,
+          responseSizes,
+          errorCounts,
+          blockedCounts,
+          successCounts,
+        };
+        res.send(result);
+        log(
+          _,
+          "/metrics",
+          "GET",
+          req.rawBodySize,
+          new Blob([JSON.stringify(result)]).size
+        );
+      } else {
+        res.status(403).send("Access denied");
+        log("Access denied", "/metrics", "GET", req.rawBodySize, 0);
+      }
+    } else {
+      res.status(403).send("Access denied");
+      log("Access denied", "/metrics", "GET", req.rawBodySize, 0);
+    }
   } catch (error) {
-    console.error(error);
+    res.status(500).send("Internal Server Error");
+    log("Internal Server Error", "/metrics", "GET", req.rawBodySize, 0, error);
   }
+});
+
+router.get("/raw", async (req, res) => {
+  try {
+    let auth;
+    if ((auth = req.headers.authorization)) {
+      let user;
+      if ((user = await users.findOne({ where: { password: auth } }))) {
+        const result = await logs.findAll();
+        res.send(result);
+      }
+    } else {
+      res.status(403).send("Access denied");
+    }
+  } catch (error) {}
 });
 
 module.exports = router;
