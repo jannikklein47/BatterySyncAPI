@@ -52,12 +52,6 @@ router.get("/due", async (req, res) => {
   let deviceToDisplay = req.query.deviceToDisplay || "";
   if (auth) {
     let user = await users.findOne({ where: { password: auth } });
-    console.log(
-      "Notification get: deviceToDisplay " +
-        deviceToDisplay +
-        " userId " +
-        user.id
-    );
     if (user) {
       let deviceId = (
         await devices.findOne({
@@ -123,21 +117,21 @@ router.get("/due", async (req, res) => {
         });
       }
 
-      res.send(
-        scheduledNotificationsToDisplay.map((sched) => {
-          return {
-            targetName: sched.notification.device.name,
-            predictedZeroAt: sched.notification.device.predictedZeroAt,
-          };
-        })
-      );
+      const data = scheduledNotificationsToDisplay.map((sched) => {
+        return {
+          targetName: sched.notification.device.name,
+          predictedZeroAt: sched.notification.device.predictedZeroAt,
+        };
+      });
+
+      res.send(data);
 
       log(
         null,
         "/notification/due",
         "GET",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
+        req.rawBodySize,
+        new Blob([JSON.stringify(data)]).size
       );
     }
   }
@@ -149,13 +143,7 @@ router.post("/new", async (req, res) => {
     const deviceId = req.body.deviceId;
     if (!deviceId) {
       res.status(400).send("No device id provided");
-      log(
-        "Device not found",
-        "/notification/new",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Device not found", "/notification/new", "POST", req.rawBodySize, 0);
       return;
     }
 
@@ -194,33 +182,15 @@ router.post("/new", async (req, res) => {
             }
           }
           res.send("Ok");
-          log(
-            null,
-            "/notification/new",
-            "POST",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
-          );
+          log(null, "/notification/new", "POST", req.rawBodySize, 0);
         } else {
           res.status(403).send("Access denied");
-          log(
-            "Access denied",
-            "/notification/new",
-            "POST",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
-          );
+          log("Access denied", "/notification/new", "POST", req.rawBodySize, 0);
         }
       });
     } else {
       res.status(400).send("No authentication provided");
-      log(
-        "Access denied",
-        "/notification/new",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/notification/new", "POST", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal Server Error");
@@ -228,8 +198,8 @@ router.post("/new", async (req, res) => {
       "Internal Server Error",
       "/notification/new",
       "POST",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -242,13 +212,7 @@ router.post("/off", async (req, res) => {
     const deviceId = req.body.deviceId;
     if (!deviceId) {
       res.status(400).send("No device id provided");
-      log(
-        "Device not found",
-        "/notification/off",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Device not found", "/notification/off", "POST", req.rawBodySize, 0);
       return;
     }
 
@@ -263,33 +227,15 @@ router.post("/off", async (req, res) => {
           });
 
           res.send("Ok");
-          log(
-            null,
-            "/notification/off",
-            "POST",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
-          );
+          log(null, "/notification/off", "POST", req.rawBodySize, 0);
         } else {
           res.status(403).send("Invalid authentication");
-          log(
-            "Access denied",
-            "/notification/off",
-            "POST",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
-          );
+          log("Access denied", "/notification/off", "POST", req.rawBodySize, 0);
         }
       });
     } else {
       res.status(400).send("No authentication provided");
-      log(
-        "Access denied",
-        "/notification/off",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/notification/off", "POST", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal Server Error");
@@ -297,8 +243,8 @@ router.post("/off", async (req, res) => {
       "Internal Server Error",
       "/notification/off",
       "POST",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }

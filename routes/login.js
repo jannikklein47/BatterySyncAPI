@@ -19,13 +19,7 @@ router.post("/", async (req, res) => {
       password = req.query.password;
     } else {
       res.status(400).send("Invalid request");
-      log(
-        "Invalid request",
-        "/login",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Invalid request", "/login", "POST", req.rawBodySize, 0);
       return;
     }
 
@@ -45,29 +39,17 @@ router.post("/", async (req, res) => {
             null,
             "/login",
             "POST",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            new Blob([JSON.stringify(existingUser.dataValues.password)]).size
           );
           return;
         } else {
           res.status(403).send("Wrong credentials.");
-          log(
-            "Access denied",
-            "/login",
-            "POST",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
-          );
+          log("Access denied", "/login", "POST", req.rawBodySize, 0);
         }
       } catch (error) {
         res.status(403).send("Wrong credentials.");
-        log(
-          "Access denied",
-          "/login",
-          "POST",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
-        );
+        log("Access denied", "/login", "POST", req.rawBodySize, 0);
       }
 
       return;
@@ -81,15 +63,21 @@ router.post("/", async (req, res) => {
     });
 
     res.send(hashedPw);
-    log(null, "/login", "POST", req.socket.bytesRead, res.socket.bytesWritten);
+    log(
+      null,
+      "/login",
+      "POST",
+      req.rawBodySize,
+      new Blob([JSON.stringify(hashedPw)]).size
+    );
   } catch (error) {
     res.status(500).send("Internal Server Error");
     log(
       "Internal Server Error",
       "/login",
       "POST",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -110,8 +98,8 @@ router.get("/auth", async (req, res) => {
           null,
           "/login/auth",
           "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          new Blob([JSON.stringify(user.email)]).size
         );
       } else {
         res.status(403).send("Invalid access token");
@@ -119,8 +107,8 @@ router.get("/auth", async (req, res) => {
           "Access denied",
           "/login/auth",
           "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          0
         );
       }
     } else {
@@ -129,8 +117,8 @@ router.get("/auth", async (req, res) => {
         "Access denied",
         "/login/auth",
         "GET",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
+        req.rawBodySize,
+        0
       );
     }
   } catch (error) {
@@ -139,8 +127,8 @@ router.get("/auth", async (req, res) => {
       "Internal Server Error",
       "/login/auth",
       "GET",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0
       error.message
     );
   }
@@ -155,8 +143,8 @@ router.put("/user", async (req, res) => {
           "Access denied",
           "/login/user",
           "PUT",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          0
         );
         return;
       }
@@ -170,13 +158,7 @@ router.put("/user", async (req, res) => {
         }
       );
       res.send("Ok");
-      log(
-        null,
-        "/login/user",
-        "PUT",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log(null, "/login/user", "PUT", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal server error");
@@ -184,8 +166,8 @@ router.put("/user", async (req, res) => {
       "Internal Server Error",
       "/login/user",
       "PUT",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }

@@ -17,7 +17,6 @@ router.put("/", async (req, res) => {
         }))
       ) {
         let updated;
-        console.log(req.body, user.id);
         if (
           (updated = await devices.update(req.body, {
             where: {
@@ -29,52 +28,22 @@ router.put("/", async (req, res) => {
           // console.log("Device update: ", device)
           if (updated > 0) {
             res.status(200).send("Ok");
-            log(
-              null,
-              "/device",
-              "PUT",
-              req.socket.bytesRead,
-              res.socket.bytesWritten
-            );
+            log(null, "/device", "PUT", req.rawBodySize, 0);
           } else {
             res.status(404).send("Device not found");
-            log(
-              "Device not found",
-              "/device",
-              "PUT",
-              req.socket.bytesRead,
-              res.socket.bytesWritten
-            );
+            log("Device not found", "/device", "PUT", req.rawBodySize, 0);
           }
         } else {
           res.status(400).send("Update failed");
-          log(
-            "Update failed",
-            "/device",
-            "PUT",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
-          );
+          log("Update failed", "/device", "PUT", req.rawBodySize, 0);
         }
       } else {
         res.status(403).send("Invalid authToken");
-        log(
-          "Access denied",
-          "/device",
-          "PUT",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
-        );
+        log("Access denied", "/device", "PUT", req.rawBodySize, 0);
       }
     } else {
       res.status(400).send("No authToken included");
-      log(
-        "Access denied",
-        "/device",
-        "PUT",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/device", "PUT", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal server error");
@@ -82,8 +51,8 @@ router.put("/", async (req, res) => {
       "Internal Server Error",
       "/device",
       "PUT",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -96,13 +65,7 @@ router.post("/favorite", async (req, res) => {
 
     if (!deviceId || typeof set != "boolean") {
       res.status(400).send("Invalid body");
-      log(
-        "Invalid body",
-        "/device/favorite",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Invalid body", "/device/favorite", "POST", req.rawBodySize, 0);
       return;
     }
 
@@ -117,42 +80,24 @@ router.post("/favorite", async (req, res) => {
         if ((device = await devices.findOne({ where: { id: deviceId } }))) {
           await device.update({ favorite: set });
           res.status(200).send("Ok");
-          log(
-            null,
-            "/device/favorite",
-            "POST",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
-          );
+          log(null, "/device/favorite", "POST", req.rawBodySize, 0);
         } else {
           res.status(404).send("Device not found");
           log(
             "Device not found",
             "/device/favorite",
             "POST",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            0
           );
         }
       } else {
         res.status(403).send("Invalid authToke");
-        log(
-          "Access denied",
-          "/device/favorite",
-          "POST",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
-        );
+        log("Access denied", "/device/favorite", "POST", req.rawBodySize, 0);
       }
     } else {
       res.status(400).send("No authToken included");
-      log(
-        "Access denied",
-        "/device/favorite",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/device/favorite", "POST", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal server error");
@@ -160,8 +105,8 @@ router.post("/favorite", async (req, res) => {
       "Internal Server Error",
       "/device/favorite",
       "POST",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -180,32 +125,20 @@ router.delete("/", async (req, res) => {
       });
       if (deleted > 0) {
         res.send("Ok");
-        log(
-          null,
-          "/device/favorite",
-          "DELETE",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
-        );
+        log(null, "/device/favorite", "DELETE", req.rawBodySize, 0);
       } else {
         res.status(404).send("Device not found");
         log(
           "Device not found",
           "/device/favorite",
           "DELETE",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          0
         );
       }
     } else {
       res.status(403).send("Invalid authToken");
-      log(
-        "Access denied",
-        "/device/favorite",
-        "DELETE",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/device/favorite", "DELETE", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal server error");
@@ -213,8 +146,8 @@ router.delete("/", async (req, res) => {
       "Internal Server Error",
       "/device/favorite",
       "DELETE",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }

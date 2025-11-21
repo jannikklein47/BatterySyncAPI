@@ -67,46 +67,32 @@ router.get("/", async (req, res) => {
           null,
           "/battery",
           "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          new Blob([JSON.stringify(result)]).size
         );
       } else {
         res.status(403).send("Access denied");
-        log(
-          "Access denied",
-          "/battery",
-          "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
-        );
+        log("Access denied", "/battery", "GET", req.rawBodySize, 0);
       }
     } else {
       res.status(403).send("Access denied");
-      log(
-        "Access denied",
-        "/battery",
-        "GET",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/battery", "GET", req.rawBodySize, 0);
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
-    console.log(error);
     res.status(500).send("Internal Server Error");
     log(
       "Internal Server Error",
       "/battery",
       "GET",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.messsage
     );
   }
 });
 router.get("/withNotificationInfo", async (req, res) => {
-  console.log("GET /battery/withNotificationInfo");
   try {
     let auth;
     if ((auth = req.headers.authorization)) {
@@ -152,8 +138,8 @@ router.get("/withNotificationInfo", async (req, res) => {
           null,
           "/battery/withNotificationInfo",
           "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          new Blob([JSON.stringify(result)]).size
         );
       } else {
         res.status(403).send("Access denied");
@@ -161,8 +147,8 @@ router.get("/withNotificationInfo", async (req, res) => {
           "Access denied",
           "/battery/withNotificationInfo",
           "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          0
         );
       }
     } else {
@@ -171,8 +157,8 @@ router.get("/withNotificationInfo", async (req, res) => {
         "Access denied",
         "/battery/withNotificationInfo",
         "GET",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
+        req.rawBodySize,
+        0
       );
     }
 
@@ -183,8 +169,8 @@ router.get("/withNotificationInfo", async (req, res) => {
       "Internal Server Error",
       "/battery/withNotificationInfo",
       "GET",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -290,22 +276,10 @@ router.post("/", async (req, res) => {
       }
 
       res.send("Ok");
-      log(
-        null,
-        "/battery",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log(null, "/battery", "POST", req.rawBodySize, 0);
     } else {
       res.status(403).send("Access denied");
-      log(
-        "Access denied",
-        "/battery",
-        "POST",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/battery", "POST", req.rawBodySize, 0);
       return;
     }
   } catch (error) {
@@ -314,8 +288,8 @@ router.post("/", async (req, res) => {
       "Internal Server Error",
       "/battery",
       "POST",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -372,33 +346,15 @@ router.put("/", async (req, res) => {
         });
       } else {
         res.status(404).send("No device to update");
-        log(
-          "Device not found",
-          "/battery",
-          "PUT",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
-        );
+        log("Device not found", "/battery", "PUT", req.rawBodySize, 0);
         return;
       }
 
       res.status(200).send("Ok");
-      log(
-        null,
-        "/battery",
-        "PUT",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log(null, "/battery", "PUT", req.rawBodySize, 0);
     } else {
       res.status(403).send("Access denied");
-      log(
-        "Access denied",
-        "/battery",
-        "PUT",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/battery", "PUT", req.rawBodySize, 0);
       return;
     }
   } catch (error) {
@@ -407,8 +363,8 @@ router.put("/", async (req, res) => {
       "Internal Server Error",
       "/battery",
       "PUT",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -458,13 +414,13 @@ router.get("/history", async (req, res) => {
             raw: true,
           });
 
-          res.send(results);
+          res.send(result);
           log(
             null,
             "/battery/history",
             "GET",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            new Blob([JSON.stringify(result)]).size
           );
         } else {
           res.status(404).send("Device not found.");
@@ -472,41 +428,28 @@ router.get("/history", async (req, res) => {
             "Device not found",
             "/battery/history",
             "GET",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            0
           );
         }
       } else {
         res.status(403).send("Access denied");
-        log(
-          "Access denied",
-          "/battery/history",
-          "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
-        );
+        log("Access denied", "/battery/history", "GET", req.rawBodySize, 0);
       }
     } else {
       res.status(403).send("Access denied");
-      log(
-        "Access denied",
-        "/battery/history",
-        "GET",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/battery/history", "GET", req.rawBodySize, 0);
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
-    console.log(error);
     res.status(500).send("Fehler");
     log(
       "Internal Server Error",
       "/battery/history",
       "GET",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -582,8 +525,8 @@ router.get("/history/all", async (req, res) => {
             null,
             "/battery/history/all",
             "GET",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            new Blob([JSON.stringify(results)]).size
           );
         } else {
           res.status(404).send("Device not found.");
@@ -591,29 +534,17 @@ router.get("/history/all", async (req, res) => {
             "Device not found",
             "/battery/history/all",
             "GET",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            0
           );
         }
       } else {
         res.status(403).send("Access denied");
-        log(
-          "Access denied",
-          "/battery/history/all",
-          "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
-        );
+        log("Access denied", "/battery/history/all", "GET", req.rawBodySize, 0);
       }
     } else {
       res.status(403).send("Access denied");
-      log(
-        "Access denied",
-        "/battery/history/all",
-        "GET",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
-      );
+      log("Access denied", "/battery/history/all", "GET", req.rawBodySize, 0);
     }
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
@@ -623,8 +554,8 @@ router.get("/history/all", async (req, res) => {
       "Internal Server Error",
       "/battery/history/all",
       "GET",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -702,8 +633,8 @@ router.get("/history/all/week", async (req, res) => {
             null,
             "/battery/history/all/week",
             "GET",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            new Blob([JSON.stringify(results)]).size
           );
         } else {
           res.status(404).send("Device not found.");
@@ -711,8 +642,8 @@ router.get("/history/all/week", async (req, res) => {
             "Device not found",
             "/battery/history/all/week",
             "GET",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            0
           );
         }
       } else {
@@ -721,8 +652,8 @@ router.get("/history/all/week", async (req, res) => {
           "Access denied",
           "/battery/history/all/week",
           "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          0
         );
       }
     } else {
@@ -731,8 +662,8 @@ router.get("/history/all/week", async (req, res) => {
         "Access denied",
         "/battery/history/all/week",
         "GET",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
+        req.rawBodySize,
+        0
       );
     }
 
@@ -743,8 +674,8 @@ router.get("/history/all/week", async (req, res) => {
       "Internal Server Error",
       "/battery/history/all/week",
       "GET",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
@@ -809,8 +740,8 @@ router.get("/history/all/fromStart", async (req, res) => {
             null,
             "/battery/history/all/fromStart",
             "GET",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            new Blob([JSON.stringify(results)]).size
           );
         } else {
           res.status(404).send("Device not found.");
@@ -818,8 +749,8 @@ router.get("/history/all/fromStart", async (req, res) => {
             "Device not found",
             "/battery/history/all/week",
             "GET",
-            req.socket.bytesRead,
-            res.socket.bytesWritten
+            req.rawBodySize,
+            0
           );
         }
       } else {
@@ -828,8 +759,8 @@ router.get("/history/all/fromStart", async (req, res) => {
           "Access denied",
           "/battery/history/all/week",
           "GET",
-          req.socket.bytesRead,
-          res.socket.bytesWritten
+          req.rawBodySize,
+          0
         );
       }
     } else {
@@ -838,8 +769,8 @@ router.get("/history/all/fromStart", async (req, res) => {
         "Access denied",
         "/battery/history/all/week",
         "GET",
-        req.socket.bytesRead,
-        res.socket.bytesWritten
+        req.rawBodySize,
+        0
       );
     }
 
@@ -850,8 +781,8 @@ router.get("/history/all/fromStart", async (req, res) => {
       "Internal Server Error",
       "/battery/history/all/week",
       "GET",
-      req.socket.bytesRead,
-      res.socket.bytesWritten,
+      req.rawBodySize,
+      0,
       error.message
     );
   }
