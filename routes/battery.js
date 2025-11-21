@@ -634,7 +634,7 @@ router.get("/history/all/week", async (req, res) => {
 
             if (result[result.length - 1]) {
               result.push({
-                createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+                createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7 - 1,
                 battery: result[result.length - 1].battery,
                 chargingStatus: result[result.length - 1].chargingStatus,
                 isPluggedIn: result[result.length - 1].isPluggedIn,
@@ -740,15 +740,6 @@ router.get("/history/all/fromStart", async (req, res) => {
                 battery: result[0].battery,
                 chargingStatus: result[0].chargingStatus,
                 isPluggedIn: result[0].isPluggedIn,
-              });
-            }
-
-            if (result[result.length - 1]) {
-              result.push({
-                createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
-                battery: result[result.length - 1].battery,
-                chargingStatus: result[result.length - 1].chargingStatus,
-                isPluggedIn: result[result.length - 1].isPluggedIn,
               });
             }
 
