@@ -511,19 +511,23 @@ router.get("/history/all", async (req, res) => {
 
             if (result.length < 1) continue;
 
-            result.unshift({
-              createdAt: Date.now(),
-              battery: result[0].battery,
-              chargingStatus: result[0].chargingStatus,
-              isPluggedIn: result[0].isPluggedIn,
-            });
+            if (result[0]) {
+              result.unshift({
+                createdAt: Date.now(),
+                battery: result[0].battery,
+                chargingStatus: result[0].chargingStatus,
+                isPluggedIn: result[0].isPluggedIn,
+              });
+            }
 
-            result.push({
-              createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
-              battery: result[result.length - 1].battery,
-              chargingStatus: result[result.length - 1].chargingStatus,
-              isPluggedIn: result[result.length - 1].isPluggedIn,
-            });
+            if (result[result.length - 1]) {
+              result.push({
+                createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+                battery: result[result.length - 1].battery,
+                chargingStatus: result[result.length - 1].chargingStatus,
+                isPluggedIn: result[result.length - 1].isPluggedIn,
+              });
+            }
 
             results[foundDevices[i].id] = downsample(result);
           }
@@ -619,19 +623,23 @@ router.get("/history/all/week", async (req, res) => {
 
             if (result.length < 1) continue;
 
-            result.unshift({
-              createdAt: Date.now(),
-              battery: result[0].battery,
-              chargingStatus: result[0].chargingStatus,
-              isPluggedIn: result[0].isPluggedIn,
-            });
+            if (result[0]) {
+              result.unshift({
+                createdAt: Date.now(),
+                battery: result[0].battery,
+                chargingStatus: result[0].chargingStatus,
+                isPluggedIn: result[0].isPluggedIn,
+              });
+            }
 
-            result.push({
-              createdAt: Date.now() - 1000 * 60 * 60 * 24 * 7 - 1,
-              battery: result[result.length - 1].battery,
-              chargingStatus: result[result.length - 1].chargingStatus,
-              isPluggedIn: result[result.length - 1].isPluggedIn,
-            });
+            if (result[result.length - 1]) {
+              result.push({
+                createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+                battery: result[result.length - 1].battery,
+                chargingStatus: result[result.length - 1].chargingStatus,
+                isPluggedIn: result[result.length - 1].isPluggedIn,
+              });
+            }
 
             results[foundDevices[i].id] = downsample(result);
           }
@@ -726,19 +734,23 @@ router.get("/history/all/fromStart", async (req, res) => {
               raw: true,
             });
 
-            result.unshift({
-              createdAt: Date.now(),
-              battery: result[0].battery,
-              chargingStatus: result[0].chargingStatus,
-              isPluggedIn: result[0].isPluggedIn,
-            });
+            if (result[0]) {
+              result.unshift({
+                createdAt: Date.now(),
+                battery: result[0].battery,
+                chargingStatus: result[0].chargingStatus,
+                isPluggedIn: result[0].isPluggedIn,
+              });
+            }
 
-            result.push({
-              createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
-              battery: result[result.length - 1].battery,
-              chargingStatus: result[result.length - 1].chargingStatus,
-              isPluggedIn: result[result.length - 1].isPluggedIn,
-            });
+            if (result[result.length - 1]) {
+              result.push({
+                createdAt: Date.now() - 1000 * 60 * 60 * 24 - 1,
+                battery: result[result.length - 1].battery,
+                chargingStatus: result[result.length - 1].chargingStatus,
+                isPluggedIn: result[result.length - 1].isPluggedIn,
+              });
+            }
 
             results[foundDevices[i].id] = result;
           }
