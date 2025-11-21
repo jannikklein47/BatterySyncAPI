@@ -11,6 +11,7 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   try {
     let email, password;
+    console.log("Body", req.body, "query", req.query);
     if (req.body && req.body.password && req.body.email) {
       email = req.body.email;
       password = req.body.password;
