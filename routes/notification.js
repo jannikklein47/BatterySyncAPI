@@ -48,92 +48,103 @@ const router = express.Router();
     sched.notification and sched.notification.device will never be null!
  */
 router.get("/due", async (req, res) => {
-  let auth = req.headers.authorization;
-  let deviceToDisplay = req.query.deviceToDisplay || "";
-  if (auth) {
-    let user = await users.findOne({ where: { password: auth } });
-    if (user) {
-      let deviceId = (
-        await devices.findOne({
-          where: {
-            name: deviceToDisplay,
-            userId: user.id,
-          },
-        })
-      ).dataValues.id;
-      if (req.query.deviceId) deviceId = req.query.deviceId;
+  try {
+    let auth = req.headers.authorization;
+    let deviceToDisplay = req.query.deviceToDisplay || "";
+    if (auth) {
+      let user = await users.findOne({ where: { password: auth } });
+      if (user) {
+        let deviceId = (
+          await devices.findOne({
+            where: {
+              name: deviceToDisplay,
+              userId: user.id,
+            },
+          })
+        ).dataValues.id;
+        if (req.query.deviceId) deviceId = req.query.deviceId;
 
-      let scheduledNotificationsToDisplay =
-        await models.ScheduledNotifications.findAll({
-          where: {
-            deviceId: deviceId,
-          },
-          include: [
-            {
-              model: models.OrderedNotifications,
-              as: "notification",
-              required: true,
-              include: [
-                {
-                  model: devices,
-                  as: "device",
-                  where: {
-                    predictedZeroAt: {
-                      [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
+        let scheduledNotificationsToDisplay =
+          await models.ScheduledNotifications.findAll({
+            where: {
+              deviceId: deviceId,
+            },
+            include: [
+              {
+                model: models.OrderedNotifications,
+                as: "notification",
+                required: true,
+                include: [
+                  {
+                    model: devices,
+                    as: "device",
+                    where: {
+                      predictedZeroAt: {
+                        [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
+                      },
                     },
+                    required: true,
                   },
-                  required: true,
+                ],
+              },
+            ],
+          });
+
+        const idsToDelete = scheduledNotificationsToDisplay.map((sn) => sn.id);
+        if (idsToDelete.length > 0) {
+          await models.sequelize.transaction(async (t) => {
+            await models.ScheduledNotifications.destroy(
+              {
+                where: {
+                  id: {
+                    [Op.in]: idsToDelete,
+                  },
                 },
-              ],
-            },
-          ],
+              },
+              { transaction: t }
+            );
+            await models.OrderedNotifications.destroy(
+              {
+                where: {
+                  id: {
+                    [Op.notIn]: Sequelize.literal(
+                      '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")'
+                    ),
+                  },
+                },
+              },
+              { transaction: t }
+            );
+          });
+        }
+
+        const data = scheduledNotificationsToDisplay.map((sched) => {
+          return {
+            targetName: sched.notification.device.name,
+            predictedZeroAt: sched.notification.device.predictedZeroAt,
+          };
         });
 
-      const idsToDelete = scheduledNotificationsToDisplay.map((sn) => sn.id);
-      if (idsToDelete.length > 0) {
-        await models.sequelize.transaction(async (t) => {
-          await models.ScheduledNotifications.destroy(
-            {
-              where: {
-                id: {
-                  [Op.in]: idsToDelete,
-                },
-              },
-            },
-            { transaction: t }
-          );
-          await models.OrderedNotifications.destroy(
-            {
-              where: {
-                id: {
-                  [Op.notIn]: Sequelize.literal(
-                    '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")'
-                  ),
-                },
-              },
-            },
-            { transaction: t }
-          );
-        });
+        res.send(data);
+
+        log(
+          null,
+          "/notification/due",
+          "GET",
+          req.rawBodySize,
+          new Blob([JSON.stringify(data)]).size
+        );
       }
-
-      const data = scheduledNotificationsToDisplay.map((sched) => {
-        return {
-          targetName: sched.notification.device.name,
-          predictedZeroAt: sched.notification.device.predictedZeroAt,
-        };
-      });
-
-      res.send(data);
-
-      log(
-        null,
-        "/notification/due",
-        "GET",
-        req.rawBodySize,
-        new Blob([JSON.stringify(data)]).size
-      );
     }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/notification/due",
+      "GET",
+      req.rawBodySize,
+      0
+    );
   }
 });
 router.post("/new", async (req, res) => {
