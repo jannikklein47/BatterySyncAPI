@@ -7,6 +7,8 @@ const devices = models.Device;
 
 const router = express.Router();
 
+const log = require("../services/logsystem");
+
 router.put("/", async (req, res) => {
   try {
     if (req.headers.authorization && req.body) {
