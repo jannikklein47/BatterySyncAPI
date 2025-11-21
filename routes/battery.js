@@ -34,6 +34,28 @@ function downsample(data) {
   return reduced;
 }
 
+function debouncePerId(fn, wait) {
+  const timers = new Map();
+
+  return function (id, ...args) {
+    // If a timer exists for this id, clear it
+    if (timers.has(id)) {
+      clearTimeout(timers.get(id));
+    }
+
+    // Set a new timer for this id
+    timers.set(
+      id,
+      setTimeout(() => {
+        fn(id, ...args);
+        timers.delete(id); // Clean up
+      }, wait)
+    );
+  };
+}
+
+const debouncePrediction = debouncePerId(generatePredictions, 2000);
+
 router.get("/", async (req, res) => {
   try {
     let auth;
@@ -243,7 +265,7 @@ router.post("/", async (req, res) => {
           deviceId: device.id,
         });
 
-        await generatePredictions(device.id);
+        debouncePrediction(device.id);
 
         if (
           (chargingStatus === "true" ||
