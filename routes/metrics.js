@@ -17,77 +17,86 @@ router.get("/", async (req, res) => {
       let user;
       if ((user = await users.findOne({ where: { password: auth } }))) {
         let result = {};
+
+        let timeframe = req.query.timeframe || "1 day";
+        let interval = req.query.intervalMinutes || "30";
+
         const requestCounts = await sequelize.query(
           `
         SELECT
           DATE_TRUNC('minute', "createdAt") - 
-          MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
+          MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
             AS interval_start,
           method,
           COUNT(*) AS count
         FROM logs
+        WHERE "createdAt" >= NOW() - INTERVAL :timeframe
         GROUP BY interval_start, method
         ORDER BY interval_start ASC;
         `,
-          { type: QueryTypes.SELECT }
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
         const responseSizes = await sequelize.query(
           `
         SELECT
           DATE_TRUNC('minute', "createdAt") - 
-            MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
+            MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
               AS interval_start,
           SUM("resSize") AS count
         FROM logs
+        WHERE "createdAt" >= NOW() - INTERVAL :timeframe
         GROUP BY interval_start
         ORDER BY interval_start ASC;
       `,
-          { type: QueryTypes.SELECT }
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
         const errorCounts = await sequelize.query(
           `
       SELECT
         DATE_TRUNC('minute', "createdAt") - 
-          MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
+          MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
             AS interval_start,
         COUNT(*) AS count
       FROM logs
       WHERE error IS NOT NULL
+      AND "createdAt" >= NOW() - INTERVAL :timeframe
       GROUP BY interval_start
       ORDER BY interval_start ASC;`,
-          { type: QueryTypes.SELECT }
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
         const blockedCounts = await sequelize.query(
           `
           SELECT
             DATE_TRUNC('minute', "createdAt") - 
-              MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
+              MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
                 AS interval_start,
             COUNT(*) AS count
           FROM logs
           WHERE text IS NOT NULL
+          AND "createdAt" >= NOW() - INTERVAL :timeframe
           GROUP BY interval_start
           ORDER BY interval_start ASC;
         `,
-          { type: QueryTypes.SELECT }
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
         const successCounts = await sequelize.query(
           `
       SELECT
         DATE_TRUNC('minute', "createdAt") - 
-          MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
+          MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
             AS interval_start,
         COUNT(*) AS count
       FROM logs
       WHERE text IS NULL
+      AND "createdAt" >= NOW() - INTERVAL :timeframe
       GROUP BY interval_start
       ORDER BY interval_start ASC;
     `,
-          { type: QueryTypes.SELECT }
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
         const routeUsage = await sequelize.query(
@@ -95,15 +104,16 @@ router.get("/", async (req, res) => {
           SELECT
             route,
             DATE_TRUNC('minute',"createdAt") - 
-              MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
+              MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
               AS interval_start,
             COUNT(*) AS count
           FROM logs
           WHERE route IS NOT NULL
+          AND "createdAt" >= NOW() - INTERVAL :timeframe
           GROUP BY route, interval_start
           ORDER BY route, interval_start;
         `,
-          { type: QueryTypes.SELECT }
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
         const getRouteUsage = async () => {
