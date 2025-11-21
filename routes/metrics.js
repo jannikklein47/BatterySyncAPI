@@ -1,5 +1,6 @@
 const express = require("express");
 const models = require("../models");
+const sequelize = models.sequelize;
 const { QueryTypes } = require("sequelize");
 
 const logs = models.logs;
@@ -8,7 +9,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const requestCounts = await logs.query(
+    const requestCounts = await sequelize.query(
       `
         SELECT
           DATE_TRUNC('minute', "createdAt") - 
@@ -23,7 +24,7 @@ router.get("/", async (req, res) => {
       { type: QueryTypes.SELECT }
     );
 
-    const responseSizes = await logs.query(
+    const responseSizes = await sequelize.query(
       `
         SELECT
           DATE_TRUNC('minute', "createdAt") - 
