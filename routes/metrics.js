@@ -155,7 +155,7 @@ router.get("/", async (req, res) => {
         };
         res.send(result);
         log(
-          _,
+          null,
           "/metrics",
           "GET",
           req.rawBodySize,
@@ -170,7 +170,6 @@ router.get("/", async (req, res) => {
       log("Access denied", "/metrics", "GET", req.rawBodySize, 0);
     }
   } catch (error) {
-    console.error(error);
     res.status(500).send("Internal Server Error");
     log("Internal Server Error", "/metrics", "GET", req.rawBodySize, 0, error);
   }
@@ -185,7 +184,7 @@ router.get("/raw", async (req, res) => {
         const result = await logs.findAll();
         res.send(result);
         log(
-          _,
+          null,
           "/metrics/raw",
           "GET",
           req.rawBodySize,
