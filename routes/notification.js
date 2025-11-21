@@ -133,7 +133,7 @@ router.get("/due", async (req, res) => {
       );
 
       log(
-        _,
+        null,
         "/notification/due",
         "GET",
         req.socket.bytesRead,
@@ -195,7 +195,7 @@ router.post("/new", async (req, res) => {
           }
           res.send("Ok");
           log(
-            _,
+            null,
             "/notification/new",
             "POST",
             req.socket.bytesRead,
@@ -264,7 +264,7 @@ router.post("/off", async (req, res) => {
 
           res.send("Ok");
           log(
-            _,
+            null,
             "/notification/off",
             "POST",
             req.socket.bytesRead,

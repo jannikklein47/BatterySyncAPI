@@ -64,7 +64,7 @@ router.get("/", async (req, res) => {
         //console.log("Ergebnis von GET: ", result);
         res.send(result);
         log(
-          _,
+          null,
           "/battery",
           "GET",
           req.socket.bytesRead,
@@ -149,7 +149,7 @@ router.get("/withNotificationInfo", async (req, res) => {
         //console.log("Ergebnis von GET: ", result);
         res.send(result);
         log(
-          _,
+          null,
           "/battery/withNotificationInfo",
           "GET",
           req.socket.bytesRead,
@@ -178,7 +178,6 @@ router.get("/withNotificationInfo", async (req, res) => {
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
-    console.log(error);
     res.status(500).send("Fehler");
     log(
       "Internal Server Error",
@@ -291,7 +290,13 @@ router.post("/", async (req, res) => {
       }
 
       res.send("Ok");
-      log(_, "/battery", "POST", req.socket.bytesRead, res.socket.bytesWritten);
+      log(
+        null,
+        "/battery",
+        "POST",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     } else {
       res.status(403).send("Access denied");
       log(
@@ -378,7 +383,13 @@ router.put("/", async (req, res) => {
       }
 
       res.status(200).send("Ok");
-      log(_, "/battery", "PUT", req.socket.bytesRead, res.socket.bytesWritten);
+      log(
+        null,
+        "/battery",
+        "PUT",
+        req.socket.bytesRead,
+        res.socket.bytesWritten
+      );
     } else {
       res.status(403).send("Access denied");
       log(
@@ -449,7 +460,7 @@ router.get("/history", async (req, res) => {
 
           res.send(results);
           log(
-            _,
+            null,
             "/battery/history",
             "GET",
             req.socket.bytesRead,
@@ -568,7 +579,7 @@ router.get("/history/all", async (req, res) => {
 
           res.send(results);
           log(
-            _,
+            null,
             "/battery/history/all",
             "GET",
             req.socket.bytesRead,
@@ -688,7 +699,7 @@ router.get("/history/all/week", async (req, res) => {
 
           res.send(results);
           log(
-            _,
+            null,
             "/battery/history/all/week",
             "GET",
             req.socket.bytesRead,
@@ -795,7 +806,7 @@ router.get("/history/all/fromStart", async (req, res) => {
 
           res.send(results);
           log(
-            _,
+            null,
             "/battery/history/all/fromStart",
             "GET",
             req.socket.bytesRead,

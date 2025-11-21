@@ -42,7 +42,7 @@ router.post("/", async (req, res) => {
         if (access) {
           res.send(existingUser.dataValues.password);
           log(
-            _,
+            null,
             "/login",
             "POST",
             req.socket.bytesRead,
@@ -81,7 +81,7 @@ router.post("/", async (req, res) => {
     });
 
     res.send(hashedPw);
-    log(_, "/login", "POST", req.socket.bytesRead, res.socket.bytesWritten);
+    log(null, "/login", "POST", req.socket.bytesRead, res.socket.bytesWritten);
   } catch (error) {
     res.status(500).send("Internal Server Error");
     log(
@@ -107,7 +107,7 @@ router.get("/auth", async (req, res) => {
         //console.log("Acces granted for user ", user)
         res.send(user.email);
         log(
-          _,
+          null,
           "/login/auth",
           "GET",
           req.socket.bytesRead,
@@ -171,7 +171,7 @@ router.put("/user", async (req, res) => {
       );
       res.send("Ok");
       log(
-        _,
+        null,
         "/login/user",
         "PUT",
         req.socket.bytesRead,

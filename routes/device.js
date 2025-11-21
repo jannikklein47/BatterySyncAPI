@@ -30,7 +30,7 @@ router.put("/", async (req, res) => {
           if (updated > 0) {
             res.status(200).send("Ok");
             log(
-              _,
+              null,
               "/device",
               "PUT",
               req.socket.bytesRead,
@@ -118,7 +118,7 @@ router.post("/favorite", async (req, res) => {
           await device.update({ favorite: set });
           res.status(200).send("Ok");
           log(
-            _,
+            null,
             "/device/favorite",
             "POST",
             req.socket.bytesRead,
@@ -181,7 +181,7 @@ router.delete("/", async (req, res) => {
       if (deleted > 0) {
         res.send("Ok");
         log(
-          _,
+          null,
           "/device/favorite",
           "DELETE",
           req.socket.bytesRead,
