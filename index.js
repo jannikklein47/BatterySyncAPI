@@ -31,7 +31,9 @@ const limiter = rateLimit({
 app.use(limiter);
 
 app.use((req, res, next) => {
-  req.rawBodySize = new Blob([req.query + req.body]).size;
+  req.rawBodySize = new Blob([
+    JSON.stringify(req.query) + JSON.stringify(req.body),
+  ]).size;
   next();
 });
 
