@@ -9,6 +9,8 @@ const fs = require("fs");
 const path = require("path");
 const https = require("https");
 
+const umbress = require("umbress");
+
 const app = express();
 const PORT = 3000;
 
@@ -21,13 +23,19 @@ let corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use(express.urlencoded({ extended: true }));
+
 app.use(
-  express.json({
-    verify: (req, res, buf) => {
-      req.rawBodySize = buf.length;
+  umbress({
+    rateLimiter: {
+      enabled: true,
     },
   })
 );
+
+app.use((req, res) => {
+  req.rawBodySize = new Blob([req.query + req.body]).size;
+});
 
 app.use(routes);
 
