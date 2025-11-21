@@ -26,8 +26,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 const limiter = rateLimit({
-  windowMs: 1000, // 20 seconds
-  max: 7, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
+  windowMs: 1000,
+  max: 10,
 });
 
 app.use(limiter);
