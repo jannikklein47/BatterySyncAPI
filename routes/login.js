@@ -11,15 +11,16 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   try {
     let email, password;
-    console.log("Body", req.body, "query", req.query);
-    console.log(req);
+
     if (req.body && req.body.password && req.body.email) {
       email = req.body.email;
       password = req.body.password;
     } else if (req.query && req.query.password && req.query.email) {
       email = req.query.email;
       password = req.query.password;
-    } else {
+    }
+
+    if (!password || !email) {
       res.status(400).send("Invalid request");
       log("Invalid request", "/login", "POST", req.rawBodySize, 0);
       return;
