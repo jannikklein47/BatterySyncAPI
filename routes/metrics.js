@@ -90,12 +90,50 @@ router.get("/", async (req, res) => {
           { type: QueryTypes.SELECT }
         );
 
+        const routeUsage = await sequelize.query(
+          `
+          SELECT
+            route,
+            DATE_TRUNC('minute',"createdAt") - 
+              MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
+              AS interval_start,
+            COUNT(*) AS count
+          FROM logs
+          WHERE route IS NOT NULL
+          GROUP BY route, interval_start
+          ORDER BY route, interval_start;
+        `,
+          { type: QueryTypes.SELECT }
+        );
+
+        const getRouteUsage = async () => {
+          const rows = routeUsage;
+
+          const result = {};
+
+          for (const row of rows) {
+            const route = row.route;
+
+            if (!result[route]) {
+              result[route] = [];
+            }
+
+            result[route].push({
+              interval_start: row.interval_start,
+              count: row.count,
+            });
+          }
+
+          return result;
+        };
+
         result = {
           requestCounts,
           responseSizes,
           errorCounts,
           blockedCounts,
           successCounts,
+          ...getRouteUsage(),
         };
         res.send(result);
         log(
@@ -127,11 +165,29 @@ router.get("/raw", async (req, res) => {
       if ((user = await users.findOne({ where: { password: auth } }))) {
         const result = await logs.findAll();
         res.send(result);
+        log(
+          _,
+          "/metrics/raw",
+          "GET",
+          req.rawBodySize,
+          new Blob([JSON.stringify(result)]).size
+        );
       }
     } else {
       res.status(403).send("Access denied");
+      log("Access denied", "/metrics/raw", "GET", req.rawBodySize, 0);
     }
-  } catch (error) {}
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/metrics/raw",
+      "GET",
+      req.rawBodySize,
+      0,
+      error
+    );
+  }
 });
 
 module.exports = router;
