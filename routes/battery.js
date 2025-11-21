@@ -171,7 +171,7 @@ router.get("/withNotificationInfo", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });
@@ -284,14 +284,7 @@ router.post("/", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Error");
-    log(
-      "Internal Server Error",
-      "/battery",
-      "POST",
-      req.rawBodySize,
-      0,
-      error.message
-    );
+    log("Internal Server Error", "/battery", "POST", req.rawBodySize, 0, error);
   }
 });
 
@@ -359,14 +352,7 @@ router.put("/", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Internal server error");
-    log(
-      "Internal Server Error",
-      "/battery",
-      "PUT",
-      req.rawBodySize,
-      0,
-      error.message
-    );
+    log("Internal Server Error", "/battery", "PUT", req.rawBodySize, 0, error);
   }
 });
 
@@ -450,7 +436,7 @@ router.get("/history", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });
@@ -556,7 +542,7 @@ router.get("/history/all", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });
@@ -676,7 +662,7 @@ router.get("/history/all/week", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });
@@ -783,7 +769,7 @@ router.get("/history/all/fromStart", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });

@@ -47,14 +47,7 @@ router.put("/", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Internal server error");
-    log(
-      "Internal Server Error",
-      "/device",
-      "PUT",
-      req.rawBodySize,
-      0,
-      error.message
-    );
+    log("Internal Server Error", "/device", "PUT", req.rawBodySize, 0, error);
   }
 });
 
@@ -107,7 +100,7 @@ router.post("/favorite", async (req, res) => {
       "POST",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });
@@ -148,7 +141,7 @@ router.delete("/", async (req, res) => {
       "DELETE",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });

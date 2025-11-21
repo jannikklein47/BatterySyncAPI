@@ -72,14 +72,7 @@ router.post("/", async (req, res) => {
     );
   } catch (error) {
     res.status(500).send("Internal Server Error");
-    log(
-      "Internal Server Error",
-      "/login",
-      "POST",
-      req.rawBodySize,
-      0,
-      error.message
-    );
+    log("Internal Server Error", "/login", "POST", req.rawBodySize, 0, error);
   }
 });
 
@@ -117,7 +110,7 @@ router.get("/auth", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });
@@ -150,7 +143,7 @@ router.put("/user", async (req, res) => {
       "PUT",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });

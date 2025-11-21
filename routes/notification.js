@@ -211,7 +211,7 @@ router.post("/new", async (req, res) => {
       "POST",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });
@@ -256,7 +256,7 @@ router.post("/off", async (req, res) => {
       "POST",
       req.rawBodySize,
       0,
-      error.message
+      error
     );
   }
 });
