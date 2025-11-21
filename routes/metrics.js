@@ -38,7 +38,7 @@ router.get("/", async (req, res) => {
           DATE_TRUNC('minute', "createdAt") - 
             MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
               AS interval_start,
-          SUM("resSize") AS total_res_size
+          SUM("resSize") AS count
         FROM logs
         GROUP BY interval_start
         ORDER BY interval_start ASC;
@@ -52,7 +52,7 @@ router.get("/", async (req, res) => {
         DATE_TRUNC('minute', "createdAt") - 
           MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
             AS interval_start,
-        COUNT(*) AS error_count
+        COUNT(*) AS count
       FROM logs
       WHERE error IS NOT NULL
       GROUP BY interval_start
@@ -66,7 +66,7 @@ router.get("/", async (req, res) => {
             DATE_TRUNC('minute', "createdAt") - 
               MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
                 AS interval_start,
-            COUNT(*) AS text_present_count
+            COUNT(*) AS count
           FROM logs
           WHERE text IS NOT NULL
           GROUP BY interval_start
@@ -81,7 +81,7 @@ router.get("/", async (req, res) => {
         DATE_TRUNC('minute', "createdAt") - 
           MOD(EXTRACT(MINUTE FROM "createdAt")::int, 30) * INTERVAL '1 minute'
             AS interval_start,
-        COUNT(*) AS text_missing_count
+        COUNT(*) AS count
       FROM logs
       WHERE text IS NULL
       GROUP BY interval_start
