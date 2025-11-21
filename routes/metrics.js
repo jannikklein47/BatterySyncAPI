@@ -12,6 +12,12 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
+    if (req.query.key !== process.env.ADMIN_ACCESS) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/metrics", "GET", req.rawBodySize, 0);
+      return;
+    }
+
     let auth;
     if ((auth = req.headers.authorization)) {
       let user;
@@ -138,8 +144,6 @@ router.get("/", async (req, res) => {
         };
 
         const perRouteUsage = await getRouteUsage();
-
-        console.log(perRouteUsage);
 
         result = {
           requestCounts,
