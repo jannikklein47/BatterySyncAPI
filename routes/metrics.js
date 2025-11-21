@@ -88,7 +88,9 @@ router.get("/", async (req, res) => {
       blockedCounts,
       successCounts
     );
-  } catch (error) {}
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 module.exports = router;
