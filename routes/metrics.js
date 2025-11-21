@@ -90,3 +90,5 @@ router.get("/", async (req, res) => {
     );
   } catch (error) {}
 });
+
+module.exports = router;
