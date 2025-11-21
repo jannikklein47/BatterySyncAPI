@@ -143,7 +143,8 @@ router.get("/due", async (req, res) => {
       "/notification/due",
       "GET",
       req.rawBodySize,
-      0
+      0,
+      error
     );
   }
 });
