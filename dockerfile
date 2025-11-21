@@ -30,4 +30,4 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 # Standardbefehl zum Starten des Servers (wird nach dem Entrypoint ausgeführt)
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
