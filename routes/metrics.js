@@ -127,7 +127,7 @@ router.get("/", async (req, res) => {
           return result;
         };
 
-        const perRouteUsage = getRouteUsage();
+        const perRouteUsage = await getRouteUsage();
 
         console.log(perRouteUsage);
 
