@@ -103,23 +103,11 @@ router.get("/auth", async (req, res) => {
         );
       } else {
         res.status(403).send("Invalid access token");
-        log(
-          "Access denied",
-          "/login/auth",
-          "GET",
-          req.rawBodySize,
-          0
-        );
+        log("Access denied", "/login/auth", "GET", req.rawBodySize, 0);
       }
     } else {
       res.status(400).send("Bad request");
-      log(
-        "Access denied",
-        "/login/auth",
-        "GET",
-        req.rawBodySize,
-        0
-      );
+      log("Access denied", "/login/auth", "GET", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal server error");
@@ -128,7 +116,7 @@ router.get("/auth", async (req, res) => {
       "/login/auth",
       "GET",
       req.rawBodySize,
-      0
+      0,
       error.message
     );
   }
@@ -139,13 +127,7 @@ router.put("/user", async (req, res) => {
     if (req.query.email && req.query.password && req.query.masterkey) {
       if (req.query.masterkey !== "ahibUZ787tfgIUvfvgfd333") {
         res.status(403).send("Wrong masterkey");
-        log(
-          "Access denied",
-          "/login/user",
-          "PUT",
-          req.rawBodySize,
-          0
-        );
+        log("Access denied", "/login/user", "PUT", req.rawBodySize, 0);
         return;
       }
       let encrypted = await bcrypt.hash(req.query.password, 11);
