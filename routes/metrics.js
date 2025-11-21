@@ -127,13 +127,17 @@ router.get("/", async (req, res) => {
           return result;
         };
 
+        const perRouteUsage = getRouteUsage();
+
+        console.log(perRouteUsage);
+
         result = {
           requestCounts,
           responseSizes,
           errorCounts,
           blockedCounts,
           successCounts,
-          ...getRouteUsage(),
+          ...perRouteUsage,
         };
         res.send(result);
         log(
