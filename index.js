@@ -23,7 +23,7 @@ let corsOptions = {
 
 app.use(cors(corsOptions));
 
-const limiter = rateLimit.rateLimit({
+const limiter = rateLimit({
   windowMs: 1000, // 20 seconds
   limit: 10, // Limit each IP to 100 requests per `window` (here, per 15 minutes).
   standardHeaders: "draft-8", // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
