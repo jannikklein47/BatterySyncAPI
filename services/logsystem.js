@@ -39,6 +39,6 @@ module.exports = async function (
     method: method,
     reqSize: reqSize,
     resSize: resSize,
-    error: error,
+    error: error?.toString(),
   });
 };
