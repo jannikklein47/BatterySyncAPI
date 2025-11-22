@@ -58,6 +58,21 @@ router.get("/", async (req, res) => {
           { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
+        const requestSizes = await sequelize.query(
+          `
+        SELECT
+          DATE_TRUNC('minute', "createdAt") - 
+            MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
+              AS interval_start,
+          SUM("reqSize") AS count
+        FROM logs
+        WHERE "createdAt" >= NOW() - INTERVAL :timeframe
+        GROUP BY interval_start
+        ORDER BY interval_start ASC;
+      `,
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
+        );
+
         const errorCounts = await sequelize.query(
           `
       SELECT
