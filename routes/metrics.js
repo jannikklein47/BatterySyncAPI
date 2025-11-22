@@ -163,6 +163,7 @@ router.get("/", async (req, res) => {
         result = {
           requestCounts,
           responseSizes,
+          requestSizes,
           errorCounts,
           blockedCounts,
           successCounts,
