@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 
 const { Op } = require("sequelize");
 
-const Issue = models.Issue;
+const Issue = models.issue;
 const Users = models.User;
 const router = express.Router();
 
