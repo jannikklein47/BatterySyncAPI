@@ -131,24 +131,24 @@ router.get("/admin", async (req, res) => {
         res.send(user.admin);
         log(
           null,
-          "/login/auth",
+          "/login/admin",
           "GET",
           req.rawBodySize,
           new Blob([JSON.stringify(user.email)]).size
         );
       } else {
         res.status(403).send("Invalid access token");
-        log("Access denied", "/login/auth", "GET", req.rawBodySize, 0);
+        log("Access denied", "/login/admin", "GET", req.rawBodySize, 0);
       }
     } else {
       res.status(400).send("Bad request");
-      log("Access denied", "/login/auth", "GET", req.rawBodySize, 0);
+      log("Access denied", "/login/admin", "GET", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal server error");
     log(
       "Internal Server Error",
-      "/login/auth",
+      "/login/admin",
       "GET",
       req.rawBodySize,
       0,
@@ -183,6 +183,33 @@ router.put("/user", async (req, res) => {
       "Internal Server Error",
       "/login/user",
       "PUT",
+      req.rawBodySize,
+      0,
+      error
+    );
+  }
+});
+
+router.patch("/user", async (req, res) => {
+  try {
+    if (req.query.email && req.query.masterkey) {
+      if (req.query.masterkey !== process.env.ADMIN_ACCESS) {
+        res.status(403).send("Wrong admin code");
+        log("Access denied", "/login/user", "PATCh", req.rawBodySize, 0);
+        return;
+      }
+      await users.update(req.body, {
+        where: { email: req.query.email },
+      });
+      res.send("Ok");
+      log(null, "/login/user", "PATCH", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/login/user",
+      "PATCH",
       req.rawBodySize,
       0,
       error
