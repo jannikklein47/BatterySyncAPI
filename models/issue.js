@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 0,
       },
       category: DataTypes.INTEGER,
+      priority: DataTypes.INTEGER,
     },
     {
       sequelize,
