@@ -118,6 +118,45 @@ router.get("/auth", async (req, res) => {
   }
 });
 
+router.get("/admin", async (req, res) => {
+  try {
+    if (req.headers.authorization) {
+      let user;
+      if (
+        (user = await users.findOne({
+          where: { password: req.headers.authorization },
+        }))
+      ) {
+        //console.log("Acces granted for user ", user)
+        res.send(user.admin);
+        log(
+          null,
+          "/login/auth",
+          "GET",
+          req.rawBodySize,
+          new Blob([JSON.stringify(user.email)]).size
+        );
+      } else {
+        res.status(403).send("Invalid access token");
+        log("Access denied", "/login/auth", "GET", req.rawBodySize, 0);
+      }
+    } else {
+      res.status(400).send("Bad request");
+      log("Access denied", "/login/auth", "GET", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/login/auth",
+      "GET",
+      req.rawBodySize,
+      0,
+      error
+    );
+  }
+});
+
 router.put("/user", async (req, res) => {
   try {
     if (req.query.email && req.query.password && req.query.masterkey) {
