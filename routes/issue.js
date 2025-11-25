@@ -140,14 +140,13 @@ router.patch("/", async (req, res) => {
         "Update: '" +
           issue.title.substring(0, 30) +
           "...' ist nun " +
-          issue.status ===
-          0
-          ? "nicht in Bearbeitung."
-          : issue.status === 1
-          ? "in Bearbeitung."
-          : issue.status === 2
-          ? "umgesetzt worden. Vielen Dank für dein Feedback!"
-          : " aktiv.",
+          (issue.status === 0
+            ? "nicht in Bearbeitung."
+            : issue.status === 1
+            ? "in Bearbeitung."
+            : issue.status === 2
+            ? "umgesetzt worden. Vielen Dank für dein Feedback!"
+            : " aktiv."),
         user
       );
       log(
