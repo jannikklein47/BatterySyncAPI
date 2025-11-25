@@ -155,9 +155,8 @@ router.get("/due", async (req, res) => {
           }),
           ...otherNotificationsToDisplay.map((sched) => {
             return {
-              targetName: sched.notification.device.name,
-              predictedZeroAt:
-                sched.notification.device?.predictedZeroAt || null,
+              targetName: null,
+              predictedZeroAt: null,
               content: sched.notification.content,
               type: sched.notification.type,
             };
