@@ -11,7 +11,7 @@ const router = express.Router();
 
 const log = require("../services/logsystem");
 
-async function sendUpdateNotification(content, userId) {
+async function sendUpdateNotification(title, content, userId) {
   await models.sequelize.transaction(async (t) => {
     //console.log("Creating new noti order")
 
@@ -64,6 +64,27 @@ router.get("/", async (req, res) => {
         where: {
           archived: false,
         },
+        order: [
+          // 1. Put status === 2 at the bottom
+          [Sequelize.literal(`CASE WHEN status = 2 THEN 1 ELSE 0 END`), "ASC"],
+
+          // 2. Then sort everything by newest updated first
+          ["updatedAt", "DESC"],
+        ],
+      });
+      res.send(result);
+      log(
+        null,
+        "/issue",
+        "GET",
+        req.rawBodySize,
+        new Blob([JSON.stringify(result)]).size
+      );
+    } else {
+      const result = await Issue.findAll({
+        where: {
+          archived: false,
+        },
         include: {
           model: models.User,
           attributes: ["email"],
@@ -85,9 +106,6 @@ router.get("/", async (req, res) => {
         req.rawBodySize,
         new Blob([JSON.stringify(result)]).size
       );
-    } else {
-      res.status(403).send("Invalid access token");
-      log("Access denied", "/issue", "GET", req.rawBodySize, 0);
     }
   } catch (error) {
     console.error(error);
@@ -109,9 +127,8 @@ router.post("/", async (req, res) => {
       res.send(created);
 
       sendUpdateNotification(
-        'Eingangsbestätigung: dein Issue "' +
-          created.title +
-          '" ist erfolgreich eingegangen.',
+        "Eingangsbestätigung",
+        'Dein Issue "' + created.title + '" ist erfolgreich eingegangen.',
         created.userId
       );
       log(
@@ -145,7 +162,8 @@ router.patch("/", async (req, res) => {
       res.send(issue);
 
       sendUpdateNotification(
-        'Update: dein Issue "' +
+        "Issue Update",
+        'Dein Issue "' +
           issue.title +
           '" ist nun ' +
           (issue.status === 0
@@ -186,6 +204,7 @@ router.delete("/", async (req, res) => {
 
       res.send(toDelete);
       sendUpdateNotification(
+        "Issue Update",
         'Dein Issue "' +
           toDelete.title.substring(0, 30) +
           '" wurde von einem Entwickler archiviert.',

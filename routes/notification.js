@@ -156,6 +156,7 @@ router.get("/due", async (req, res) => {
               predictedZeroAt: sched.notification.device?.predictedZeroAt || "",
               content: sched.notification.content || "",
               type: sched.notification.type || "",
+              title: sched.notification.title || "",
             };
           }),
           ...otherNotificationsToDisplay.map((sched) => {
@@ -164,6 +165,7 @@ router.get("/due", async (req, res) => {
               predictedZeroAt: "",
               content: sched.notification.content || "",
               type: sched.notification.type || "",
+              title: sched.notification.title || "",
             };
           }),
         ];
@@ -259,6 +261,96 @@ router.post("/new", async (req, res) => {
     log(
       "Internal Server Error",
       "/notification/new",
+      "POST",
+      req.rawBodySize,
+      0,
+      error
+    );
+  }
+});
+router.post("/new/custom", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+
+    const type = "CONTENT";
+
+    if (!req.body.title || !req.body.content) {
+      // reject
+      return;
+    }
+
+    if (auth) {
+      await models.sequelize.transaction(async (t) => {
+        let user = await users.findOne({ where: { password: auth } });
+        if (user) {
+          if (user.admin) {
+            const allUsers = await users.findAll();
+
+            for (const u of allUsers) {
+              const uDevices = await devices.findAll({
+                where: { userId: u.id },
+              });
+              if (uDevices.length > 0) {
+                const newOrderedNotification =
+                  await models.OrderedNotifications.create(
+                    {
+                      deviceId: uDevices[0].id,
+                      type: type,
+                      content: req.body.content,
+                      title: req.body.title,
+                    },
+                    { transaction: t }
+                  );
+
+                for (const d of uDevices) {
+                  await models.ScheduledNotifications.create(
+                    {
+                      deviceId: d.id,
+                      notificationId: newOrderedNotification.id,
+                    },
+                    { transaction: t }
+                  );
+                }
+              }
+            }
+            res.send("Ok");
+            log(null, "/notification/new/custom", "POST", req.rawBodySize, 0);
+          } else {
+            res.status(403).send("Access denied");
+            log(
+              "Access denied",
+              "/notification/new/custom",
+              "POST",
+              req.rawBodySize,
+              0
+            );
+          }
+        } else {
+          res.status(403).send("Access denied");
+          log(
+            "Access denied",
+            "/notification/new/custom",
+            "POST",
+            req.rawBodySize,
+            0
+          );
+        }
+      });
+    } else {
+      res.status(400).send("No authentication provided");
+      log(
+        "Access denied",
+        "/notification/new/custom",
+        "POST",
+        req.rawBodySize,
+        0
+      );
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/notification/new/custom",
       "POST",
       req.rawBodySize,
       0,

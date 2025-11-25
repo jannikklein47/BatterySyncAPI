@@ -24,6 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       deviceId: DataTypes.INTEGER,
       type: DataTypes.STRING,
       content: DataTypes.TEXT,
+      title: DataTypes.TEXT,
     },
     {
       sequelize,
