@@ -53,7 +53,6 @@ function analyzeSinceLastUnplug(log, device) {
 
     if (predictedZeroAt < new Date()) {
       predictedZeroAt = null;
-      console.log("Device " + device.id + " has a past prediction.");
     }
   }
 
