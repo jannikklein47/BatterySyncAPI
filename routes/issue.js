@@ -101,9 +101,9 @@ router.post("/", async (req, res) => {
       res.send(created);
 
       sendUpdateNotification(
-        "Eingangsbestätigung: dein Issue " +
-          created.title.substring(0, 30) +
-          "...' ist erfolgreich eingegangen.",
+        'Eingangsbestätigung: dein Issue "' +
+          created.title +
+          '" ist erfolgreich eingegangen.',
         user
       );
       log(
@@ -137,11 +137,11 @@ router.patch("/", async (req, res) => {
       res.send(issue);
 
       sendUpdateNotification(
-        "Update: '" +
-          issue.title.substring(0, 30) +
-          "...' ist nun " +
+        'Update: dein Issue "' +
+          issue.title +
+          '" ist nun ' +
           (issue.status === 0
-            ? "nicht in Bearbeitung."
+            ? "nicht mehr in Bearbeitung."
             : issue.status === 1
             ? "in Bearbeitung."
             : issue.status === 2
@@ -178,9 +178,9 @@ router.delete("/", async (req, res) => {
 
       res.send(toDelete);
       sendUpdateNotification(
-        "Dein Issue '" +
+        'Dein Issue "' +
           toDelete.title.substring(0, 30) +
-          "...' wurde von einem Entwickler archiviert.",
+          '" wurde von einem Entwickler archiviert.',
         user
       );
       log(
