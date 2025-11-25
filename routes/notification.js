@@ -74,6 +74,9 @@ router.get("/due", async (req, res) => {
                 model: models.OrderedNotifications,
                 as: "notification",
                 required: true,
+                where: {
+                  type: "CHARGEREMINDER",
+                },
                 include: [
                   {
                     model: devices,
@@ -86,6 +89,16 @@ router.get("/due", async (req, res) => {
                     required: true,
                   },
                 ],
+              },
+              {
+                model: models.OrderedNotifications,
+                as: "notification",
+                required: true,
+                where: {
+                  type: {
+                    [Op.notLike]: "CHARGEREMINDER",
+                  },
+                },
               },
             ],
           });
@@ -121,7 +134,9 @@ router.get("/due", async (req, res) => {
         const data = scheduledNotificationsToDisplay.map((sched) => {
           return {
             targetName: sched.notification.device.name,
-            predictedZeroAt: sched.notification.device.predictedZeroAt,
+            predictedZeroAt: sched.notification.device?.predictedZeroAt || null,
+            content: sched.notification.content,
+            type: sched.notification.type,
           };
         });
 
@@ -153,7 +168,12 @@ router.post("/new", async (req, res) => {
     const auth = req.headers.authorization;
 
     const deviceId = req.body.deviceId;
-    if (!deviceId) {
+    let type = "";
+    if (!req.body.type) {
+      type = "CHARGEREMINDER";
+    } else type = req.body.type;
+
+    if (!deviceId && type === "CHARGEREMINDER") {
       res.status(400).send("No device id provided");
       log("Device not found", "/notification/new", "POST", req.rawBodySize, 0);
       return;
@@ -168,6 +188,8 @@ router.post("/new", async (req, res) => {
             await models.OrderedNotifications.create(
               {
                 deviceId: deviceId,
+                type: type.toUpperCase(),
+                content: req.body.content,
               },
               { transaction: t }
             );
@@ -235,6 +257,7 @@ router.post("/off", async (req, res) => {
           await models.OrderedNotifications.destroy({
             where: {
               deviceId: deviceId,
+              type: "CHARGEREMINDER",
             },
           });
 
