@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       category: DataTypes.INTEGER,
       priority: DataTypes.INTEGER,
+      archived: DataTypes.BOOLEAN,
     },
     {
       sequelize,

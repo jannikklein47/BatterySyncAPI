@@ -58,6 +58,9 @@ router.get("/", async (req, res) => {
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const result = await Issue.findAll({
+        where: {
+          archived: false,
+        },
         order: [
           // 1. Put status === 2 at the bottom
           [Sequelize.literal(`CASE WHEN status = 2 THEN 1 ELSE 0 END`), "ASC"],
@@ -65,9 +68,6 @@ router.get("/", async (req, res) => {
           // 2. Then sort everything by newest updated first
           ["updatedAt", "DESC"],
         ],
-        where: {
-          archived: false,
-        },
       });
       res.send(result);
       log(
