@@ -11,7 +11,8 @@ router.get("/android", async (req, res) => {
     const auth = req.headers.authorization;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      res.sendFile("batterysync-android.apk", { root: path.normalize("../") });
+      const filePath = path.join(__dirname, "..", "batterysync-android.apk");
+      res.sendFile(filePath);
     } else {
       res.status(403).send("Invalid access token");
     }
