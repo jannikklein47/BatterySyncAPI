@@ -90,9 +90,18 @@ router.get("/due", async (req, res) => {
                   },
                 ],
               },
+            ],
+          });
+
+        let otherNotificationsToDisplay =
+          await models.ScheduledNotifications.findAll({
+            where: {
+              deviceId: deviceId,
+            },
+            include: [
               {
                 model: models.OrderedNotifications,
-                as: "otherNotifications",
+                as: "notification",
                 required: true,
                 where: {
                   type: {
@@ -103,7 +112,10 @@ router.get("/due", async (req, res) => {
             ],
           });
 
-        const idsToDelete = scheduledNotificationsToDisplay.map((sn) => sn.id);
+        const idsToDelete = [
+          ...scheduledNotificationsToDisplay.map((sn) => sn.id),
+          ...otherNotificationsToDisplay.map((sn) => sn.id),
+        ];
         if (idsToDelete.length > 0) {
           await models.sequelize.transaction(async (t) => {
             await models.ScheduledNotifications.destroy(
@@ -131,14 +143,26 @@ router.get("/due", async (req, res) => {
           });
         }
 
-        const data = scheduledNotificationsToDisplay.map((sched) => {
-          return {
-            targetName: sched.notification.device.name,
-            predictedZeroAt: sched.notification.device?.predictedZeroAt || null,
-            content: sched.notification.content,
-            type: sched.notification.type,
-          };
-        });
+        const data = [
+          ...scheduledNotificationsToDisplay.map((sched) => {
+            return {
+              targetName: sched.notification.device.name,
+              predictedZeroAt:
+                sched.notification.device?.predictedZeroAt || null,
+              content: sched.notification.content,
+              type: sched.notification.type,
+            };
+          }),
+          ...otherNotificationsToDisplay.map((sched) => {
+            return {
+              targetName: sched.notification.device.name,
+              predictedZeroAt:
+                sched.notification.device?.predictedZeroAt || null,
+              content: sched.notification.content,
+              type: sched.notification.type,
+            };
+          }),
+        ];
 
         res.send(data);
 
