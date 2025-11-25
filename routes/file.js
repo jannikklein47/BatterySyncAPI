@@ -1,6 +1,8 @@
 const express = require("express");
 const models = require("../models");
 
+const path = require("path");
+
 const Users = models.User;
 const router = express.Router();
 
@@ -9,7 +11,7 @@ router.get("/android", async (req, res) => {
     const auth = req.headers.authorization;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      res.sendFile("../batterysync-android.apk");
+      res.sendFile("batterysync-android.apk", { root: path.normalize("../") });
     } else {
       res.status(403).send("Invalid access token");
     }
