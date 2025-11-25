@@ -157,7 +157,7 @@ router.patch("/", async (req, res) => {
         "/issue",
         "PATCH",
         req.rawBodySize,
-        new Blob([JSON.stringify(created)]).size
+        new Blob([JSON.stringify(issue)]).size
       );
     } else {
       res.status(403).send("Invalid access token");
