@@ -28,7 +28,7 @@ async function sendUpdateNotification(content, user) {
     const newOrderedNotification = await Notifications.create(
       {
         deviceId: userDevice.id,
-        type: "ISSUEUPDATE",
+        type: "CONTENT",
         content: content,
       },
       { transaction: t }
