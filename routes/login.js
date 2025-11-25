@@ -134,7 +134,7 @@ router.get("/admin", async (req, res) => {
           "/login/admin",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(user.email)]).size
+          new Blob([JSON.stringify(user.admin)]).size
         );
       } else {
         res.status(403).send("Invalid access token");
@@ -149,6 +149,45 @@ router.get("/admin", async (req, res) => {
     log(
       "Internal Server Error",
       "/login/admin",
+      "GET",
+      req.rawBodySize,
+      0,
+      error
+    );
+  }
+});
+
+router.get("/userId", async (req, res) => {
+  try {
+    if (req.headers.authorization) {
+      let user;
+      if (
+        (user = await users.findOne({
+          where: { password: req.headers.authorization },
+        }))
+      ) {
+        //console.log("Acces granted for user ", user)
+        res.send(user.id);
+        log(
+          null,
+          "/login/userId",
+          "GET",
+          req.rawBodySize,
+          new Blob([JSON.stringify(user.id)]).size
+        );
+      } else {
+        res.status(403).send("Invalid access token");
+        log("Access denied", "/login/userId", "GET", req.rawBodySize, 0);
+      }
+    } else {
+      res.status(400).send("Bad request");
+      log("Access denied", "/login/userId", "GET", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/login/userId",
       "GET",
       req.rawBodySize,
       0,
