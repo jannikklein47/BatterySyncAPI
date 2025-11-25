@@ -57,7 +57,7 @@ async function sendUpdateNotification(title, content, userId) {
 
 router.get("/", async (req, res) => {
   try {
-    const auth = req.headers.authorization;
+    const auth = req.headers.authorization || "";
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const result = await Issue.findAll({
@@ -197,7 +197,7 @@ router.delete("/", async (req, res) => {
   try {
     const auth = req.headers.authorization;
     const id = req.query.id;
-    const user = await Users.findOne({ where: { password: auth || "" } });
+    const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const toDelete = await Issue.findByPk(id);
       await toDelete.update({ archived: true });
