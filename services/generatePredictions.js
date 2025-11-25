@@ -50,8 +50,10 @@ function analyzeSinceLastUnplug(log, device) {
   if (ratePerMs < 0) {
     const timeToZeroMs = latestBattery / Math.abs(ratePerMs);
     predictedZeroAt = new Date(now + timeToZeroMs);
-    if (timeToZeroMs < 0) {
+
+    if (predictedZeroAt < new Date()) {
       predictedZeroAt = null;
+      console.log("Device " + device.id + " has a past prediction.");
     }
   }
 
