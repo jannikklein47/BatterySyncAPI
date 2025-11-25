@@ -92,7 +92,7 @@ router.get("/due", async (req, res) => {
               },
               {
                 model: models.OrderedNotifications,
-                as: "notification",
+                as: "otherNotifications",
                 required: true,
                 where: {
                   type: {
