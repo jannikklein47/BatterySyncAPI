@@ -64,6 +64,11 @@ router.get("/", async (req, res) => {
         where: {
           archived: false,
         },
+        include: {
+          model: models.User,
+          attributes: ["email"],
+          as: "user",
+        },
         order: [
           // 1. Put status === 2 at the bottom
           [Sequelize.literal(`CASE WHEN status = 2 THEN 1 ELSE 0 END`), "ASC"],
@@ -84,11 +89,6 @@ router.get("/", async (req, res) => {
       const result = await Issue.findAll({
         where: {
           archived: false,
-        },
-        include: {
-          model: models.User,
-          attributes: ["email"],
-          as: "user",
         },
         order: [
           // 1. Put status === 2 at the bottom
