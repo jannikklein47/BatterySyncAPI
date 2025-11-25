@@ -20,6 +20,11 @@ async function sendUpdateNotification(content, userId) {
         where: {
           userId: userId,
         },
+        include: {
+          model: models.User,
+          attributes: ["email"],
+          as: "user",
+        },
       },
       { transaction: t }
     );
