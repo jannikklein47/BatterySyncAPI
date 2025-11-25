@@ -33,7 +33,7 @@ async function sendUpdateNotification(content, user) {
       },
       { transaction: t }
     );
-    const userDevices = await devices.findAll(
+    const userDevices = await models.Device.findAll(
       { where: { userId: user.id } },
       { transaction: t }
     );
