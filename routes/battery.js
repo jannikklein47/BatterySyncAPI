@@ -277,6 +277,7 @@ router.post("/", async (req, res) => {
           await models.OrderedNotifications.destroy({
             where: {
               deviceId: device.id,
+              type: "CHARGEREMINDER",
             },
           });
         }
