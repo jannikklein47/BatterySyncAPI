@@ -11,14 +11,14 @@ const router = express.Router();
 
 const log = require("../services/logsystem");
 
-async function sendUpdateNotification(content, user) {
+async function sendUpdateNotification(content, userId) {
   await models.sequelize.transaction(async (t) => {
     //console.log("Creating new noti order")
 
     const userDevice = await models.Device.findOne(
       {
         where: {
-          userId: user.id,
+          userId: userId,
         },
       },
       { transaction: t }
@@ -37,7 +37,7 @@ async function sendUpdateNotification(content, user) {
       { transaction: t }
     );
     const userDevices = await models.Device.findAll(
-      { where: { userId: user.id } },
+      { where: { userId: userId } },
       { transaction: t }
     );
 
