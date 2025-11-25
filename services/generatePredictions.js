@@ -69,8 +69,6 @@ function analyzeSinceLastUnplug(log, device) {
 // --> The entire 24-hour history of 500 devices is processed PER SECOND! Only 1000 Devices, or 500 Users best case!
 // FIXING RN
 module.exports = async function (deviceId) {
-  const deviceList = await models.Device.findAll({ raw: true });
-
   const device = await models.Device.findByPk(deviceId);
 
   if (!device) return;

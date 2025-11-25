@@ -8,6 +8,7 @@ const notification = require("./notification.js");
 const appinfo = require("./appinfo.js");
 const metrics = require("./metrics.js");
 const issue = require("./issue.js");
+const prediction = require("./prediction.js");
 
 const file = require("./file.js");
 
@@ -19,5 +20,6 @@ router.use("/appinfo", appinfo);
 router.use("/metrics", metrics);
 router.use("/issue", issue);
 router.use("/file", file);
+router.use("/prediction", prediction);
 
 module.exports = router;

@@ -234,7 +234,7 @@ router.patch("/user", async (req, res) => {
     if (req.query.email && req.query.masterkey) {
       if (req.query.masterkey !== process.env.ADMIN_ACCESS) {
         res.status(403).send("Wrong admin code");
-        log("Access denied", "/login/user", "PATCh", req.rawBodySize, 0);
+        log("Access denied", "/login/user", "PATCH", req.rawBodySize, 0);
         return;
       }
       await users.update(req.body, {
