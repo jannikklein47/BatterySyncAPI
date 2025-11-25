@@ -64,6 +64,12 @@ router.get("/due", async (req, res) => {
         )?.dataValues.id;
         if (req.query.deviceId) deviceId = req.query.deviceId;
 
+        if (!deviceId) {
+          console.error("Notification get due device not found: ", req.query);
+          res.status(404).send("Device not found");
+          return;
+        }
+
         let scheduledNotificationsToDisplay =
           await models.ScheduledNotifications.findAll({
             where: {
