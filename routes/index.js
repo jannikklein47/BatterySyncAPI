@@ -9,6 +9,8 @@ const appinfo = require("./appinfo.js");
 const metrics = require("./metrics.js");
 const issue = require("./issue.js");
 
+const file = require("./file.js");
+
 router.use("/battery", battery);
 router.use("/login", login);
 router.use("/device", device);
@@ -16,5 +18,6 @@ router.use("/notification", notification);
 router.use("/appinfo", appinfo);
 router.use("/metrics", metrics);
 router.use("/issue", issue);
+router.use("/file", file);
 
 module.exports = router;
