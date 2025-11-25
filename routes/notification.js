@@ -146,19 +146,18 @@ router.get("/due", async (req, res) => {
         const data = [
           ...scheduledNotificationsToDisplay.map((sched) => {
             return {
-              targetName: sched.notification.device.name,
-              predictedZeroAt:
-                sched.notification.device?.predictedZeroAt || null,
-              content: sched.notification.content,
-              type: sched.notification.type,
+              targetName: sched.notification.device.name || "",
+              predictedZeroAt: sched.notification.device?.predictedZeroAt || "",
+              content: sched.notification.content || "",
+              type: sched.notification.type || "",
             };
           }),
           ...otherNotificationsToDisplay.map((sched) => {
             return {
-              targetName: null,
-              predictedZeroAt: null,
-              content: sched.notification.content,
-              type: sched.notification.type,
+              targetName: "",
+              predictedZeroAt: "",
+              content: sched.notification.content || "",
+              type: sched.notification.type || "",
             };
           }),
         ];
