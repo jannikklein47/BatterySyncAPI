@@ -115,7 +115,7 @@ router.delete("/", async (req, res) => {
         "/issue",
         "DELETE",
         req.rawBodySize,
-        new Blob([JSON.stringify(created)]).size
+        new Blob([JSON.stringify(deleted)]).size
       );
     } else {
       res.status(403).send("Invalid access token");
