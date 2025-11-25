@@ -25,6 +25,11 @@ router.get("/", async (req, res) => {
 
     for (const device of allDevices) {
       generatePredictions(device.id);
+      await new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve();
+        }, 500);
+      });
     }
 
     res.send("Ok");
