@@ -15,26 +15,20 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    if (req.query.email && req.query.masterkey) {
-      if (req.query.masterkey !== process.env.ADMIN_ACCESS) {
-        res.status(403).send("Wrong admin code");
-        log("Access denied", "/prediction", "GET", req.rawBodySize, 0);
-        return;
-      }
-
-      const allDevices = await devices.findAll();
-
-      for (const device of allDevices) {
-        generatePredictions(device.id);
-      }
-
-      res.send("Ok");
-      log(null, "/prediction", "GET", req.rawBodySize, 0);
-    } else {
+    if (req.query.masterkey !== process.env.ADMIN_ACCESS) {
       res.status(403).send("Wrong admin code");
       log("Access denied", "/prediction", "GET", req.rawBodySize, 0);
       return;
     }
+
+    const allDevices = await devices.findAll();
+
+    for (const device of allDevices) {
+      generatePredictions(device.id);
+    }
+
+    res.send("Ok");
+    log(null, "/prediction", "GET", req.rawBodySize, 0);
   } catch (error) {
     res.status(500).send("Internal server error");
     log(
