@@ -1,7 +1,11 @@
 const express = require("express");
 const models = require("../models");
 
+const fs = require("node:fs");
+
 const path = require("path");
+
+const log = require("../services/logsystem");
 
 const Users = models.User;
 const router = express.Router();
@@ -13,6 +17,8 @@ router.get("/android", async (req, res) => {
     if (user) {
       const filePath = path.join(__dirname, "..", "batterysync-android.apk");
       res.sendFile(filePath);
+      const stats = await fs.stat(filePath);
+      log(null, "/file/android", "GET", req.body.rawBodySize, stats.size || 0);
     } else {
       res.status(403).send("Invalid access token");
     }

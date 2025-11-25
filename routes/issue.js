@@ -15,14 +15,17 @@ async function sendUpdateNotification(content, user) {
   await models.sequelize.transaction(async (t) => {
     //console.log("Creating new noti order")
 
-    const userDevice = await models.Device.findOne({
-      where: {
-        userId: user.id,
+    const userDevice = await models.Device.findOne(
+      {
+        where: {
+          userId: user.id,
+        },
       },
-    });
+      { transaction: t }
+    );
 
     if (!userDevice) {
-      console.log("NO USER DEVICE FOUND TO APPEND NOTIFICATION TO");
+      return;
     }
 
     const newOrderedNotification = await Notifications.create(
@@ -104,7 +107,7 @@ router.post("/", async (req, res) => {
         'Eingangsbestätigung: dein Issue "' +
           created.title +
           '" ist erfolgreich eingegangen.',
-        user
+        created.userId
       );
       log(
         null,
@@ -147,7 +150,7 @@ router.patch("/", async (req, res) => {
             : issue.status === 2
             ? "umgesetzt worden. Vielen Dank für dein Feedback!"
             : " aktiv."),
-        user
+        issue.userId
       );
       log(
         null,
@@ -181,7 +184,7 @@ router.delete("/", async (req, res) => {
         'Dein Issue "' +
           toDelete.title.substring(0, 30) +
           '" wurde von einem Entwickler archiviert.',
-        user
+        toDelete.userId
       );
       log(
         null,
