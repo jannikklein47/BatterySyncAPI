@@ -6,9 +6,40 @@ const { Op, Sequelize } = require("sequelize");
 
 const Issue = models.issue;
 const Users = models.User;
+const Notifications = models.OrderedNotifications;
 const router = express.Router();
 
 const log = require("../services/logsystem");
+
+async function sendUpdateNotification(content, user) {
+  await models.sequelize.transaction(async (t) => {
+    //console.log("Creating new noti order")
+    const newOrderedNotification = await Notifications.create(
+      {
+        deviceId: null,
+        type: "ISSUEUPDATE",
+        content: content,
+      },
+      { transaction: t }
+    );
+    const userDevices = await devices.findAll(
+      { where: { userId: user.id } },
+      { transaction: t }
+    );
+
+    for (const dev of userDevices) {
+      //console.log("Creating sched entry")
+
+      await models.ScheduledNotifications.create(
+        {
+          deviceId: dev.id,
+          notificationId: newOrderedNotification.id,
+        },
+        { transaction: t }
+      );
+    }
+  });
+}
 
 router.get("/", async (req, res) => {
   try {
@@ -54,6 +85,13 @@ router.post("/", async (req, res) => {
       const created = await Issue.create({ ...data, userId: user.id });
 
       res.send(created);
+
+      sendUpdateNotification(
+        "Eingangsbestätigung: dein Issue " +
+          created.title.subString(0, 30) +
+          "...' ist erfolgreich eingegangen.",
+        user
+      );
       log(
         null,
         "/issue",
@@ -83,6 +121,21 @@ router.patch("/", async (req, res) => {
       await issue.update(data);
 
       res.send(issue);
+
+      sendUpdateNotification(
+        "Update: '" +
+          toDelete.title.subString(0, 30) +
+          "...' ist nun " +
+          issue.status ===
+          0
+          ? "nicht in Bearbeitung."
+          : issue.status === 1
+          ? "in Bearbeitung."
+          : issue.status === 2
+          ? "umgesetzt worden. Vielen Dank für dein Feedback!"
+          : " aktiv.",
+        user
+      );
       log(
         null,
         "/issue",
@@ -107,15 +160,22 @@ router.delete("/", async (req, res) => {
     const id = req.query.id;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const deleted = await Issue.destroy({ where: { id: id } });
+      const toDelete = await Issue.findByPk(id);
+      await toDelete.update({ archived: true });
 
-      res.send(deleted);
+      res.send(toDelete);
+      sendUpdateNotification(
+        "Dein Issue '" +
+          toDelete.title.subString(0, 30) +
+          "...' wurde von einem Entwickler archiviert.",
+        user
+      );
       log(
         null,
         "/issue",
         "DELETE",
         req.rawBodySize,
-        new Blob([JSON.stringify(deleted)]).size
+        new Blob([JSON.stringify(toDelete)]).size
       );
     } else {
       res.status(403).send("Invalid access token");
