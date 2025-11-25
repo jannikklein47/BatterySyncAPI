@@ -61,7 +61,7 @@ router.get("/due", async (req, res) => {
               userId: user.id,
             },
           })
-        ).dataValues.id;
+        ).dataValues?.id;
         if (req.query.deviceId) deviceId = req.query.deviceId;
 
         let scheduledNotificationsToDisplay =
