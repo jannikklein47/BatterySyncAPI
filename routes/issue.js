@@ -91,7 +91,7 @@ router.post("/", async (req, res) => {
 
       sendUpdateNotification(
         "Eingangsbestätigung: dein Issue " +
-          created.toJSON().title.subString(0, 30) +
+          created.title.substring(0, 30) +
           "...' ist erfolgreich eingegangen.",
         user
       );
@@ -127,7 +127,7 @@ router.patch("/", async (req, res) => {
 
       sendUpdateNotification(
         "Update: '" +
-          issue.toJSON().title.subString(0, 30) +
+          issue.title.substring(0, 30) +
           "...' ist nun " +
           issue.status ===
           0
@@ -169,7 +169,7 @@ router.delete("/", async (req, res) => {
       res.send(toDelete);
       sendUpdateNotification(
         "Dein Issue '" +
-          toDelete.toJSON().title.subString(0, 30) +
+          toDelete.title.substring(0, 30) +
           "...' wurde von einem Entwickler archiviert.",
         user
       );
