@@ -20,11 +20,6 @@ async function sendUpdateNotification(content, userId) {
         where: {
           userId: userId,
         },
-        include: {
-          model: models.User,
-          attributes: ["email"],
-          as: "user",
-        },
       },
       { transaction: t }
     );
@@ -68,6 +63,11 @@ router.get("/", async (req, res) => {
       const result = await Issue.findAll({
         where: {
           archived: false,
+        },
+        include: {
+          model: models.User,
+          attributes: ["email"],
+          as: "user",
         },
         order: [
           // 1. Put status === 2 at the bottom
