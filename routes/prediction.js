@@ -30,6 +30,10 @@ router.get("/", async (req, res) => {
 
       res.send("Ok");
       log(null, "/prediction", "GET", req.rawBodySize, 0);
+    } else {
+      res.status(403).send("Wrong admin code");
+      log("Access denied", "/prediction", "GET", req.rawBodySize, 0);
+      return;
     }
   } catch (error) {
     res.status(500).send("Internal server error");
