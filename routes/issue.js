@@ -15,7 +15,15 @@ router.get("/", async (req, res) => {
     const auth = req.headers.authorization;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const result = await Issue.findAll();
+      const result = await Issue.findAll({
+        order: [
+          // 1. Put status === 2 at the bottom
+          [Sequelize.literal(`CASE WHEN status = 2 THEN 1 ELSE 0 END`), "ASC"],
+
+          // 2. Then sort everything by newest updated first
+          ["updatedAt", "DESC"],
+        ],
+      });
       res.send(result);
       log(
         null,
