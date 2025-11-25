@@ -54,6 +54,9 @@ router.get("/", async (req, res) => {
           // 2. Then sort everything by newest updated first
           ["updatedAt", "DESC"],
         ],
+        where: {
+          archived: false,
+        },
       });
       res.send(result);
       log(
