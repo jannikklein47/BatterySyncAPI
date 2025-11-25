@@ -14,9 +14,20 @@ const log = require("../services/logsystem");
 async function sendUpdateNotification(content, user) {
   await models.sequelize.transaction(async (t) => {
     //console.log("Creating new noti order")
+
+    const userDevice = await models.Device.findOne({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    if (!userDevice) {
+      console.log("NO USER DEVICE FOUND TO APPEND NOTIFICATION TO");
+    }
+
     const newOrderedNotification = await Notifications.create(
       {
-        deviceId: null,
+        deviceId: userDevice,
         type: "ISSUEUPDATE",
         content: content,
       },
