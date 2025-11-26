@@ -145,11 +145,13 @@ router.post("/", async (req, res) => {
       const created = await Issue.create(
         { ...data, userId: user.id },
         {
-          include: {
-            model: models.User,
-            attributes: ["email"],
-            as: "user",
-          },
+          include: [
+            {
+              model: models.User,
+              attributes: ["email"],
+              as: "user",
+            },
+          ],
         }
       );
 
