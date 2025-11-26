@@ -287,7 +287,15 @@ router.post("/new/custom", async (req, res) => {
         let user = await users.findOne({ where: { password: auth } });
         if (user) {
           if (user.admin) {
-            const allUsers = await users.findAll();
+            let allUsers;
+
+            if (req.body.users === "all") {
+              allUsers = await users.findAll();
+            } else {
+              allUsers = await users.findAll({
+                where: { id: { [Op.in]: JSON.parse(req.body.users) } },
+              });
+            }
 
             for (const u of allUsers) {
               const uDevices = await devices.findAll({
