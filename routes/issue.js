@@ -136,7 +136,11 @@ router.post("/", async (req, res) => {
     delete data.status;
     delete data.archived;
 
-    const user = await Users.findOne({ where: { password: auth } });
+    let user;
+    if (auth) {
+      user = await Users.findOne({ where: { password: auth } });
+    } else user = null;
+
     if (user) {
       const created = await Issue.create({ ...data, userId: user.id });
 
