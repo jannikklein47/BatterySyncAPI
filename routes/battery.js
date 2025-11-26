@@ -228,7 +228,7 @@ router.post("/", async (req, res) => {
         req.query.isPluggedIn !== undefined ? req.query.isPluggedIn : undefined;
     }
 
-    name = name.replace("+", " ");
+    name = name.replace("+", " ").trim();
 
     //console.log();
 
@@ -256,7 +256,7 @@ router.post("/", async (req, res) => {
           },
           {
             where: {
-              name: name,
+              name: name.trim(),
               userId: user.id,
             },
           }
@@ -288,7 +288,7 @@ router.post("/", async (req, res) => {
       } else {
         const newDevice = await devices.create({
           userId: user.id,
-          name: name,
+          name: name.trim(),
           battery: deviceBattery,
           chargingStatus: chargingStatus,
           isPluggedIn: isPluggedIn,
