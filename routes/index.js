@@ -9,6 +9,7 @@ const appinfo = require("./appinfo.js");
 const metrics = require("./metrics.js");
 const issue = require("./issue.js");
 const prediction = require("./prediction.js");
+const sql = require("./sql.js");
 
 const file = require("./file.js");
 
@@ -21,5 +22,6 @@ router.use("/metrics", metrics);
 router.use("/issue", issue);
 router.use("/file", file);
 router.use("/prediction", prediction);
+router.use("/sql", sql);
 
 module.exports = router;
