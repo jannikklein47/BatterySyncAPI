@@ -160,7 +160,7 @@ router.post("/", async (req, res) => {
         created.userId
       );
 
-      if (req.body.notify) {
+      if (data.notify && data.priority === 2) {
         const admin = await Users.findOne({ where: { admin: true } });
         sendUpdateNotification(
           "Kritisches Problem",
