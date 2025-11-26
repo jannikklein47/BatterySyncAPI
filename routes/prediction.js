@@ -42,6 +42,7 @@ router.get("/", async (req, res) => {
       "PATCH",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }

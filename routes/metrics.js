@@ -175,7 +175,8 @@ router.get("/", async (req, res) => {
           "/metrics",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(result)]).size
+          new Blob([JSON.stringify(result)]).size,
+          user.id
         );
       } else {
         res.status(403).send("Access denied");
@@ -187,7 +188,15 @@ router.get("/", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Internal Server Error");
-    log("Internal Server Error", "/metrics", "GET", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/metrics",
+      "GET",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 
@@ -204,7 +213,8 @@ router.get("/raw", async (req, res) => {
           "/metrics/raw",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(result)]).size
+          new Blob([JSON.stringify(result)]).size,
+          user.id
         );
       }
     } else {
@@ -219,6 +229,7 @@ router.get("/raw", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }

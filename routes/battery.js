@@ -111,7 +111,8 @@ router.get("/", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
-      error.messsage
+      null,
+      error
     );
   }
 });
@@ -195,6 +196,7 @@ router.get("/withNotificationInfo", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -309,7 +311,15 @@ router.post("/", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Error");
-    log("Internal Server Error", "/battery", "POST", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/battery",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 
@@ -377,7 +387,15 @@ router.put("/", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Internal server error");
-    log("Internal Server Error", "/battery", "PUT", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/battery",
+      "PUT",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 
@@ -431,7 +449,8 @@ router.get("/history", async (req, res) => {
             "/battery/history",
             "GET",
             req.rawBodySize,
-            new Blob([JSON.stringify(result)]).size
+            new Blob([JSON.stringify(result)]).size,
+            user.id
           );
         } else {
           res.status(404).send("Device not found.");
@@ -440,7 +459,8 @@ router.get("/history", async (req, res) => {
             "/battery/history",
             "GET",
             req.rawBodySize,
-            0
+            0,
+            user.id
           );
         }
       } else {
@@ -461,6 +481,7 @@ router.get("/history", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -541,7 +562,8 @@ router.get("/history/all", async (req, res) => {
             "/battery/history/all",
             "GET",
             req.rawBodySize,
-            new Blob([JSON.stringify(results)]).size
+            new Blob([JSON.stringify(results)]).size,
+            user.id
           );
         } else {
           res.status(404).send("Device not found.");
@@ -550,7 +572,8 @@ router.get("/history/all", async (req, res) => {
             "/battery/history/all",
             "GET",
             req.rawBodySize,
-            0
+            0,
+            user.id
           );
         }
       } else {
@@ -571,6 +594,7 @@ router.get("/history/all", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -653,7 +677,8 @@ router.get("/history/all/week", async (req, res) => {
             "/battery/history/all/week",
             "GET",
             req.rawBodySize,
-            new Blob([JSON.stringify(results)]).size
+            new Blob([JSON.stringify(results)]).size,
+            user.id
           );
         } else {
           res.status(404).send("Device not found.");
@@ -695,6 +720,7 @@ router.get("/history/all/week", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -755,7 +781,8 @@ router.get("/history/all/fromStart", async (req, res) => {
             "/battery/history/all/fromStart",
             "GET",
             req.rawBodySize,
-            new Blob([JSON.stringify(results)]).size
+            new Blob([JSON.stringify(results)]).size,
+            user.id
           );
         } else {
           res.status(404).send("Device not found.");
@@ -797,6 +824,8 @@ router.get("/history/all/fromStart", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+
+      null,
       error
     );
   }

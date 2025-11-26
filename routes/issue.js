@@ -84,7 +84,8 @@ router.get("/", async (req, res) => {
         "/issue",
         "GET",
         req.rawBodySize,
-        new Blob([JSON.stringify(result)]).size
+        new Blob([JSON.stringify(result)]).size,
+        user.id
       );
     } else {
       const result = await Issue.findAll({
@@ -105,13 +106,22 @@ router.get("/", async (req, res) => {
         "/issue",
         "GET",
         req.rawBodySize,
-        new Blob([JSON.stringify(result)]).size
+        new Blob([JSON.stringify(result)]).size,
+        user.id
       );
     }
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
-    log("Internal Server Error", "/issue", "GET", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/issue",
+      "GET",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 
@@ -137,7 +147,8 @@ router.post("/", async (req, res) => {
         "/issue",
         "POST",
         req.rawBodySize,
-        new Blob([JSON.stringify(created)]).size
+        new Blob([JSON.stringify(created)]).size,
+        user.id
       );
     } else {
       res.status(403).send("Invalid access token");
@@ -146,7 +157,15 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
-    log("Internal Server Error", "/issue", "POST", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/issue",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 
@@ -181,7 +200,8 @@ router.patch("/", async (req, res) => {
         "/issue",
         "PATCH",
         req.rawBodySize,
-        new Blob([JSON.stringify(issue)]).size
+        new Blob([JSON.stringify(issue)]).size,
+        user.id
       );
     } else {
       res.status(403).send("Invalid access token");
@@ -190,7 +210,15 @@ router.patch("/", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
-    log("Internal Server Error", "/issue", "PATCH", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/issue",
+      "PATCH",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 
@@ -216,7 +244,8 @@ router.delete("/", async (req, res) => {
         "/issue",
         "DELETE",
         req.rawBodySize,
-        new Blob([JSON.stringify(toDelete)]).size
+        new Blob([JSON.stringify(toDelete)]).size,
+        user.id
       );
     } else {
       res.status(403).send("Invalid access token");
@@ -225,7 +254,15 @@ router.delete("/", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
-    log("Internal Server Error", "/issue", "DELETE", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/issue",
+      "DELETE",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 

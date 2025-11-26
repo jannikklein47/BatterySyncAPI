@@ -177,7 +177,8 @@ router.get("/due", async (req, res) => {
           "/notification/due",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(data)]).size
+          new Blob([JSON.stringify(data)]).size,
+          user.id
         );
       }
     }
@@ -189,6 +190,7 @@ router.get("/due", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -264,6 +266,7 @@ router.post("/new", async (req, res) => {
       "POST",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -361,6 +364,7 @@ router.post("/new/custom", async (req, res) => {
       "POST",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -407,6 +411,7 @@ router.post("/off", async (req, res) => {
       "POST",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }

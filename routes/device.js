@@ -33,11 +33,18 @@ router.put("/", async (req, res) => {
             log(null, "/device", "PUT", req.rawBodySize, 0, user.id);
           } else {
             res.status(404).send("Device not found");
-            log("Device not found", "/device", "PUT", req.rawBodySize, 0);
+            log(
+              "Device not found",
+              "/device",
+              "PUT",
+              req.rawBodySize,
+              0,
+              user.id
+            );
           }
         } else {
           res.status(400).send("Update failed");
-          log("Update failed", "/device", "PUT", req.rawBodySize, 0);
+          log("Update failed", "/device", "PUT", req.rawBodySize, 0, user.id);
         }
       } else {
         res.status(403).send("Invalid authToken");
@@ -49,7 +56,15 @@ router.put("/", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Internal server error");
-    log("Internal Server Error", "/device", "PUT", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/device",
+      "PUT",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 
@@ -102,6 +117,7 @@ router.post("/favorite", async (req, res) => {
       "POST",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -143,6 +159,7 @@ router.delete("/", async (req, res) => {
       "DELETE",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }

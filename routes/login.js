@@ -43,7 +43,8 @@ router.post("/", async (req, res) => {
             "/login",
             "POST",
             req.rawBodySize,
-            new Blob([JSON.stringify(existingUser.dataValues.password)]).size
+            new Blob([JSON.stringify(existingUser.dataValues.password)]).size,
+            user.id
           );
           return;
         } else {
@@ -71,11 +72,20 @@ router.post("/", async (req, res) => {
       "/login",
       "POST",
       req.rawBodySize,
-      new Blob([JSON.stringify(hashedPw)]).size
+      new Blob([JSON.stringify(hashedPw)]).size,
+      user.id
     );
   } catch (error) {
     res.status(500).send("Internal Server Error");
-    log("Internal Server Error", "/login", "POST", req.rawBodySize, 0, error);
+    log(
+      "Internal Server Error",
+      "/login",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
   }
 });
 
@@ -95,7 +105,8 @@ router.get("/auth", async (req, res) => {
           "/login/auth",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(user.email)]).size
+          new Blob([JSON.stringify(user.email)]).size,
+          user.id
         );
       } else {
         res.status(403).send("Invalid access token");
@@ -113,6 +124,7 @@ router.get("/auth", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -134,7 +146,8 @@ router.get("/admin", async (req, res) => {
           "/login/admin",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(user.admin)]).size
+          new Blob([JSON.stringify(user.admin)]).size,
+          user.id
         );
       } else {
         res.status(403).send("Invalid access token");
@@ -152,6 +165,7 @@ router.get("/admin", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -173,7 +187,8 @@ router.get("/userId", async (req, res) => {
           "/login/userId",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(user.id)]).size
+          new Blob([JSON.stringify(user.id)]).size,
+          user.id
         );
       } else {
         res.status(403).send("Invalid access token");
@@ -191,6 +206,7 @@ router.get("/userId", async (req, res) => {
       "GET",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -214,7 +230,7 @@ router.put("/user", async (req, res) => {
         }
       );
       res.send("Ok");
-      log(null, "/login/user", "PUT", req.rawBodySize, 0, user.id);
+      log(null, "/login/user", "PUT", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal server error");
@@ -224,6 +240,7 @@ router.put("/user", async (req, res) => {
       "PUT",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
@@ -251,6 +268,7 @@ router.patch("/user", async (req, res) => {
       "PATCH",
       req.rawBodySize,
       0,
+      null,
       error
     );
   }
