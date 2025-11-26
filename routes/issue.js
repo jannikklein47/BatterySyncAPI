@@ -2,7 +2,7 @@ const express = require("express");
 const models = require("../models");
 const bcrypt = require("bcrypt");
 
-const { Op, Sequelize } = require("sequelize");
+const { Op, Sequelize, where } = require("sequelize");
 
 const Issue = models.issue;
 const Users = models.User;
@@ -151,6 +151,16 @@ router.post("/", async (req, res) => {
         'Dein Issue "' + created.title + '" ist erfolgreich eingegangen.',
         created.userId
       );
+
+      if (req.body.notify) {
+        const admin = await Users.findOne({ where: { admin: true } });
+        sendUpdateNotification(
+          "Kritisches Problem",
+          "'" + created.title + "' erfordert deine Aufmerksamkeit.",
+          admin.id
+        );
+      }
+
       log(
         null,
         "/issue",
