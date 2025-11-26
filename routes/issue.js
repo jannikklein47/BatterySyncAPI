@@ -142,20 +142,17 @@ router.post("/", async (req, res) => {
     } else user = null;
 
     if (user) {
-      const created = await Issue.create(
-        { ...data, userId: user.id },
-        {
-          include: [
-            {
-              model: models.User,
-              attributes: ["email"],
-              as: "user",
-            },
-          ],
-        }
-      );
+      const created = await Issue.create({ ...data, userId: user.id });
 
-      res.send(created);
+      const createdWithUser = await Issue.findByPk(created.id, {
+        include: {
+          model: models.User,
+          as: "user",
+          attributes: ["email"],
+        },
+      });
+
+      res.send(createdWithUser);
 
       sendUpdateNotification(
         "Eingangsbestätigung",
@@ -177,7 +174,7 @@ router.post("/", async (req, res) => {
         "/issue",
         "POST",
         req.rawBodySize,
-        new Blob([JSON.stringify(created)]).size,
+        new Blob([JSON.stringify(createdWithUser)]).size,
         user.id
       );
     } else {
