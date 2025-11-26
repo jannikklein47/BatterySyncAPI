@@ -30,7 +30,7 @@ router.put("/", async (req, res) => {
           // console.log("Device update: ", device)
           if (updated > 0) {
             res.status(200).send("Ok");
-            log(null, "/device", "PUT", req.rawBodySize, 0);
+            log(null, "/device", "PUT", req.rawBodySize, 0, user.id);
           } else {
             res.status(404).send("Device not found");
             log("Device not found", "/device", "PUT", req.rawBodySize, 0);
@@ -75,7 +75,7 @@ router.post("/favorite", async (req, res) => {
         if ((device = await devices.findOne({ where: { id: deviceId } }))) {
           await device.update({ favorite: set });
           res.status(200).send("Ok");
-          log(null, "/device/favorite", "POST", req.rawBodySize, 0);
+          log(null, "/device/favorite", "POST", req.rawBodySize, 0, user.id);
         } else {
           res.status(404).send("Device not found");
           log(
@@ -120,7 +120,7 @@ router.delete("/", async (req, res) => {
       });
       if (deleted > 0) {
         res.send("Ok");
-        log(null, "/device/favorite", "DELETE", req.rawBodySize, 0);
+        log(null, "/device/favorite", "DELETE", req.rawBodySize, 0, user.id);
       } else {
         res.status(404).send("Device not found");
         log(

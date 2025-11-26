@@ -246,7 +246,7 @@ router.post("/new", async (req, res) => {
             }
           }
           res.send("Ok");
-          log(null, "/notification/new", "POST", req.rawBodySize, 0);
+          log(null, "/notification/new", "POST", req.rawBodySize, 0, user.id);
         } else {
           res.status(403).send("Access denied");
           log("Access denied", "/notification/new", "POST", req.rawBodySize, 0);
@@ -314,7 +314,14 @@ router.post("/new/custom", async (req, res) => {
               }
             }
             res.send("Ok");
-            log(null, "/notification/new/custom", "POST", req.rawBodySize, 0);
+            log(
+              null,
+              "/notification/new/custom",
+              "POST",
+              req.rawBodySize,
+              0,
+              user.id
+            );
           } else {
             res.status(403).send("Access denied");
             log(
@@ -382,7 +389,7 @@ router.post("/off", async (req, res) => {
           });
 
           res.send("Ok");
-          log(null, "/notification/off", "POST", req.rawBodySize, 0);
+          log(null, "/notification/off", "POST", req.rawBodySize, 0, user.id);
         } else {
           res.status(403).send("Invalid authentication");
           log("Access denied", "/notification/off", "POST", req.rawBodySize, 0);

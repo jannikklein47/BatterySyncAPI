@@ -18,7 +18,14 @@ router.get("/android", async (req, res) => {
       const filePath = path.join(__dirname, "..", "batterysync-android.apk");
       res.sendFile(filePath);
       const stats = fs.statSync(filePath);
-      log(null, "/file/android", "GET", req.rawBodySize, stats.size || 0);
+      log(
+        null,
+        "/file/android",
+        "GET",
+        req.rawBodySize,
+        stats.size || 0,
+        user.id
+      );
     } else {
       res.status(403).send("Invalid access token");
     }

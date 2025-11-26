@@ -7,6 +7,7 @@ module.exports = async function (
   method = null,
   reqSize = null,
   resSize = null,
+  userId = null,
   error = null
 ) {
   let builder =
@@ -26,6 +27,7 @@ module.exports = async function (
   if (resSize) builder += " Res: " + resSize;
   if (text) builder += " | " + text;
   if (error) builder += " | " + error;
+  if (userId) builder += " | User " + userId;
 
   if (error) {
     console.error(builder);
@@ -39,6 +41,7 @@ module.exports = async function (
     method: method,
     reqSize: reqSize,
     resSize: resSize,
+    userId: userId,
     error: error?.toString(),
   });
 };

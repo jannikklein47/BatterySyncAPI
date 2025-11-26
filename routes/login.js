@@ -214,7 +214,7 @@ router.put("/user", async (req, res) => {
         }
       );
       res.send("Ok");
-      log(null, "/login/user", "PUT", req.rawBodySize, 0);
+      log(null, "/login/user", "PUT", req.rawBodySize, 0, user.id);
     }
   } catch (error) {
     res.status(500).send("Internal server error");

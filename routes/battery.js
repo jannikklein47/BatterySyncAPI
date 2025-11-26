@@ -90,7 +90,8 @@ router.get("/", async (req, res) => {
           "/battery",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(result)]).size
+          new Blob([JSON.stringify(result)]).size,
+          user.id
         );
       } else {
         res.status(403).send("Access denied");
@@ -161,7 +162,8 @@ router.get("/withNotificationInfo", async (req, res) => {
           "/battery/withNotificationInfo",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(result)]).size
+          new Blob([JSON.stringify(result)]).size,
+          user.id
         );
       } else {
         res.status(403).send("Access denied");
@@ -299,7 +301,7 @@ router.post("/", async (req, res) => {
       }
 
       res.send("Ok");
-      log(null, "/battery", "POST", req.rawBodySize, 0);
+      log(null, "/battery", "POST", req.rawBodySize, 0, user.id);
     } else {
       res.status(403).send("Access denied");
       log("Access denied", "/battery", "POST", req.rawBodySize, 0);
@@ -367,7 +369,7 @@ router.put("/", async (req, res) => {
       }
 
       res.status(200).send("Ok");
-      log(null, "/battery", "PUT", req.rawBodySize, 0);
+      log(null, "/battery", "PUT", req.rawBodySize, 0, user.id);
     } else {
       res.status(403).send("Access denied");
       log("Access denied", "/battery", "PUT", req.rawBodySize, 0);
