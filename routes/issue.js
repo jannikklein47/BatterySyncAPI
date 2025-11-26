@@ -142,7 +142,16 @@ router.post("/", async (req, res) => {
     } else user = null;
 
     if (user) {
-      const created = await Issue.create({ ...data, userId: user.id });
+      const created = await Issue.create(
+        { ...data, userId: user.id },
+        {
+          include: {
+            model: models.User,
+            attributes: ["email"],
+            as: "user",
+          },
+        }
+      );
 
       res.send(created);
 
