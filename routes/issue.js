@@ -33,6 +33,7 @@ async function sendUpdateNotification(title, content, userId) {
         deviceId: userDevice.id,
         type: "CONTENT",
         content: content,
+        title: title,
       },
       { transaction: t }
     );
