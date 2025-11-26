@@ -31,20 +31,17 @@ router.post("/", async (req, res) => {
       //res.status(403).send("User already exists.");
 
       try {
-        let access = bcrypt.compareSync(
-          password,
-          existingUser.dataValues.password
-        );
+        let access = bcrypt.compareSync(password, existingUser.password);
 
         if (access) {
-          res.send(existingUser.dataValues.password);
+          res.send(existingUser.password);
           log(
             null,
             "/login",
             "POST",
             req.rawBodySize,
-            new Blob([JSON.stringify(existingUser.dataValues.password)]).size,
-            user.id
+            new Blob([JSON.stringify(existingUser.password)]).size,
+            existingUser.id
           );
           return;
         } else {
