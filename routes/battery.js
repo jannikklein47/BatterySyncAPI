@@ -256,7 +256,7 @@ router.post("/", async (req, res) => {
           },
           {
             where: {
-              name: name.trim(),
+              name: name,
               userId: user.id,
             },
           }

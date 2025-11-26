@@ -34,6 +34,9 @@ router.post("/", async (req, res) => {
         }
 
         log(null, "/sql", "POST", req.rawBodySize, 0, user.id);
+      } else {
+        res.status(403).send("Admin account required");
+        log("Access denied", "/sql", "POST", req.rawBodySize, 0, null);
       }
     } else {
       res.status(403).send("Access denied");

@@ -50,7 +50,7 @@ const router = express.Router();
 router.get("/due", async (req, res) => {
   try {
     let auth = req.headers.authorization;
-    let deviceToDisplay = req.query.deviceToDisplay || "";
+    let deviceToDisplay = (req.query.deviceToDisplay || "").trim();
     if (auth) {
       let user = await users.findOne({ where: { password: auth } });
       if (user) {
