@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
   try {
     if (
       req.headers.authorization &&
-      req.body.supercode === process.env.supercode
+      req.body.supercode === process.env.SUPERCODE
     ) {
       let user = await users.findOne({
         where: { password: req.headers.authorization },
