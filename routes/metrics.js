@@ -28,138 +28,133 @@ router.get("/", async (req, res) => {
         let result = {};
 
         let timeframe = req.query.timeframe || "1 day";
-        let interval = req.query.intervalMinutes || "30";
-        let unit = req.query.unit || "minute";
+        let interval = req.query.interval || "30 minutes";
 
+        const timeBucket = `
+        (
+          date_trunc('second', "createdAt") - 
+          ( extract(epoch from "createdAt")::int 
+            % extract(epoch from :interval::interval)::int
+          ) * interval '1 second'
+        ) AS interval_start
+        `;
+
+        // -----------------------------------------------------
+        // Request Counts
+        // -----------------------------------------------------
         const requestCounts = await sequelize.query(
           `
-        SELECT
-          DATE_TRUNC(':unit', "createdAt") - 
-          MOD(EXTRACT(:unit FROM "createdAt")::int, :interval) * INTERVAL '1 :unit'
-            AS interval_start,
-          method,
-          COUNT(*) AS count
-        FROM logs
-        WHERE "createdAt" >= NOW() - INTERVAL :timeframe
-        GROUP BY interval_start, method
-        ORDER BY interval_start ASC;
-        `,
-          {
-            type: QueryTypes.SELECT,
-            replacements: { interval, timeframe, unit },
-          }
-        );
-
-        const responseSizes = await sequelize.query(
-          `
-        SELECT
-          DATE_TRUNC(':unit', "createdAt") - 
-            MOD(EXTRACT(:unit FROM "createdAt")::int, :interval) * INTERVAL '1 :unit'
-              AS interval_start,
-          SUM("resSize") AS count
-        FROM logs
-        WHERE "createdAt" >= NOW() - INTERVAL :timeframe
-        GROUP BY interval_start
-        ORDER BY interval_start ASC;
-      `,
-          {
-            type: QueryTypes.SELECT,
-            replacements: { interval, timeframe, unit },
-          }
-        );
-
-        const requestSizes = await sequelize.query(
-          `
-        SELECT
-          DATE_TRUNC(':unit', "createdAt") - 
-            MOD(EXTRACT(:unit FROM "createdAt")::int, :interval) * INTERVAL '1 :unit'
-              AS interval_start,
-          SUM("reqSize") AS count
-        FROM logs
-        WHERE "createdAt" >= NOW() - INTERVAL :timeframe
-        GROUP BY interval_start
-        ORDER BY interval_start ASC;
-      `,
-          {
-            type: QueryTypes.SELECT,
-            replacements: { interval, timeframe, unit },
-          }
-        );
-
-        const errorCounts = await sequelize.query(
-          `
-      SELECT
-        DATE_TRUNC(':unit', "createdAt") - 
-          MOD(EXTRACT(:unit FROM "createdAt")::int, :interval) * INTERVAL '1 :unit'
-            AS interval_start,
-        COUNT(*) AS count
-      FROM logs
-      WHERE error IS NOT NULL
-      AND "createdAt" >= NOW() - INTERVAL :timeframe
-      GROUP BY interval_start
-      ORDER BY interval_start ASC;`,
-          {
-            type: QueryTypes.SELECT,
-            replacements: { interval, timeframe, unit },
-          }
-        );
-
-        const blockedCounts = await sequelize.query(
-          `
           SELECT
-            DATE_TRUNC(':unit', "createdAt") - 
-              MOD(EXTRACT(:unit FROM "createdAt")::int, :interval) * INTERVAL '1 :unit'
-                AS interval_start,
+            ${timeBucket},
+            method,
             COUNT(*) AS count
           FROM logs
-          WHERE text IS NOT NULL
-          AND "createdAt" >= NOW() - INTERVAL :timeframe
+          WHERE "createdAt" >= NOW() - INTERVAL :timeframe
+          GROUP BY interval_start, method
+          ORDER BY interval_start ASC;
+        `,
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
+        );
+
+        // -----------------------------------------------------
+        // Response Sizes
+        // -----------------------------------------------------
+        const responseSizes = await sequelize.query(
+          `
+          SELECT
+            ${timeBucket},
+            SUM("resSize") AS count
+          FROM logs
+          WHERE "createdAt" >= NOW() - INTERVAL :timeframe
           GROUP BY interval_start
           ORDER BY interval_start ASC;
         `,
-          {
-            type: QueryTypes.SELECT,
-            replacements: { interval, timeframe, unit },
-          }
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
+        // -----------------------------------------------------
+        // Request Sizes
+        // -----------------------------------------------------
+        const requestSizes = await sequelize.query(
+          `
+          SELECT
+            ${timeBucket},
+            SUM("reqSize") AS count
+          FROM logs
+          WHERE "createdAt" >= NOW() - INTERVAL :timeframe
+          GROUP BY interval_start
+          ORDER BY interval_start ASC;
+        `,
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
+        );
+
+        // -----------------------------------------------------
+        // Error Counts
+        // -----------------------------------------------------
+        const errorCounts = await sequelize.query(
+          `
+          SELECT
+            ${timeBucket},
+            COUNT(*) AS count
+          FROM logs
+          WHERE error IS NOT NULL
+            AND "createdAt" >= NOW() - INTERVAL :timeframe
+          GROUP BY interval_start
+          ORDER BY interval_start ASC;
+        `,
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
+        );
+
+        // -----------------------------------------------------
+        // Blocked Counts
+        // -----------------------------------------------------
+        const blockedCounts = await sequelize.query(
+          `
+          SELECT
+            ${timeBucket},
+            COUNT(*) AS count
+          FROM logs
+          WHERE text IS NOT NULL
+            AND "createdAt" >= NOW() - INTERVAL :timeframe
+          GROUP BY interval_start
+          ORDER BY interval_start ASC;
+        `,
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
+        );
+
+        // -----------------------------------------------------
+        // Success Counts
+        // -----------------------------------------------------
         const successCounts = await sequelize.query(
           `
-      SELECT
-        DATE_TRUNC(':unit', "createdAt") - 
-          MOD(EXTRACT(:unit FROM "createdAt")::int, :interval) * INTERVAL '1 :unit'
-            AS interval_start,
-        COUNT(*) AS count
-      FROM logs
-      WHERE text IS NULL
-      AND "createdAt" >= NOW() - INTERVAL :timeframe
-      GROUP BY interval_start
-      ORDER BY interval_start ASC;
-    `,
-          {
-            type: QueryTypes.SELECT,
-            replacements: { interval, timeframe, unit },
-          }
+          SELECT
+            ${timeBucket},
+            COUNT(*) AS count
+          FROM logs
+          WHERE text IS NULL
+            AND "createdAt" >= NOW() - INTERVAL :timeframe
+          GROUP BY interval_start
+          ORDER BY interval_start ASC;
+        `,
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
+        // -----------------------------------------------------
+        // Route Usage
+        // -----------------------------------------------------
         const routeUsage = await sequelize.query(
           `
           SELECT
             route,
-            DATE_TRUNC(':unit',"createdAt") - 
-              MOD(EXTRACT(:unit FROM "createdAt")::int, :interval) * INTERVAL '1 :unit'
-              AS interval_start,
+            ${timeBucket},
             COUNT(*) AS count
           FROM logs
           WHERE route IS NOT NULL
-          AND "createdAt" >= NOW() - INTERVAL :timeframe
+            AND "createdAt" >= NOW() - INTERVAL :timeframe
           GROUP BY route, interval_start
           ORDER BY route, interval_start;
         `,
-          {
-            type: QueryTypes.SELECT,
-            replacements: { interval, timeframe, unit },
-          }
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
         const getRouteUsage = async () => {
