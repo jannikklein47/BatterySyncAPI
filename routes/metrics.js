@@ -29,12 +29,13 @@ router.get("/", async (req, res) => {
 
         let timeframe = req.query.timeframe || "1 day";
         let interval = req.query.intervalMinutes || "30";
+        let cumulate = req.query.cumulate || "minute";
 
         const requestCounts = await sequelize.query(
           `
         SELECT
-          DATE_TRUNC('minute', "createdAt") - 
-          MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
+          DATE_TRUNC(':cumulate', "createdAt") - 
+          MOD(EXTRACT(:cumulate FROM "createdAt")::int, :interval) * INTERVAL '1 :cumulate'
             AS interval_start,
           method,
           COUNT(*) AS count
@@ -49,8 +50,8 @@ router.get("/", async (req, res) => {
         const responseSizes = await sequelize.query(
           `
         SELECT
-          DATE_TRUNC('minute', "createdAt") - 
-            MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
+          DATE_TRUNC(':cumulate', "createdAt") - 
+            MOD(EXTRACT(:cumulate FROM "createdAt")::int, :interval) * INTERVAL '1 :cumulate'
               AS interval_start,
           SUM("resSize") AS count
         FROM logs
@@ -64,8 +65,8 @@ router.get("/", async (req, res) => {
         const requestSizes = await sequelize.query(
           `
         SELECT
-          DATE_TRUNC('minute', "createdAt") - 
-            MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
+          DATE_TRUNC(':cumulate', "createdAt") - 
+            MOD(EXTRACT(:cumulate FROM "createdAt")::int, :interval) * INTERVAL '1 :cumulate'
               AS interval_start,
           SUM("reqSize") AS count
         FROM logs
@@ -79,8 +80,8 @@ router.get("/", async (req, res) => {
         const errorCounts = await sequelize.query(
           `
       SELECT
-        DATE_TRUNC('minute', "createdAt") - 
-          MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
+        DATE_TRUNC(':cumulate', "createdAt") - 
+          MOD(EXTRACT(:cumulate FROM "createdAt")::int, :interval) * INTERVAL '1 :cumulate'
             AS interval_start,
         COUNT(*) AS count
       FROM logs
@@ -94,8 +95,8 @@ router.get("/", async (req, res) => {
         const blockedCounts = await sequelize.query(
           `
           SELECT
-            DATE_TRUNC('minute', "createdAt") - 
-              MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
+            DATE_TRUNC(':cumulate', "createdAt") - 
+              MOD(EXTRACT(:cumulate FROM "createdAt")::int, :interval) * INTERVAL '1 :cumulate'
                 AS interval_start,
             COUNT(*) AS count
           FROM logs
@@ -110,8 +111,8 @@ router.get("/", async (req, res) => {
         const successCounts = await sequelize.query(
           `
       SELECT
-        DATE_TRUNC('minute', "createdAt") - 
-          MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
+        DATE_TRUNC(':cumulate', "createdAt") - 
+          MOD(EXTRACT(:cumulate FROM "createdAt")::int, :interval) * INTERVAL '1 :cumulate'
             AS interval_start,
         COUNT(*) AS count
       FROM logs
@@ -127,8 +128,8 @@ router.get("/", async (req, res) => {
           `
           SELECT
             route,
-            DATE_TRUNC('minute',"createdAt") - 
-              MOD(EXTRACT(MINUTE FROM "createdAt")::int, :interval) * INTERVAL '1 minute'
+            DATE_TRUNC(':cumulate',"createdAt") - 
+              MOD(EXTRACT(:cumulate FROM "createdAt")::int, :interval) * INTERVAL '1 :cumulate'
               AS interval_start,
             COUNT(*) AS count
           FROM logs
