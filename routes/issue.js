@@ -160,8 +160,9 @@ router.post("/", async (req, res) => {
         created.userId
       );
 
-      if (data.notify && data.priority === 2) {
+      if (data.notify && (data.priority === 2 || data.priority === "2")) {
         const admin = await Users.findOne({ where: { admin: true } });
+        console.log("Sent notification to admin ", admin.id);
         sendUpdateNotification(
           "Kritisches Problem",
           "'" + created.title + "' erfordert deine Aufmerksamkeit.",
