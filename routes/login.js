@@ -54,6 +54,55 @@ router.post("/", async (req, res) => {
       }
 
       return;
+    } else {
+      res.status(404).send("User does not exist.");
+      log("Access denied", "/login", "POST", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/login",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
+router.post("/register", async (req, res) => {
+  try {
+    let email, password;
+
+    if (req.body && req.body.password && req.body.email) {
+      email = req.body.email;
+      password = req.body.password;
+    } else if (req.query && req.query.password && req.query.email) {
+      email = req.query.email;
+      password = req.query.password;
+    }
+
+    if (!password || !email) {
+      res.status(400).send("Invalid request");
+      log("Invalid request", "/login", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    let existingUser;
+    if ((existingUser = await users.findOne({ where: { email: email } }))) {
+      res.status(403).send("User already exists.");
+      log("Access denied", "/login/register", "POST", req.rawBodySize, 0);
+
+      return;
+    }
+
+    if ((password || "").length < 8) {
+      res.status(403).send("Password must be at least 8 characters long.");
+      log("Access denied", "/login/register", "POST", req.rawBodySize, 0);
+
+      return;
     }
 
     const hashedPw = await bcrypt.hash(password, 11);
