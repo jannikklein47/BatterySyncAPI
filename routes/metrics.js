@@ -12,7 +12,10 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    if (req.query.key !== process.env.ADMIN_ACCESS) {
+    if (
+      req.query.key !== process.env.ADMIN_ACCESS ||
+      req.query.key !== process.env.API_USAGE_KEY
+    ) {
       res.status(403).send("Access denied");
       log("Access denied", "/metrics", "GET", req.rawBodySize, 0);
       return;
