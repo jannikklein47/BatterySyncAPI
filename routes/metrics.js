@@ -31,12 +31,14 @@ router.get("/", async (req, res) => {
         let interval = req.query.interval || "30 minutes";
 
         const timeBucket = `
-        (
-          date_trunc('second', "createdAt") - 
-          ( extract(epoch from "createdAt")::int 
-            % extract(epoch from :interval::interval)::int
-          ) * interval '1 second'
-        ) AS interval_start
+          (
+            to_timestamp(
+              floor(
+                extract(epoch from "createdAt")
+                / extract(epoch from :interval::interval)
+              ) * extract(epoch from :interval::interval)
+            )
+          ) AS interval_start
         `;
 
         // -----------------------------------------------------
