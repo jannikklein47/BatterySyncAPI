@@ -104,6 +104,12 @@ router.post("/register", async (req, res) => {
 
       return;
     }
+    if ((email || "").length < 4) {
+      res.status(403).send("Username must be at least 4 characters long.");
+      log("Access denied", "/login/register", "POST", req.rawBodySize, 0);
+
+      return;
+    }
 
     const hashedPw = await bcrypt.hash(password, 11);
 
