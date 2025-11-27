@@ -334,6 +334,102 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.post("/secure", async (req, res) => {
+  try {
+    let auth, uuid, battery, chargingStatus, isPluggedIn;
+
+    if (!(auth = req.headers.authorization)) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/battery", "POST", req.rawBodySize, 0);
+      return;
+    }
+    if (!(uuid = req.body.uuid)) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/battery", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    battery = req.body.battery || undefined;
+    chargingStatus = req.body.chargingStatus || undefined;
+    isPluggedIn = req.body.isPluggedIn || undefined;
+
+    let user = await users.findOne({
+      where: {
+        password: auth,
+      },
+    });
+    if (user) {
+      let device;
+      if (
+        (device = await devices.findOne({
+          where: {
+            userId: user.id,
+            uuid: uuid,
+          },
+        }))
+      ) {
+        await device.update({
+          battery: battery,
+          chargingStatus: chargingStatus,
+          isPluggedIn: isPluggedIn,
+        });
+
+        await batterylogs.create({
+          battery: device.battery,
+          chargingStatus: device.chargingStatus,
+          isPluggedIn: device.isPluggedIn,
+          deviceId: device.id,
+        });
+
+        debouncePrediction(device.id);
+
+        if (
+          (device.chargingStatus === "true" ||
+            device.chargingStatus === true ||
+            device.sPluggedIn === "true" ||
+            device.isPluggedIn === true) &&
+          device.predictedZeroAt < new Date(Date.now() + 2 * 60 * 60 * 1000)
+        ) {
+          await models.OrderedNotifications.destroy({
+            where: {
+              deviceId: device.id,
+              type: "CHARGEREMINDER",
+            },
+          });
+        }
+
+        res.send("Ok");
+        log(null, "/battery/secure", "POST", req.rawBodySize, 0, user.id);
+      } else {
+        res.status(404).send("Invalid UUID");
+        log(
+          "Invalid UUID",
+          "/battery/secure",
+          "POST",
+          req.rawBodySize,
+          0,
+          user.id
+        );
+      }
+    } else {
+      res.status(403).send("Access denied");
+      log("Access denied", "/battery/secure", "POST", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Error");
+    log(
+      "Internal Server Error",
+      "/battery/secure",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
 router.put("/", async (req, res) => {
   try {
     let auth, name, deviceBattery, chargingStatus, isPluggedIn;
