@@ -123,6 +123,59 @@ router.post("/favorite", async (req, res) => {
   }
 });
 
+router.post("/register", async (req, res) => {
+  try {
+    let auth;
+    if (!(auth = req.headers.authorization)) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/register", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    if (req.body.system !== "phone" && req.body.system !== "laptop") {
+      res.status(400).send("Invalid system");
+      log("Access denied", "/device/register", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    let user;
+    if ((user = await users.findOne({ where: { password: auth } }))) {
+      const createdDevice = await devices.create({
+        type: req.body.system.toLowerCase(),
+        userId: user.id,
+      });
+
+      const createdUUID = createdDevice.uuid;
+
+      res.send(createdUUID);
+      log(
+        null,
+        "/device/register",
+        "POST",
+        req.rawBodySize,
+        new Blob([JSON.stringify(createdUUID)]).size,
+        user.id
+      );
+    } else {
+      res.status(403).send("Access denied");
+      log(null, "/device/register", "POST", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/device/register",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+    return;
+  }
+});
+
 router.delete("/", async (req, res) => {
   try {
     let user;

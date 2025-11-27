@@ -1,5 +1,5 @@
 "use strict";
-const { Model } = require("sequelize");
+const { Model, Sequelize } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Device extends Model {
     /**
@@ -57,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+      },
+      uuid: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
     },
     {

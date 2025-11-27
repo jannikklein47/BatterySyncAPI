@@ -285,7 +285,20 @@ router.post("/", async (req, res) => {
             },
           });
         }
+
+        res.send("Ok");
+        log(null, "/battery", "POST", req.rawBodySize, 0, user.id);
       } else {
+        res.status(404).send("Device not found");
+        log(
+          "Device not found",
+          "/battery",
+          "POST",
+          req.rawBodySize,
+          0,
+          user.id
+        );
+        /*
         const newDevice = await devices.create({
           userId: user.id,
           name: name.trim(),
@@ -300,10 +313,8 @@ router.post("/", async (req, res) => {
           deviceId: newDevice.id,
           isPluggedIn: isPluggedIn,
         });
+        */
       }
-
-      res.send("Ok");
-      log(null, "/battery", "POST", req.rawBodySize, 0, user.id);
     } else {
       res.status(403).send("Access denied");
       log("Access denied", "/battery", "POST", req.rawBodySize, 0);
