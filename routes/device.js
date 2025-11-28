@@ -183,11 +183,13 @@ router.post("/uuid", async (req, res) => {
     if (!(auth = req.headers.authorization)) {
       res.status(403).send("Access denied");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
+      console.log("kein auth");
       return;
     }
 
     if (!req.query.uuid) {
       res.status(400).send("Invalid uuid");
+      console.log("kein uuid");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
       return;
     }
@@ -219,8 +221,10 @@ router.post("/uuid", async (req, res) => {
         new Blob([JSON.stringify(stripped)]).size,
         user.id
       );
+      console.log("kein user");
     } else {
       res.status(403).send("Access denied");
+
       log(null, "/device/uuid", "POST", req.rawBodySize, 0);
       return;
     }
