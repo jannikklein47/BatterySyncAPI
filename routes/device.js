@@ -180,13 +180,12 @@ router.post("/register", async (req, res) => {
 router.post("/uuid", async (req, res) => {
   try {
     let auth;
+    console.log("Body", req.body);
     if (!(auth = req.headers.authorization)) {
       res.status(403).send("Access denied");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
       return;
     }
-
-    console.log(req.body);
 
     if (!req.body.uuid) {
       res.status(400).send("Invalid uuid");
