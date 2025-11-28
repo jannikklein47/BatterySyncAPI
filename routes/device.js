@@ -291,6 +291,7 @@ router.post("/otp", async (req, res) => {
         new Date(foundDevice.otpTime) > Date.now() - 5 * 60 * 1000
       ) {
         res.status(410).send(foundDevice.otpTime);
+        console.log("Device has otp newer than 5 minutes");
         log("Access denied", "/device/otp", "POST", req.rawBodySize, 0);
         return;
       }
@@ -298,6 +299,8 @@ router.post("/otp", async (req, res) => {
       let generated = generateRandomString();
 
       await foundDevice.update({ otp: generated, otpTime: Date.now() });
+
+      console.log("OTP:", generated);
 
       sendNotification(
         generated + " ist dein Einmalpasswort",
