@@ -141,7 +141,7 @@ router.post("/register", async (req, res) => {
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
       const createdDevice = await devices.create({
-        type: req.body.system.toLowerCase(),
+        type: req.query.system.toLowerCase(),
         userId: user.id,
       });
 
