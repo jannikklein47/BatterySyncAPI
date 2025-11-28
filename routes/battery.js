@@ -343,15 +343,15 @@ router.post("/secure", async (req, res) => {
       log("Access denied", "/battery", "POST", req.rawBodySize, 0);
       return;
     }
-    if (!(uuid = req.body.uuid)) {
+    if (!(uuid = req.query.uuid)) {
       res.status(403).send("Access denied");
       log("Access denied", "/battery", "POST", req.rawBodySize, 0);
       return;
     }
 
-    battery = req.body.battery || undefined;
-    chargingStatus = req.body.chargingStatus || undefined;
-    isPluggedIn = req.body.isPluggedIn || undefined;
+    battery = req.query.battery || undefined;
+    chargingStatus = req.query.chargingStatus || undefined;
+    isPluggedIn = req.query.isPluggedIn || undefined;
 
     let user = await users.findOne({
       where: {

@@ -180,14 +180,13 @@ router.post("/register", async (req, res) => {
 router.post("/uuid", async (req, res) => {
   try {
     let auth;
-    console.log("Body", req.body);
     if (!(auth = req.headers.authorization)) {
       res.status(403).send("Access denied");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
       return;
     }
 
-    if (!req.body.uuid) {
+    if (!req.query.uuid) {
       res.status(400).send("Invalid uuid");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
       return;
@@ -198,7 +197,7 @@ router.post("/uuid", async (req, res) => {
       const foundDevice = await devices.findOne({
         where: {
           userId: user.id,
-          uuid: req.body.uuid,
+          uuid: req.query.uuid,
         },
       });
 
