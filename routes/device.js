@@ -2,12 +2,30 @@ const express = require("express");
 const models = require("../models");
 const bcrypt = require("bcrypt");
 
+const { Op, Sequelize } = require("sequelize");
+
 const users = models.User;
 const devices = models.Device;
+const sequelize = models.sequelize;
 
 const router = express.Router();
 
 const log = require("../services/logsystem");
+const sendNotification = require("../services/sendNotification");
+
+function generateRandomString(length = 6) {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+
+  for (let i = 0; i < length; i++) {
+    // Generate a random index based on the number of available characters
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    // Append the character at that index to the result
+    result += characters.charAt(randomIndex);
+  }
+
+  return result;
+}
 
 router.put("/", async (req, res) => {
   try {
@@ -183,13 +201,11 @@ router.post("/uuid", async (req, res) => {
     if (!auth) {
       res.status(403).send("Access denied");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
-      console.log("kein auth");
       return;
     }
 
     if (!req.query.uuid) {
       res.status(400).send("Invalid uuid");
-      console.log("kein uuid");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
       return;
     }
@@ -219,7 +235,172 @@ router.post("/uuid", async (req, res) => {
         new Blob([JSON.stringify(foundDevice)]).size,
         user.id
       );
-      console.log("kein user");
+    } else {
+      res.status(403).send("Access denied");
+
+      log(null, "/device/uuid", "POST", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/device/uuid",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+    return;
+  }
+});
+
+router.post("/otp", async (req, res) => {
+  try {
+    let auth = req.headers.authorization;
+    if (!auth) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/otp", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    if (!req.query.id) {
+      res.status(400).send("Invalid id");
+      log("Access denied", "/device/otp", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    let user;
+    if ((user = await users.findOne({ where: { password: auth } }))) {
+      const foundDevice = await devices.findOne({
+        where: {
+          userId: user.id,
+          id: req.query.id,
+        },
+      });
+
+      if (!foundDevice) {
+        res.status(404).send("Device not found");
+        log("Device not found", "/device/otp", "POST", req.rawBodySize, 0);
+        return;
+      }
+
+      if (
+        foundDevice.otpTime &&
+        new Date(foundDevice.otpTime) > Date.now() - 5 * 60 * 1000
+      ) {
+        res.status(410).send(foundDevice.otpTime);
+        log("Access denied", "/device/otp", "POST", req.rawBodySize, 0);
+        return;
+      }
+
+      let generated = generateRandomString();
+
+      await foundDevice.update({ otp: generated, otpTime: Date.now() });
+
+      sendNotification(
+        generated + " ist dein Einmalpasswort",
+        "Gib diesen Code niemals weiter. Er ist für 5 Minuten gültig.",
+        user.id,
+        foundDevice.id
+      );
+
+      res.send("ok");
+
+      log(
+        null,
+        "/device/otp",
+        "POST",
+        req.rawBodySize,
+        new Blob([JSON.stringify(foundDevice)]).size,
+        user.id
+      );
+    } else {
+      res.status(403).send("Access denied");
+
+      log(null, "/device/otp", "POST", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/device/otp",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+    return;
+  }
+});
+
+router.post("/newUuid", async (req, res) => {
+  try {
+    let auth = req.headers.authorization;
+    if (!auth) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    if (!req.query.id) {
+      res.status(400).send("Invalid id");
+      log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    if (!req.query.otp) {
+      res.status(400).send("Missing One-Time-Password");
+      log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    let user;
+    if ((user = await users.findOne({ where: { password: auth } }))) {
+      const foundDevice = await devices.findOne({
+        where: {
+          userId: user.id,
+          id: req.query.id,
+          otp: req.query.otp,
+          otpTime: {
+            [Op.gte]: sequelize.literal(`NOW() - INTERVAL '5 minutes'`),
+          },
+        },
+      });
+
+      if (!foundDevice) {
+        res.status(404).send("Device not found");
+        log("Device not found", "/device/newUuid", "POST", req.rawBodySize, 0);
+        return;
+      }
+
+      if (foundDevice.otp === req.query.otp) {
+        await foundDevice.update({
+          uuid: Sequelize.literal("gen_random_uuid()"),
+          otp: null,
+          otpTime: null,
+        });
+
+        const newUuid = foundDevice.uuid;
+
+        res.send(newUuid);
+      } else {
+        res.status(403).send("Wrong One-Time-Password");
+        log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
+        return;
+      }
+
+      log(
+        null,
+        "/device/newUuid",
+        "POST",
+        req.rawBodySize,
+        new Blob([JSON.stringify(foundDevice)]).size,
+        user.id
+      );
     } else {
       res.status(403).send("Access denied");
 
