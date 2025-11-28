@@ -210,13 +210,13 @@ router.post("/uuid", async (req, res) => {
       const stripped = JSON.parse(foundDevice.toJSON());
       delete stripped.id;
 
-      res.send(createdUUID);
+      res.send(stripped);
       log(
         null,
         "/device/uuid",
         "POST",
         req.rawBodySize,
-        new Blob([JSON.stringify(createdUUID)]).size,
+        new Blob([JSON.stringify(stripped)]).size,
         user.id
       );
     } else {
@@ -263,7 +263,7 @@ router.get("/", async (req, res) => {
         "/device",
         "GET",
         req.rawBodySize,
-        new Blob([JSON.stringify(createdUUID)]).size,
+        new Blob([JSON.stringify(foundDevices)]).size,
         user.id
       );
     } else {
