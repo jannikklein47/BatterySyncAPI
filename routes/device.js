@@ -179,8 +179,8 @@ router.post("/register", async (req, res) => {
 // more secure than get
 router.post("/uuid", async (req, res) => {
   try {
-    let auth;
-    if (!(auth = req.headers.authorization)) {
+    let auth = req.headers.authorization;
+    if (!auth) {
       res.status(403).send("Access denied");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
       console.log("kein auth");
