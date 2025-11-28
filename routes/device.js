@@ -209,7 +209,7 @@ router.post("/uuid", async (req, res) => {
         return;
       }
 
-      const stripped = JSON.parse(foundDevice.toJSON());
+      const stripped = foundDevice;
       delete stripped.id;
 
       res.send(stripped);
