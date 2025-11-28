@@ -63,6 +63,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: Sequelize.literal("gen_random_uuid()"),
       },
+      otp: {
+        type: DataTypes.STRING,
+      },
+      otpTime: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,
