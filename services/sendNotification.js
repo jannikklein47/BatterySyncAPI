@@ -1,3 +1,6 @@
+const models = require("../models");
+const Notifications = models.OrderedNotifications;
+
 module.exports = async function (
   title,
   content,

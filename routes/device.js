@@ -280,6 +280,8 @@ router.post("/otp", async (req, res) => {
         },
       });
 
+      console.log(JSON.stringify(foundDevice));
+
       if (!foundDevice) {
         res.status(404).send("Device not found");
         log("Device not found", "/device/otp", "POST", req.rawBodySize, 0);
@@ -298,9 +300,13 @@ router.post("/otp", async (req, res) => {
 
       let generated = generateRandomString();
 
-      await foundDevice.update({ otp: generated, otpTime: Date.now() });
+      await foundDevice.update({
+        otp: generated,
+        otpTime: Sequelize.literal("NOW()"),
+      });
 
       console.log("OTP:", generated);
+      console.log("Device: ", JSON.stringify(foundDevice));
 
       sendNotification(
         generated + " ist dein Einmalpasswort",
@@ -316,7 +322,7 @@ router.post("/otp", async (req, res) => {
         "/device/otp",
         "POST",
         req.rawBodySize,
-        new Blob([JSON.stringify(foundDevice)]).size,
+        new Blob([JSON.stringify(0)]).size,
         user.id
       );
     } else {
@@ -360,6 +366,8 @@ router.post("/newUuid", async (req, res) => {
       log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
       return;
     }
+
+    console.log("got id", req.query.id, " otp", req.query.otp);
 
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
