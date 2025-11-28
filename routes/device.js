@@ -302,7 +302,7 @@ router.post("/otp", async (req, res) => {
 
       await foundDevice.update({
         otp: generated,
-        otpTime: Sequelize.literal("NOW()"),
+        otpTime: new Date(),
       });
 
       console.log("OTP:", generated);
