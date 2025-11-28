@@ -186,6 +186,8 @@ router.post("/uuid", async (req, res) => {
       return;
     }
 
+    console.log(req.body);
+
     if (!req.body.uuid) {
       res.status(400).send("Invalid uuid");
       log("Access denied", "/device/uuid", "POST", req.rawBodySize, 0);
