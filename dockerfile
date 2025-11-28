@@ -14,6 +14,8 @@ COPY package*.json ./
 # Abhängigkeiten installieren
 RUN npm install
 
+RUN npm install sequelize-cli
+
 # bcrypt fix?
 RUN npm rebuild bcrypt --build-from-source
 
