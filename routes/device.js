@@ -201,6 +201,7 @@ router.post("/uuid", async (req, res) => {
           userId: user.id,
           uuid: req.query.uuid,
         },
+        attributes: ["name"],
       });
 
       if (!foundDevice) {
@@ -209,16 +210,13 @@ router.post("/uuid", async (req, res) => {
         return;
       }
 
-      const stripped = foundDevice;
-      delete stripped.id;
-
-      res.send(stripped);
+      res.send(foundDevice);
       log(
         null,
         "/device/uuid",
         "POST",
         req.rawBodySize,
-        new Blob([JSON.stringify(stripped)]).size,
+        new Blob([JSON.stringify(foundDevice)]).size,
         user.id
       );
       console.log("kein user");
