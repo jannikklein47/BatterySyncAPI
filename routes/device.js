@@ -132,7 +132,7 @@ router.post("/register", async (req, res) => {
       return;
     }
 
-    if (req.body.system !== "phone" && req.body.system !== "laptop") {
+    if (req.query.system !== "phone" && req.query.system !== "laptop") {
       res.status(400).send("Invalid system");
       log("Access denied", "/device/register", "POST", req.rawBodySize, 0);
       return;
