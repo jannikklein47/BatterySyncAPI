@@ -390,7 +390,7 @@ router.post("/newUuid", async (req, res) => {
 
       if (foundDevice.otp === req.query.otp) {
         await foundDevice.update({
-          uuid: Sequelize.literal("gen_random_uuid()"),
+          uuid: sequelize.literal("gen_random_uuid()"),
           otp: null,
           otpTime: null,
         });
