@@ -511,6 +511,81 @@ router.post("/newUuid", async (req, res) => {
   }
 });
 
+router.patch("/name", async (req, res) => {
+  try {
+    let auth;
+    if (!(auth = req.headers.authorization)) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/name", "PATCH", req.rawBodySize, 0);
+      return;
+    }
+
+    let uuid;
+    if (!(uuid = req.query.uuid)) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/name", "PATCH", req.rawBodySize, 0);
+      return;
+    }
+
+    if (!req.query.name || req.query.name.length < 2) {
+      res.status(400).send("Invalid name");
+      log("Access denied", "/device/name", "PATCH", req.rawBodySize, 0);
+      return;
+    }
+
+    let user;
+    if ((user = await users.findOne({ where: { password: auth } }))) {
+      const foundDevice = await devices.findOne({
+        where: {
+          uuid: uuid,
+          userId: user.id,
+        },
+      });
+
+      if (!foundDevice) {
+        res.status(404).send("Device not found");
+        log(
+          "Device not found",
+          "/device/name",
+          "PATCH",
+          req.rawBodySize,
+          0,
+          user.id
+        );
+        return;
+      }
+
+      foundDevice.update({ name: req.query.name });
+
+      res.send(req.query.name);
+      log(
+        null,
+        "/device/name",
+        "PATCH",
+        req.rawBodySize,
+        new Blob([JSON.stringify(req.query.name)]).size,
+        user.id
+      );
+    } else {
+      res.status(403).send("Access denied");
+      log(null, "/device/name", "PATCH", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/device/name",
+      "PATCH",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+    return;
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     let auth;
@@ -557,60 +632,6 @@ router.get("/", async (req, res) => {
     return;
   }
 });
-/*
-router.post("/register/replaceOld", async (req, res) => {
-  try {
-    let auth;
-    if (!(auth = req.headers.authorization)) {
-      res.status(403).send("Access denied");
-      log("Access denied", "/device/register", "POST", req.rawBodySize, 0);
-      return;
-    }
-
-    if (req.body.system !== "phone" && req.body.system !== "laptop") {
-      res.status(400).send("Invalid system");
-      log("Access denied", "/device/register", "POST", req.rawBodySize, 0);
-      return;
-    }
-
-    let user;
-    if ((user = await users.findOne({ where: { password: auth } }))) {
-      const createdDevice = await devices.create({
-        type: req.body.system.toLowerCase(),
-        userId: user.id,
-      });
-
-      const createdUUID = createdDevice.uuid;
-
-      res.send(createdUUID);
-      log(
-        null,
-        "/device/register",
-        "POST",
-        req.rawBodySize,
-        new Blob([JSON.stringify(createdUUID)]).size,
-        user.id
-      );
-    } else {
-      res.status(403).send("Access denied");
-      log(null, "/device/register", "POST", req.rawBodySize, 0);
-      return;
-    }
-  } catch (error) {
-    res.status(500).send("Internal Server Error");
-    log(
-      "Internal Server Error",
-      "/device/register",
-      "POST",
-      req.rawBodySize,
-      0,
-      null,
-      error
-    );
-    return;
-  }
-});
-*/
 
 router.delete("/", async (req, res) => {
   try {
