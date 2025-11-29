@@ -438,36 +438,105 @@ router.post("/newUuid", async (req, res) => {
       return;
     }
 
+    /* at this point it is not required (offline device?)
     if (!req.query.otp) {
       res.status(400).send("Missing One-Time-Password");
       log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
       return;
-    }
+    }*/
 
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
-      const foundDevice = await devices.findOne({
-        where: {
-          userId: user.id,
-          id: req.query.id,
-          otp: req.query.otp,
-          otpTime: {
-            [Op.gte]: sequelize.literal(`NOW() - INTERVAL '5 minutes'`),
+      if (req.query.otp) {
+        const foundDevice = await devices.findOne({
+          where: {
+            userId: user.id,
+            id: req.query.id,
+            otp: req.query.otp,
+            otpTime: {
+              [Op.gte]: sequelize.literal(`NOW() - INTERVAL '5 minutes'`),
+            },
           },
-        },
-      });
+        });
 
-      if (!foundDevice) {
-        res.status(404).send("Device not found");
-        log("Device not found", "/device/newUuid", "POST", req.rawBodySize, 0);
-        return;
-      }
+        if (!foundDevice) {
+          res.status(404).send("Device not found");
+          log(
+            "Device not found",
+            "/device/newUuid",
+            "POST",
+            req.rawBodySize,
+            0
+          );
+          return;
+        }
 
-      if (foundDevice.otp === req.query.otp) {
+        if (foundDevice.otp === req.query.otp) {
+          await foundDevice.update({
+            uuid: sequelize.literal("gen_random_uuid()"),
+            otp: null,
+            otpTime: null,
+          });
+
+          // Reload, damit das ergebnis des literals gewählt wird
+          await foundDevice.reload();
+
+          const newUuid = foundDevice.uuid;
+
+          res.send(newUuid);
+        } else {
+          res.status(403).send("Wrong One-Time-Password");
+          log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
+          return;
+        }
+
+        log(
+          null,
+          "/device/newUuid",
+          "POST",
+          req.rawBodySize,
+          new Blob([JSON.stringify(foundDevice)]).size,
+          user.id
+        );
+      } else {
+        const foundDevice = await devices.findOne({
+          where: {
+            userId: user.id,
+            id: req.query.id,
+
+            [Op.or]: {
+              lastActivity: {
+                [Op.lte]: new Date(Date.now() - 12 * 60 * 60 * 1000),
+              },
+              [Op.and]: {
+                battery: 0.0,
+                lastActivity: {
+                  [Op.lte]: new Date(Date.now() - 1 * 60 * 60 * 1000),
+                },
+              },
+            },
+          },
+        });
+
+        if (!foundDevice) {
+          res
+            .status(404)
+            .send("Device does not exist or requires One-Time-Password");
+          log(
+            "Access denied",
+            "/device/newUuid",
+            "POST",
+            req.rawBodySize,
+            0,
+            user.id
+          );
+          return;
+        }
         await foundDevice.update({
           uuid: sequelize.literal("gen_random_uuid()"),
           otp: null,
           otpTime: null,
+          lastActivity: new Date(),
         });
 
         // Reload, damit das ergebnis des literals gewählt wird
@@ -476,20 +545,16 @@ router.post("/newUuid", async (req, res) => {
         const newUuid = foundDevice.uuid;
 
         res.send(newUuid);
-      } else {
-        res.status(403).send("Wrong One-Time-Password");
-        log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
-        return;
-      }
 
-      log(
-        null,
-        "/device/newUuid",
-        "POST",
-        req.rawBodySize,
-        new Blob([JSON.stringify(foundDevice)]).size,
-        user.id
-      );
+        log(
+          null,
+          "/device/newUuid",
+          "POST",
+          req.rawBodySize,
+          new Blob([JSON.stringify(foundDevice)]).size,
+          user.id
+        );
+      }
     } else {
       res.status(403).send("Access denied");
 

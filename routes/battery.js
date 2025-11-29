@@ -116,6 +116,83 @@ router.get("/", async (req, res) => {
     );
   }
 });
+router.get("/secure", async (req, res) => {
+  try {
+    if (!req.query.uuid) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/battery/secure", "GET", req.rawBodySize, 0);
+      return;
+    }
+
+    let auth;
+    if ((auth = req.headers.authorization)) {
+      let user;
+      if ((user = await users.findOne({ where: { password: auth } }))) {
+        let result;
+        result = await devices.findAll({
+          where: {
+            userId: user.id,
+          },
+          attributes: [
+            "name",
+            "battery",
+            "isShown",
+            "chargingStatus",
+            "id",
+            "type",
+            "color",
+            "isPluggedIn",
+            "predictedZeroAt",
+            "favorite",
+          ],
+          raw: true,
+          order: [["favorite", "DESC"]],
+        });
+
+        const fromDevice = await devices.findOne({
+          where: {
+            userId: user.id,
+            uuid: req.query.uuid,
+          },
+        });
+
+        if (fromDevice) {
+          await fromDevice.update({ lastActivity: new Date() });
+        }
+
+        //console.log("Ergebnis von GET: ", result);
+        res.send(result);
+        log(
+          null,
+          "/battery",
+          "GET",
+          req.rawBodySize,
+          new Blob([JSON.stringify(result)]).size,
+          user.id
+        );
+      } else {
+        res.status(403).send("Access denied");
+        log("Access denied", "/battery", "GET", req.rawBodySize, 0);
+      }
+    } else {
+      res.status(403).send("Access denied");
+      log("Access denied", "/battery", "GET", req.rawBodySize, 0);
+    }
+
+    //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/battery",
+      "GET",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
 router.get("/withNotificationInfo", async (req, res) => {
   try {
     let auth;
@@ -372,6 +449,7 @@ router.post("/secure", async (req, res) => {
           battery: battery,
           chargingStatus: chargingStatus,
           isPluggedIn: isPluggedIn,
+          lastActivity: new Date(),
         });
 
         await batterylogs.create({
