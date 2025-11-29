@@ -684,8 +684,6 @@ router.get("/", async (req, res) => {
         order: [["favorite", "DESC"]],
       });
 
-      console.log(foundDevices);
-
       const devicesWithStatus = foundDevices.map((device) => {
         const mapped = {
           ...device.toJSON(),
