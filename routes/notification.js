@@ -51,134 +51,289 @@ router.get("/due", async (req, res) => {
   try {
     let auth = req.headers.authorization;
     let deviceToDisplay = (req.query.deviceToDisplay || "").trim();
-    if (auth) {
-      let user = await users.findOne({ where: { password: auth } });
-      if (user) {
-        let deviceId = (
-          await devices.findOne({
-            where: {
-              name: deviceToDisplay,
-              userId: user.id,
-            },
-          })
-        )?.dataValues.id;
-        if (req.query.deviceId) deviceId = req.query.deviceId;
+    let uuid = req.query.uuid;
 
-        if (!deviceId) {
-          console.error("Notification get due device not found: ", req.query);
-          res.status(404).send("Device not found");
-          return;
-        }
+    if (!uuid) {
+      if (auth) {
+        let user = await users.findOne({ where: { password: auth } });
+        if (user) {
+          let deviceId = (
+            await devices.findOne({
+              where: {
+                name: deviceToDisplay,
+                userId: user.id,
+              },
+            })
+          )?.dataValues.id;
+          if (req.query.deviceId) deviceId = req.query.deviceId;
 
-        let scheduledNotificationsToDisplay =
-          await models.ScheduledNotifications.findAll({
-            where: {
-              deviceId: deviceId,
-            },
-            include: [
-              {
-                model: models.OrderedNotifications,
-                as: "notification",
-                required: true,
-                where: {
-                  type: "CHARGEREMINDER",
-                },
-                include: [
-                  {
-                    model: devices,
-                    as: "device",
-                    where: {
-                      predictedZeroAt: {
-                        [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
+          if (!deviceId) {
+            console.error("Notification get due device not found: ", req.query);
+            res.status(404).send("Device not found");
+            return;
+          }
+
+          let scheduledNotificationsToDisplay =
+            await models.ScheduledNotifications.findAll({
+              where: {
+                deviceId: deviceId,
+              },
+              include: [
+                {
+                  model: models.OrderedNotifications,
+                  as: "notification",
+                  required: true,
+                  where: {
+                    type: "CHARGEREMINDER",
+                  },
+                  include: [
+                    {
+                      model: devices,
+                      as: "device",
+                      where: {
+                        predictedZeroAt: {
+                          [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
+                        },
                       },
+                      required: true,
                     },
-                    required: true,
-                  },
-                ],
-              },
-            ],
-          });
+                  ],
+                },
+              ],
+            });
 
-        let otherNotificationsToDisplay =
-          await models.ScheduledNotifications.findAll({
-            where: {
-              deviceId: deviceId,
-            },
-            include: [
-              {
-                model: models.OrderedNotifications,
-                as: "notification",
-                required: true,
-                where: {
-                  type: {
-                    [Op.notLike]: "CHARGEREMINDER",
+          let otherNotificationsToDisplay =
+            await models.ScheduledNotifications.findAll({
+              where: {
+                deviceId: deviceId,
+              },
+              include: [
+                {
+                  model: models.OrderedNotifications,
+                  as: "notification",
+                  required: true,
+                  where: {
+                    type: {
+                      [Op.notLike]: "CHARGEREMINDER",
+                    },
                   },
                 },
-              },
-            ],
-          });
+              ],
+            });
 
-        const idsToDelete = [
-          ...scheduledNotificationsToDisplay.map((sn) => sn.id),
-          ...otherNotificationsToDisplay.map((sn) => sn.id),
-        ];
-        if (idsToDelete.length > 0) {
-          await models.sequelize.transaction(async (t) => {
-            await models.ScheduledNotifications.destroy(
-              {
-                where: {
-                  id: {
-                    [Op.in]: idsToDelete,
+          const idsToDelete = [
+            ...scheduledNotificationsToDisplay.map((sn) => sn.id),
+            ...otherNotificationsToDisplay.map((sn) => sn.id),
+          ];
+          if (idsToDelete.length > 0) {
+            await models.sequelize.transaction(async (t) => {
+              await models.ScheduledNotifications.destroy(
+                {
+                  where: {
+                    id: {
+                      [Op.in]: idsToDelete,
+                    },
                   },
                 },
-              },
-              { transaction: t }
-            );
-            await models.OrderedNotifications.destroy(
-              {
-                where: {
-                  id: {
-                    [Op.notIn]: Sequelize.literal(
-                      '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")'
-                    ),
+                { transaction: t }
+              );
+              await models.OrderedNotifications.destroy(
+                {
+                  where: {
+                    id: {
+                      [Op.notIn]: Sequelize.literal(
+                        '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")'
+                      ),
+                    },
                   },
                 },
-              },
-              { transaction: t }
-            );
-          });
+                { transaction: t }
+              );
+            });
+          }
+
+          const data = [
+            ...scheduledNotificationsToDisplay.map((sched) => {
+              return {
+                targetName: sched.notification.device.name || "",
+                predictedZeroAt:
+                  sched.notification.device?.predictedZeroAt || "",
+                content: sched.notification.content || "",
+                type: sched.notification.type || "",
+                title: sched.notification.title || "",
+              };
+            }),
+            ...otherNotificationsToDisplay.map((sched) => {
+              return {
+                targetName: "",
+                predictedZeroAt: "",
+                content: sched.notification.content || "",
+                type: sched.notification.type || "",
+                title: sched.notification.title || "",
+              };
+            }),
+          ];
+
+          res.send(data);
+
+          log(
+            null,
+            "/notification/due",
+            "GET",
+            req.rawBodySize,
+            new Blob([JSON.stringify(data)]).size,
+            user.id
+          );
         }
-
-        const data = [
-          ...scheduledNotificationsToDisplay.map((sched) => {
-            return {
-              targetName: sched.notification.device.name || "",
-              predictedZeroAt: sched.notification.device?.predictedZeroAt || "",
-              content: sched.notification.content || "",
-              type: sched.notification.type || "",
-              title: sched.notification.title || "",
-            };
-          }),
-          ...otherNotificationsToDisplay.map((sched) => {
-            return {
-              targetName: "",
-              predictedZeroAt: "",
-              content: sched.notification.content || "",
-              type: sched.notification.type || "",
-              title: sched.notification.title || "",
-            };
-          }),
-        ];
-
-        res.send(data);
-
+      } else {
+        res.status(403).send("Access denied");
         log(
-          null,
-          "/notification/due",
-          "GET",
+          "Access denied",
+          "/notification/new/custom",
+          "POST",
           req.rawBodySize,
-          new Blob([JSON.stringify(data)]).size,
-          user.id
+          0
+        );
+      }
+    } else {
+      if (auth) {
+        let user = await users.findOne({ where: { password: auth } });
+        if (user) {
+          let deviceId = (
+            await devices.findOne({
+              where: {
+                uuid: uuid,
+                userId: user.id,
+              },
+            })
+          )?.dataValues.id;
+
+          if (!deviceId) {
+            console.error("Notification get due device not found: ", req.query);
+            res.status(404).send("Device not found");
+            return;
+          }
+
+          let scheduledNotificationsToDisplay =
+            await models.ScheduledNotifications.findAll({
+              where: {
+                deviceId: deviceId,
+              },
+              include: [
+                {
+                  model: models.OrderedNotifications,
+                  as: "notification",
+                  required: true,
+                  where: {
+                    type: "CHARGEREMINDER",
+                  },
+                  include: [
+                    {
+                      model: devices,
+                      as: "device",
+                      where: {
+                        predictedZeroAt: {
+                          [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
+                        },
+                      },
+                      required: true,
+                    },
+                  ],
+                },
+              ],
+            });
+
+          let otherNotificationsToDisplay =
+            await models.ScheduledNotifications.findAll({
+              where: {
+                deviceId: deviceId,
+              },
+              include: [
+                {
+                  model: models.OrderedNotifications,
+                  as: "notification",
+                  required: true,
+                  where: {
+                    type: {
+                      [Op.notLike]: "CHARGEREMINDER",
+                    },
+                  },
+                },
+              ],
+            });
+
+          const idsToDelete = [
+            ...scheduledNotificationsToDisplay.map((sn) => sn.id),
+            ...otherNotificationsToDisplay.map((sn) => sn.id),
+          ];
+          if (idsToDelete.length > 0) {
+            await models.sequelize.transaction(async (t) => {
+              await models.ScheduledNotifications.destroy(
+                {
+                  where: {
+                    id: {
+                      [Op.in]: idsToDelete,
+                    },
+                  },
+                },
+                { transaction: t }
+              );
+              await models.OrderedNotifications.destroy(
+                {
+                  where: {
+                    id: {
+                      [Op.notIn]: Sequelize.literal(
+                        '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")'
+                      ),
+                    },
+                  },
+                },
+                { transaction: t }
+              );
+            });
+          }
+
+          const data = [
+            ...scheduledNotificationsToDisplay.map((sched) => {
+              return {
+                targetName: sched.notification.device.name || "",
+                predictedZeroAt:
+                  sched.notification.device?.predictedZeroAt || "",
+                content: sched.notification.content || "",
+                type: sched.notification.type || "",
+                title: sched.notification.title || "",
+              };
+            }),
+            ...otherNotificationsToDisplay.map((sched) => {
+              return {
+                targetName: "",
+                predictedZeroAt: "",
+                content: sched.notification.content || "",
+                type: sched.notification.type || "",
+                title: sched.notification.title || "",
+              };
+            }),
+          ];
+
+          res.send(data);
+
+          log(
+            null,
+            "/notification/due",
+            "GET",
+            req.rawBodySize,
+            new Blob([JSON.stringify(data)]).size,
+            user.id
+          );
+        }
+      } else {
+        res.status(403).send("Access denied");
+        log(
+          "Access denied",
+          "/notification/new/custom",
+          "POST",
+          req.rawBodySize,
+          0
         );
       }
     }
