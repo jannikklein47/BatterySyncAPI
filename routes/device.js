@@ -601,7 +601,7 @@ router.get("/", async (req, res) => {
         where: {
           userId: user.id,
         },
-        attributes: ["id", "name"],
+        attributes: ["id", "name", "battery"],
       });
 
       res.send(foundDevices);
