@@ -603,26 +603,22 @@ router.get("/", async (req, res) => {
           userId: user.id,
         },
         attributes: ["id", "name", "battery", "favorite", "lastActivity"],
-        include: [
-          [
-            Sequelize.literal(`CASE 
-            WHEN "Device"."lastActivity" > '${twelveHoursAgo.toISOString()}' 
-            THEN true 
-            ELSE false 
-        END`),
-            "isOnline",
-          ],
-        ],
         order: [["favorite", "DESC"]],
       });
 
-      res.send(foundDevices);
+      const devicesWithStatus = foundDevices.map((device) => ({
+        ...device.toJSON(),
+        isOnline:
+          new Date(device.lastActivity).getTime() > now - 12 * 60 * 60 * 1000,
+      }));
+
+      res.send(devicesWithStatus);
       log(
         null,
         "/device",
         "GET",
         req.rawBodySize,
-        new Blob([JSON.stringify(foundDevices)]).size,
+        new Blob([JSON.stringify(devicesWithStatus)]).size,
         user.id
       );
     } else {
