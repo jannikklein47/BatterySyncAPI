@@ -395,6 +395,9 @@ router.post("/newUuid", async (req, res) => {
           otpTime: null,
         });
 
+        // Reload, damit das ergebnis des literals gewählt wird
+        await foundDevice.reload();
+
         const newUuid = foundDevice.uuid;
 
         res.send(newUuid);
