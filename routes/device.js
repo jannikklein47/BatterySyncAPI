@@ -280,11 +280,16 @@ router.post("/otp", async (req, res) => {
         },
       });
 
-      console.log(JSON.stringify(foundDevice));
-
       if (!foundDevice) {
         res.status(404).send("Device not found");
-        log("Device not found", "/device/otp", "POST", req.rawBodySize, 0);
+        log(
+          "Device not found",
+          "/device/otp",
+          "POST",
+          req.rawBodySize,
+          0,
+          user.id
+        );
         return;
       }
 
@@ -293,8 +298,14 @@ router.post("/otp", async (req, res) => {
         new Date(foundDevice.otpTime) > Date.now() - 5 * 60 * 1000
       ) {
         res.status(410).send(foundDevice.otpTime);
-        console.log("Device has otp newer than 5 minutes");
-        log("Access denied", "/device/otp", "POST", req.rawBodySize, 0);
+        log(
+          "Access denied",
+          "/device/otp",
+          "POST",
+          req.rawBodySize,
+          0,
+          user.id
+        );
         return;
       }
 
@@ -304,9 +315,6 @@ router.post("/otp", async (req, res) => {
         otp: generated,
         otpTime: new Date(),
       });
-
-      console.log("OTP:", generated);
-      console.log("Device: ", JSON.stringify(foundDevice));
 
       sendNotification(
         generated + " ist dein Einmalpasswort",
@@ -328,7 +336,76 @@ router.post("/otp", async (req, res) => {
     } else {
       res.status(403).send("Access denied");
 
-      log(null, "/device/otp", "POST", req.rawBodySize, 0);
+      log("Access denied", "/device/otp", "POST", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/device/otp",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+    return;
+  }
+});
+
+router.get("/otpCreatable", async (req, res) => {
+  try {
+    let auth = req.headers.authorization;
+    if (!auth) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/otpCreatable", "GET", req.rawBodySize, 0);
+      return;
+    }
+
+    if (!req.query.id) {
+      res.status(400).send("Invalid id");
+      log("Access denied", "/device/otpCreatable", "GET", req.rawBodySize, 0);
+      return;
+    }
+
+    let user;
+    if ((user = await users.findOne({ where: { password: auth } }))) {
+      const foundDevice = await devices.findOne({
+        where: {
+          userId: user.id,
+          id: req.query.id,
+        },
+      });
+
+      if (!foundDevice) {
+        res.status(404).send("Device not found");
+        log(
+          "Device not found",
+          "/device/otpCreatable",
+          "GET",
+          req.rawBodySize,
+          0
+        );
+        return;
+      }
+
+      if (
+        foundDevice.otpTime &&
+        new Date(foundDevice.otpTime) > Date.now() - 5 * 60 * 1000
+      ) {
+        res.send({ status: false });
+        log(null, "/device/otpCreatable", "GET", req.rawBodySize, 0, user.id);
+        return;
+      } else {
+        res.send({ status: true });
+        log(null, "/device/otpCreatable", "GET", req.rawBodySize, 0, user.id);
+        return;
+      }
+    } else {
+      res.status(403).send("Access denied");
+
+      log("Access denied", "/device/otp", "POST", req.rawBodySize, 0);
       return;
     }
   } catch (error) {
@@ -366,8 +443,6 @@ router.post("/newUuid", async (req, res) => {
       log("Access denied", "/device/newUuid", "POST", req.rawBodySize, 0);
       return;
     }
-
-    console.log("got id", req.query.id, " otp", req.query.otp);
 
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
