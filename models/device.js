@@ -69,6 +69,11 @@ module.exports = (sequelize, DataTypes) => {
       otpTime: {
         type: DataTypes.DATE,
       },
+      lastActivity: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal("NOW()"),
+        allowNull: false,
+      },
     },
     {
       sequelize,

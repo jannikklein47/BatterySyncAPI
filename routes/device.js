@@ -597,11 +597,23 @@ router.get("/", async (req, res) => {
 
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
       const foundDevices = await devices.findAll({
         where: {
           userId: user.id,
         },
-        attributes: ["id", "name", "battery"],
+        attributes: ["id", "name", "battery", "favorite", "lastActivity"],
+        include: [
+          [
+            Sequelize.literal(`CASE 
+            WHEN "Device"."lastActivity" > '${twelveHoursAgo.toISOString()}' 
+            THEN true 
+            ELSE false 
+        END`),
+            "isOnline",
+          ],
+        ],
+        order: [["favorite", "DESC"]],
       });
 
       res.send(foundDevices);
