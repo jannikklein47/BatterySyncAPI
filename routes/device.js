@@ -536,7 +536,7 @@ router.post("/newUuid", async (req, res) => {
           uuid: sequelize.literal("gen_random_uuid()"),
           otp: null,
           otpTime: null,
-          //lastActivity: new Date(), deactivate for testing
+          lastActivity: new Date(),
         });
 
         // Reload, damit das ergebnis des literals gewählt wird
