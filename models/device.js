@@ -60,8 +60,8 @@ module.exports = (sequelize, DataTypes) => {
       },
       uuid: {
         type: DataTypes.UUID,
-        allowNull: false,
-        defaultValue: Sequelize.literal("gen_random_uuid()"),
+        allowNull: true,
+        defaultValue: null,
       },
       otp: {
         type: DataTypes.STRING,

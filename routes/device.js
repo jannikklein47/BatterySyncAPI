@@ -159,9 +159,12 @@ router.post("/register", async (req, res) => {
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
       const createdDevice = await devices.create({
+        uuid: sequelize.literal("gen_random_uuid()"),
         type: req.query.system.toLowerCase(),
         userId: user.id,
       });
+
+      await createdDevice.reload();
 
       const createdUUID = createdDevice.uuid;
 
@@ -499,6 +502,7 @@ router.post("/newUuid", async (req, res) => {
           user.id
         );
       } else {
+        // Device must be longer offline than 12 hours or have no uuid assigned yet
         const foundDevice = await devices.findOne({
           where: {
             userId: user.id,
@@ -507,12 +511,15 @@ router.post("/newUuid", async (req, res) => {
             [Op.or]: {
               lastActivity: {
                 [Op.lte]: new Date(Date.now() - 12 * 60 * 60 * 1000),
-              },
+              } /*
               [Op.and]: {
                 battery: 0.0,
                 lastActivity: {
                   [Op.lte]: new Date(Date.now() - 1 * 60 * 60 * 1000),
                 },
+              },*/,
+              uuid: {
+                [Op.is]: null,
               },
             },
           },
@@ -662,7 +669,6 @@ router.get("/", async (req, res) => {
 
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
-      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
       const foundDevices = await devices.findAll({
         where: {
           userId: user.id,
@@ -671,14 +677,15 @@ router.get("/", async (req, res) => {
         order: [["favorite", "DESC"]],
       });
 
+      console.log(foundDevices);
+
       const devicesWithStatus = foundDevices.map((device) => ({
         ...device.toJSON(),
-        isOnline:
-          device.battery > 0
-            ? new Date(device.lastActivity).getTime() >
-              Date.now() - 12 * 60 * 60 * 1000
+        requiresOtp:
+          device.uuid === null
+            ? false
             : new Date(device.lastActivity).getTime() >
-              Date.now() - 1 * 60 * 60 * 1000,
+              Date.now() - 12 * 60 * 60 * 1000,
       }));
 
       res.send(devicesWithStatus);
