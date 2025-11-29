@@ -673,20 +673,31 @@ router.get("/", async (req, res) => {
         where: {
           userId: user.id,
         },
-        attributes: ["id", "name", "battery", "favorite", "lastActivity"],
+        attributes: [
+          "id",
+          "name",
+          "battery",
+          "favorite",
+          "lastActivity",
+          "uuid",
+        ],
         order: [["favorite", "DESC"]],
       });
 
       console.log(foundDevices);
 
-      const devicesWithStatus = foundDevices.map((device) => ({
-        ...device.toJSON(),
-        requiresOtp:
-          device.uuid === null
-            ? false
-            : new Date(device.lastActivity).getTime() >
-              Date.now() - 12 * 60 * 60 * 1000,
-      }));
+      const devicesWithStatus = foundDevices.map((device) => {
+        const mapped = {
+          ...device.toJSON(),
+          requiresOtp:
+            device.uuid === null
+              ? false
+              : new Date(device.lastActivity).getTime() >
+                Date.now() - 12 * 60 * 60 * 1000,
+        };
+        delete mapped.uuid;
+        return mapped;
+      });
 
       res.send(devicesWithStatus);
       log(
