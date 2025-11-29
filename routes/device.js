@@ -674,8 +674,11 @@ router.get("/", async (req, res) => {
       const devicesWithStatus = foundDevices.map((device) => ({
         ...device.toJSON(),
         isOnline:
-          new Date(device.lastActivity).getTime() >
-          Date.now() - 12 * 60 * 60 * 1000,
+          device.battery > 0
+            ? new Date(device.lastActivity).getTime() >
+              Date.now() - 12 * 60 * 60 * 1000
+            : new Date(device.lastActivity).getTime() >
+              Date.now() - 1 * 60 * 60 * 1000,
       }));
 
       res.send(devicesWithStatus);
