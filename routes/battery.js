@@ -234,7 +234,7 @@ router.get("/withNotificationInfo", async (req, res) => {
           order: [["favorite", "DESC"]],
         });
 
-        const processed = devices.map((device) => {
+        const processed = result.map((device) => {
           const isLegacy = device.uuid === null;
           delete device.uuid;
           return {
