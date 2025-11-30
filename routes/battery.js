@@ -215,6 +215,7 @@ router.get("/withNotificationInfo", async (req, res) => {
             "isPluggedIn",
             "predictedZeroAt",
             "favorite",
+            "uuid",
             [
               fn("ARRAY_AGG", col("orderedNotifications.id")),
               "notificationIds",
@@ -233,14 +234,23 @@ router.get("/withNotificationInfo", async (req, res) => {
           order: [["favorite", "DESC"]],
         });
 
+        const processed = devices.map((device) => {
+          const isLegacy = device.uuid === null;
+          delete device.uuid;
+          return {
+            ...device,
+            isLegacy: isLegacy,
+          };
+        });
+
         //console.log("Ergebnis von GET: ", result);
-        res.send(result);
+        res.send(processed);
         log(
           null,
           "/battery/withNotificationInfo",
           "GET",
           req.rawBodySize,
-          new Blob([JSON.stringify(result)]).size,
+          new Blob([JSON.stringify(processed)]).size,
           user.id
         );
       } else {
