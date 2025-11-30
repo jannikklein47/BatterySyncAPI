@@ -156,12 +156,16 @@ router.post("/register", async (req, res) => {
       return;
     }
 
+    let battery = 0.0;
+    if (req.query.battery) battery = req.query.battery;
+
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
       const createdDevice = await devices.create({
         uuid: sequelize.literal("gen_random_uuid()"),
         type: req.query.system.toLowerCase(),
         userId: user.id,
+        battery: battery,
       });
 
       await createdDevice.reload();
