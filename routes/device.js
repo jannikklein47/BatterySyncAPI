@@ -768,4 +768,140 @@ router.delete("/", async (req, res) => {
   }
 });
 
+router.post("/logout/inactive", async (req, res) => {
+  try {
+    let auth;
+    if (!(auth = req.headers.authorization)) {
+      res.status(403).send("Access denied");
+      log(
+        "Access denied",
+        "/device/logout/inactive",
+        "POST",
+        req.rawBodySize,
+        0
+      );
+      return;
+    }
+
+    let uuid;
+    if (!(uuid = req.query.uuid)) {
+      res.status(403).send("Missing uuid");
+      log(
+        "Access denied",
+        "/device/logout/inactive",
+        "POST",
+        req.rawBodySize,
+        0
+      );
+      return;
+    }
+
+    let user;
+    if ((user = await users.findOne({ where: { password: auth } }))) {
+      const foundDevice = await devices.findOne({
+        where: {
+          uuid: uuid,
+          userId: user.id,
+        },
+      });
+
+      if (!foundDevice) {
+        res.status(404).send("Device not found");
+        log(
+          "Device not found",
+          "/device/logout/inactive",
+          "POST",
+          req.rawBodySize,
+          0,
+          user.id
+        );
+        return;
+      }
+
+      await foundDevice.update({ uuid: null });
+
+      res.send("Ok");
+      log(null, "/device/logout/inactive", "POST", req.rawBodySize, 0, user.id);
+    } else {
+      res.status(403).send("Access denied");
+      log(null, "/device/logout/inactive", "POST", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/device/logout/inactive",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+    return;
+  }
+});
+
+router.post("/logout/delete", async (req, res) => {
+  try {
+    let auth;
+    if (!(auth = req.headers.authorization)) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/logout/delete", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    let uuid;
+    if (!(uuid = req.query.uuid)) {
+      res.status(403).send("Missing uuid");
+      log("Access denied", "/device/logout/delete", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    let user;
+    if ((user = await users.findOne({ where: { password: auth } }))) {
+      const foundDevice = await devices.findOne({
+        where: {
+          uuid: uuid,
+          userId: user.id,
+        },
+      });
+
+      if (!foundDevice) {
+        res.status(404).send("Device not found");
+        log(
+          "Device not found",
+          "/device/logout/delete",
+          "POST",
+          req.rawBodySize,
+          0,
+          user.id
+        );
+        return;
+      }
+
+      await foundDevice.destroy();
+
+      res.send("Ok");
+      log(null, "/device/logout/delete", "POST", req.rawBodySize, 0, user.id);
+    } else {
+      res.status(403).send("Access denied");
+      log(null, "/device/logout/delete", "POST", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/device/logout/delete",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+    return;
+  }
+});
+
 module.exports = router;
