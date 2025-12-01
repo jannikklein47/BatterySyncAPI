@@ -752,8 +752,6 @@ router.get("/history/all", async (req, res) => {
             if (firstOlderThan24Hours) {
               const oldestDate = firstOlderThan24Hours.createdAt;
               const newestDate = result[0].createdAt;
-              const oldestNormalizedDate = 0;
-              const newestNormalizedDate = newestDate - oldestDate;
 
               const oldestBattery = Math.round(
                 firstOlderThan24Hours.battery * 100
@@ -766,24 +764,28 @@ router.get("/history/all", async (req, res) => {
                 oldestBattery,
                 "Newest:",
                 newestDate,
-                newestBattery,
-                "Normalized minutes:",
-                newestNormalizedDate / 1000 / 60
+                newestBattery
               );
 
               // calculate slope of linear function PER MINUTE
               const m =
-                (newestBattery - oldestBattery) /
-                (newestNormalizedDate / 1000 / 60); // oldestNormalizedDate can be left out as it is 0;
+                (newestBattery - oldestBattery) / (newestDate - oldestDate);
 
-              console.log("Slope per minute:", m);
+              console.log(
+                "Slope per ms:",
+                m,
+                " per minute:",
+                m * 1000 * 60,
+                "per hour",
+                m * 1000 * 60 * 60
+              );
 
               // y-achsenabschnitt
-              const b = oldestBattery; //- oldestNormalizedDate * m; can be left out as the point is 0
+              const b = oldestBattery - m * oldestDate;
 
               console.log("Y-axis cut", b);
 
-              const f = (x) => m * (x / 1000 / 60 - oldestDate / 1000 / 60) + b; // add oldestDate so when it is the input, the function should show the battery at this point!
+              const f = (x) => m * x + b;
 
               console.log("Interpolated at -24h:", f(twentyFourHoursAgo));
 
