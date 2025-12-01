@@ -770,7 +770,7 @@ router.get("/history/all", async (req, res) => {
 
               const f = (x) => m * (x - oldestDate) + b; // add oldestDate so when it is the input, the function should show the battery at this point!
 
-              const interpolatedBattery = f(twentyFourHoursAgo);
+              const interpolatedBattery = f(twentyFourHoursAgo) / 100;
 
               result.push({
                 createdAt: twentyFourHoursAgo,
