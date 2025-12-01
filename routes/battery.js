@@ -781,7 +781,11 @@ router.get("/history/all", async (req, res) => {
               // y-achsenabschnitt
               const b = oldestBattery; //- oldestNormalizedDate * m; can be left out as the point is 0
 
+              console.log("Y-axis cut", b);
+
               const f = (x) => m * (x / 1000 / 60 - oldestDate / 1000 / 60) + b; // add oldestDate so when it is the input, the function should show the battery at this point!
+
+              console.log("Interpolated at -24h:", f(twentyFourHoursAgo));
 
               const interpolatedBattery = f(twentyFourHoursAgo) / 100;
 
