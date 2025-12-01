@@ -796,7 +796,8 @@ router.get("/history/all", async (req, res) => {
                 f(twentyFourHoursAgo) / 100
               );
 
-              const interpolatedBattery = f(twentyFourHoursAgo) / 100;
+              const interpolatedBattery =
+                Math.round(f(twentyFourHoursAgo)) / 100;
 
               result.push({
                 createdAt: twentyFourHoursAgo,
