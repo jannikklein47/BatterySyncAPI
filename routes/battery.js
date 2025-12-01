@@ -758,9 +758,7 @@ router.get("/history/all", async (req, res) => {
               const oldestBattery = Math.round(
                 firstOlderThan24Hours.battery * 100
               );
-              const newestBattery = Math.round(
-                firstOlderThan24Hours.battery * 100
-              );
+              const newestBattery = Math.round(result[0].battery * 100);
 
               console.log(
                 "Oldest:",
