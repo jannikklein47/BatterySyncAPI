@@ -712,7 +712,7 @@ router.get("/history/all", async (req, res) => {
               where: {
                 deviceId: targetDeviceId,
                 createdAt: {
-                  [Op.gte]: twentyFourHoursAgo,
+                  [Op.gt]: twentyFourHoursAgo,
                 },
                 chargingStatus: { [Op.ne]: null },
                 battery: { [Op.ne]: null },
@@ -729,6 +729,56 @@ router.get("/history/all", async (req, res) => {
             });
 
             if (result.length < 1) continue;
+
+            const firstOlderThan24Hours = await batterylogs.findOne({
+              where: {
+                deviceId: targetDeviceId,
+                createdAt: {
+                  [Op.lte]: twentyFourHoursAgo,
+                },
+                chargingStatus: { [Op.ne]: null },
+                battery: { [Op.ne]: null },
+                isPluggedIn: { [Op.ne]: null },
+              },
+              order: [["createdAt", "DESC"]],
+              attributes: [
+                "createdAt",
+                "chargingStatus",
+                "battery",
+                "isPluggedIn",
+              ],
+            });
+
+            if (firstOlderThan24Hours) {
+              const oldestDate = firstOlderThan24Hours.createdAt;
+              const newestDate = result[0].createdAt;
+              const oldestNormalizedDate = 0;
+              const newestNormalizedDate = newestDate - oldestDate;
+
+              const oldestBattery = Math.round(
+                firstOlderThan24Hours.battery * 100
+              );
+              const newestBattery = Math.round(
+                firstOlderThan24Hours.battery * 100
+              );
+
+              // calculate slope of linear function
+              const m = (newestBattery - oldestBattery) / newestNormalizedDate; // oldestNormalizedDate can be left out as it is 0;
+
+              // y-achsenabschnitt
+              const b = oldestBattery; //- oldestNormalizedDate * m; can be left out as the point is 0
+
+              const f = (x) => m * (x - oldestDate) + b; // add oldestDate so when it is the input, the function should show the battery at this point!
+
+              const interpolatedBattery = f(twentyFourHoursAgo);
+
+              result.push({
+                createdAt: twentyFourHoursAgo,
+                battery: interpolatedBattery,
+                chargingStatus: firstOlderThan24Hours.chargingStatus,
+                isPluggedIn: firstOlderThan24Hours.isPluggedIn,
+              });
+            }
 
             /*
             if (result[0]) {
