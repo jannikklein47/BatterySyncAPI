@@ -662,6 +662,75 @@ router.patch("/name", async (req, res) => {
   }
 });
 
+router.patch("/isShwon", async (req, res) => {
+  try {
+    let auth;
+    if (!(auth = req.headers.authorization)) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/isShown", "PATCH", req.rawBodySize, 0);
+      return;
+    }
+
+    let id;
+    if (!(id = req.query.id)) {
+      res.status(403).send("Access denied");
+      log("Access denied", "/device/isShown", "PATCH", req.rawBodySize, 0);
+      return;
+    }
+
+    let isShown;
+    if (!(isShown = req.query.isShown)) {
+      res.status(403).send("Missing isShown");
+      log("Access denied", "/device/isShown", "PATCH", req.rawBodySize, 0);
+      return;
+    }
+
+    let user;
+    if ((user = await users.findOne({ where: { password: auth } }))) {
+      const foundDevice = await devices.findOne({
+        where: {
+          id: id,
+          userId: user.id,
+        },
+      });
+
+      if (!foundDevice) {
+        res.status(404).send("Device not found");
+        log(
+          "Device not found",
+          "/device/isShown",
+          "PATCH",
+          req.rawBodySize,
+          0,
+          user.id
+        );
+        return;
+      }
+
+      foundDevice.update({ isShown: isShown });
+
+      res.send("Ok");
+      log(null, "/device/isShown", "PATCH", req.rawBodySize, 0, user.id);
+    } else {
+      res.status(403).send("Access denied");
+      log(null, "/device/isShown", "PATCH", req.rawBodySize, 0);
+      return;
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/device/isShown",
+      "PATCH",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+    return;
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     let auth;
