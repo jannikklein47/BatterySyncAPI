@@ -769,8 +769,8 @@ router.get("/history/all", async (req, res) => {
                 "Newest:",
                 newestDate,
                 newestBattery,
-                "Normalized:",
-                newestNormalizedDate
+                "Normalized minutes:",
+                newestNormalizedDate / 1000 / 60
               );
 
               // calculate slope of linear function PER MINUTE
