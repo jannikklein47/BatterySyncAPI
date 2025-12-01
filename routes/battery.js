@@ -787,7 +787,12 @@ router.get("/history/all", async (req, res) => {
 
               const f = (x) => m * x + b;
 
-              console.log("Interpolated at -24h:", f(twentyFourHoursAgo));
+              console.log(
+                "Interpolated at -24h:",
+                f(twentyFourHoursAgo),
+                "% or",
+                f(twentyFourHoursAgo) / 100
+              );
 
               const interpolatedBattery = f(twentyFourHoursAgo) / 100;
 
