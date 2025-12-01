@@ -154,11 +154,12 @@ router.post("/", async (req, res) => {
 
       res.send(createdWithUser);
 
+      /*
       sendUpdateNotification(
         "Eingangsbestätigung",
         'Dein Issue "' + created.title + '" ist erfolgreich eingegangen.',
         created.userId
-      );
+      );*/
 
       if (data.notify && (data.priority === 2 || data.priority === "2")) {
         const admin = await Users.findOne({ where: { admin: true } });
