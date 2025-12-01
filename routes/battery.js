@@ -226,6 +226,9 @@ router.get("/withNotificationInfo", async (req, res) => {
             {
               model: models.OrderedNotifications,
               as: "orderedNotifications",
+              where: {
+                type: "CHARGEREMINDER",
+              },
               attributes: [],
             },
           ],
