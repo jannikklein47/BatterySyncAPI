@@ -762,8 +762,21 @@ router.get("/history/all", async (req, res) => {
                 firstOlderThan24Hours.battery * 100
               );
 
+              console.log(
+                "Oldest:",
+                oldestDate,
+                oldestBattery,
+                "Newest:",
+                newestDate,
+                newestBattery,
+                "Normalized:",
+                newestNormalizedDate
+              );
+
               // calculate slope of linear function
               const m = (newestBattery - oldestBattery) / newestNormalizedDate; // oldestNormalizedDate can be left out as it is 0;
+
+              console.log("Slope", m);
 
               // y-achsenabschnitt
               const b = oldestBattery; //- oldestNormalizedDate * m; can be left out as the point is 0
