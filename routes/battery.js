@@ -229,7 +229,7 @@ router.get("/withNotificationInfo", async (req, res) => {
               where: {
                 type: "CHARGEREMINDER",
               },
-              attributes: [],
+              attributes: ["type"],
             },
           ],
           group: ["Device.id"],
