@@ -749,14 +749,16 @@ router.get("/history/all", async (req, res) => {
               ],
             });
 
-            if (firstOlderThan24Hours) {
+            if (firstOlderThan24Hours && result[result.length - 1]) {
               const oldestDate = firstOlderThan24Hours.createdAt;
-              const newestDate = result[0].createdAt;
+              const newestDate = result[result.length - 1].createdAt;
 
               const oldestBattery = Math.round(
                 firstOlderThan24Hours.battery * 100
               );
-              const newestBattery = Math.round(result[0].battery * 100);
+              const newestBattery = Math.round(
+                result[result.length - 1].battery * 100
+              );
 
               console.log(
                 "Oldest:",
