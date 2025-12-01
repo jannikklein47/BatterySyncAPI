@@ -759,7 +759,7 @@ router.get("/history/all", async (req, res) => {
               const newestBattery = Math.round(
                 result[result.length - 1].battery * 100
               );
-
+              /*
               console.log(
                 "Oldest:",
                 oldestDate,
@@ -767,12 +767,12 @@ router.get("/history/all", async (req, res) => {
                 "Newest:",
                 newestDate,
                 newestBattery
-              );
+              );*/
 
               // calculate slope of linear function PER MINUTE
               const m =
                 (newestBattery - oldestBattery) / (newestDate - oldestDate);
-
+              /*
               console.log(
                 "Slope per ms:",
                 m,
@@ -780,21 +780,21 @@ router.get("/history/all", async (req, res) => {
                 m * 1000 * 60,
                 "per hour",
                 m * 1000 * 60 * 60
-              );
+              );*/
 
               // y-achsenabschnitt
               const b = oldestBattery - m * oldestDate;
 
-              console.log("Y-axis cut", b);
+              //console.log("Y-axis cut", b);
 
               const f = (x) => m * x + b;
-
+              /*
               console.log(
                 "Interpolated at -24h:",
                 f(twentyFourHoursAgo),
                 "% or",
                 f(twentyFourHoursAgo) / 100
-              );
+              );*/
 
               const interpolatedBattery =
                 Math.round(f(twentyFourHoursAgo)) / 100;
