@@ -730,6 +730,7 @@ router.get("/history/all", async (req, res) => {
 
             if (result.length < 1) continue;
 
+            /*
             if (result[0]) {
               result.unshift({
                 createdAt: Date.now(),
@@ -747,6 +748,7 @@ router.get("/history/all", async (req, res) => {
                 isPluggedIn: result[result.length - 1].isPluggedIn,
               });
             }
+              */
 
             results[foundDevices[i].id] = downsample(result);
           }
