@@ -662,7 +662,7 @@ router.patch("/name", async (req, res) => {
   }
 });
 
-router.patch("/isShwon", async (req, res) => {
+router.patch("/isShown", async (req, res) => {
   try {
     let auth;
     if (!(auth = req.headers.authorization)) {
