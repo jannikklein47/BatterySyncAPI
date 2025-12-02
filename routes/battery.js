@@ -293,6 +293,7 @@ router.get("/withNotificationInfo", async (req, res) => {
   }
 });
 
+// This post route is semi-deprecated. It currently is only needed for legacy devices or the macos app. When the MacOS App is finished, we do not need this route anymore (newer is also way more secure)
 router.post("/", async (req, res) => {
   try {
     let auth, name, deviceBattery, chargingStatus, isPluggedIn;
@@ -336,6 +337,9 @@ router.post("/", async (req, res) => {
           where: {
             userId: user.id,
             name: name,
+            uuid: {
+              [Op.is]: null,
+            },
           },
         }))
       ) {
@@ -616,6 +620,7 @@ router.post("/secure", async (req, res) => {
   }
 });
 
+// Semi-security risk : Users can update battery information of devices with only their ID. As we switch to uuids, this imposes a security risk (id is publicly available, uuid is NOT)
 router.put("/", async (req, res) => {
   try {
     let auth, name, deviceBattery, chargingStatus, isPluggedIn;
@@ -691,6 +696,10 @@ router.put("/", async (req, res) => {
     );
   }
 });
+
+// TODO: Add a name PATCH route
+
+// TODO: Add a type PATCH route
 
 router.get("/history", async (req, res) => {
   try {

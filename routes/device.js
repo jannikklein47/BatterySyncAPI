@@ -305,14 +305,7 @@ router.post("/otp", async (req, res) => {
         new Date(foundDevice.otpTime) > Date.now() - 5 * 60 * 1000
       ) {
         res.status(410).send(foundDevice.otpTime);
-        log(
-          "Access denied",
-          "/device/otp",
-          "POST",
-          req.rawBodySize,
-          0,
-          user.id
-        );
+        log("OTP Expired", "/device/otp", "POST", req.rawBodySize, 0, user.id);
         return;
       }
 
@@ -460,9 +453,10 @@ router.post("/newUuid", async (req, res) => {
             userId: user.id,
             id: req.query.id,
             otp: req.query.otp,
+            /*
             otpTime: {
               [Op.gte]: sequelize.literal(`NOW() - INTERVAL '5 minutes'`),
-            },
+            },*/
           },
         });
 
@@ -475,6 +469,15 @@ router.post("/newUuid", async (req, res) => {
             req.rawBodySize,
             0
           );
+          return;
+        }
+
+        if (
+          foundDevice.otpTime &&
+          new Date(foundDevice.otpTime) < Date.now() - 5 * 60 * 1000
+        ) {
+          res.status(410).send("OTP expired. Generate a new one.");
+          log("OTP Expired", "/device/newUuid", "POST", req.rawBodySize, 0);
           return;
         }
 
