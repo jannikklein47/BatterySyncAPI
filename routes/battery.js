@@ -571,7 +571,7 @@ router.post("/secure", async (req, res) => {
                     await models.ScheduledNotifications.create(
                       {
                         deviceId: dev.id,
-                        notificationId: newOrderedNotification.id,
+                        notificationId: permanentNoti.id,
                       },
                       { transaction: t }
                     );
