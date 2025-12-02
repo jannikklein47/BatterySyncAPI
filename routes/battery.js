@@ -489,6 +489,31 @@ router.post("/secure", async (req, res) => {
               device.isPluggedIn === true) &&
             device.predictedZeroAt < new Date(Date.now() + 2 * 60 * 60 * 1000)
           ) {
+            const deviceOrderedNotifications =
+              await models.OrderedNotifications.findAll(
+                {
+                  where: {
+                    devideId: device.id,
+                    type: "CHARGEREMINDER",
+                  },
+                },
+                { transaction: t }
+              );
+
+            for (const noti of deviceOrderedNotifications) {
+              if (noti.permanent) {
+                await models.ScheduledNotifications.destroy(
+                  {
+                    where: {
+                      notificationId: noti.id,
+                    },
+                  },
+                  { transaction: t }
+                );
+              } else {
+                await noti.destroy({ transaction: t });
+              }
+            }
             await models.OrderedNotifications.destroy(
               {
                 where: {
