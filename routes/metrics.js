@@ -165,14 +165,14 @@ router.get("/", async (req, res) => {
         const userIdUsage = await sequelize.query(
           `
           SELECT
-            userId,
+            logs.userId,
             ${timeBucket},
             COUNT(*) AS count
           FROM logs
-          WHERE userId IS NOT NULL
+          WHERE logs.userId IS NOT NULL
             AND "createdAt" >= NOW() - INTERVAL :timeframe
-          GROUP BY userId, interval_start
-          ORDER BY userId, interval_start;
+          GROUP BY logs.userId, interval_start
+          ORDER BY logs.userId, interval_start;
         `,
           { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
