@@ -638,7 +638,7 @@ router.post("/debug5", async (req, res) => {
       },
     ],
     where: {
-      "$scheduledNotifications.id$": null, // keine zugeordnete SN
+      type: "CONTENT",
     },
   });
 
