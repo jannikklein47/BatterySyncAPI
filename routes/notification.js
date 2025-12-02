@@ -628,7 +628,7 @@ router.post("/debug4", async (req, res) => {
   //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 });
 
-router.post("/debug4", async (req, res) => {
+router.post("/debug5", async (req, res) => {
   const orderedWithoutSchedule = await models.OrderedNotifications.findAll({
     include: [
       {
