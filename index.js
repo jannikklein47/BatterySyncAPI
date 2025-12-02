@@ -11,6 +11,8 @@ const https = require("https");
 
 const rateLimit = require("express-rate-limit");
 
+const cleanupJob = require("./jobs/notificationCleanup");
+
 const app = express();
 const PORT = 3000;
 
@@ -67,15 +69,7 @@ if (options) {
   const http = require("http");
   server = http.createServer(app);
 }
-
-db.sequelize
-  .sync()
-  .then(() => {
-    console.log("✅ Datenbank synchronisiert");
-    server.listen(PORT, () => {
-      console.log(`🚀 Server läuft auf Port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("❌ Fehler bei DB-Sync:", err);
-  });
+server.listen(PORT, () => {
+  console.log(`🚀 Server läuft auf Port ${PORT}`);
+  cleanupJob();
+});
