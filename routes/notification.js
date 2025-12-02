@@ -360,6 +360,11 @@ router.post("/new", async (req, res) => {
       type = "CHARGEREMINDER";
     } else type = req.body.type;
 
+    let permanent = false;
+    if (req.body.permanent) {
+      permanent = req.body.permanent;
+    }
+
     if (!deviceId && type === "CHARGEREMINDER") {
       res.status(400).send("No device id provided");
       log("Device not found", "/notification/new", "POST", req.rawBodySize, 0);
@@ -368,7 +373,10 @@ router.post("/new", async (req, res) => {
 
     if (auth) {
       await models.sequelize.transaction(async (t) => {
-        let user = await users.findOne({ where: { password: auth } });
+        let user = await users.findOne(
+          { where: { password: auth } },
+          { transaction: t }
+        );
         if (user) {
           //console.log("Creating new noti order")
           const newOrderedNotification =
@@ -377,6 +385,7 @@ router.post("/new", async (req, res) => {
                 deviceId: deviceId,
                 type: type.toUpperCase(),
                 content: req.body.content,
+                permanent: permanent,
               },
               { transaction: t }
             );
@@ -589,7 +598,16 @@ router.post("/debug", async (req, res) => {
   );
 });
 router.post("/debug2", async (req, res) => {
-  res.send(await models.OrderedNotifications.findAll());
+  res.send(
+    await models.OrderedNotifications.findAll({
+      include: [
+        {
+          model: models.Device,
+          as: "device",
+        },
+      ],
+    })
+  );
   //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 });
 router.post("/debug3", async (req, res) => {

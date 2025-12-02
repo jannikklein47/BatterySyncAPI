@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       content: DataTypes.TEXT,
       title: DataTypes.TEXT,
+      permanent: DataTypes.BOOLEAN,
     },
     {
       sequelize,

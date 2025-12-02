@@ -459,36 +459,103 @@ router.post("/secure", async (req, res) => {
           },
         }))
       ) {
-        await device.update({
-          battery: battery,
-          chargingStatus: chargingStatus,
-          isPluggedIn: isPluggedIn,
-          lastActivity: new Date(),
-        });
-
-        await batterylogs.create({
-          battery: device.battery,
-          chargingStatus: device.chargingStatus,
-          isPluggedIn: device.isPluggedIn,
-          deviceId: device.id,
-        });
-
-        debouncePrediction(device.id);
-
-        if (
-          (device.chargingStatus === "true" ||
-            device.chargingStatus === true ||
-            device.sPluggedIn === "true" ||
-            device.isPluggedIn === true) &&
-          device.predictedZeroAt < new Date(Date.now() + 2 * 60 * 60 * 1000)
-        ) {
-          await models.OrderedNotifications.destroy({
-            where: {
-              deviceId: device.id,
-              type: "CHARGEREMINDER",
+        await models.sequelize.transaction(async (t) => {
+          await device.update(
+            {
+              battery: battery,
+              chargingStatus: chargingStatus,
+              isPluggedIn: isPluggedIn,
+              lastActivity: new Date(),
             },
-          });
-        }
+            { transaction: t }
+          );
+
+          await batterylogs.create(
+            {
+              battery: device.battery,
+              chargingStatus: device.chargingStatus,
+              isPluggedIn: device.isPluggedIn,
+              deviceId: device.id,
+            },
+            { transaction: t }
+          );
+
+          debouncePrediction(device.id);
+
+          if (
+            (device.chargingStatus === "true" ||
+              device.chargingStatus === true ||
+              device.sPluggedIn === "true" ||
+              device.isPluggedIn === true) &&
+            device.predictedZeroAt < new Date(Date.now() + 2 * 60 * 60 * 1000)
+          ) {
+            await models.OrderedNotifications.destroy(
+              {
+                where: {
+                  deviceId: device.id,
+                  type: "CHARGEREMINDER",
+                  permanet: false, // only destroy the ordered notification if the user wanted it only one time!
+                },
+              },
+              { transaction: t }
+            );
+          } else if (
+            (device.chargingStatus === "false" ||
+              device.chargingStatus === false) &&
+            (device.sPluggedIn === "false" || device.isPluggedIn === false)
+          ) {
+            // Does the device have a permanent ordered notification?
+            const permanentNoti = await models.OrderedNotifications.findOne(
+              {
+                where: {
+                  deviceId: device.id,
+                  permanent: true,
+                  type: "CHARGEREMINDER",
+                },
+              },
+              { transaction: t }
+            );
+
+            if (permanentNoti) {
+              // Re-Create scheduled permanent notifications for the devices that have already displayed them
+              const userDevices = await devices.findAll(
+                { where: { userId: user.id } },
+                { transaction: t }
+              );
+              //console.log("User devices:", userDevices.length)
+              if (userDevices.length > 0) {
+                const deviceThatNeedScheduling = userDevices.filter(
+                  (dev) => dev.id !== device.id
+                );
+                //console.log("dev that need sched:", deviceThatNeedScheduling.length)
+                for (const dev of deviceThatNeedScheduling) {
+                  //console.log("Creating sched entry")
+
+                  const hasScheduled =
+                    await models.ScheduledNotifications.findOne(
+                      {
+                        where: {
+                          notificationId: permanentNoti.id,
+                          deviceId: dev.id,
+                        },
+                      },
+                      { transaction: t }
+                    );
+
+                  if (!hasScheduled) {
+                    await models.ScheduledNotifications.create(
+                      {
+                        deviceId: dev.id,
+                        notificationId: newOrderedNotification.id,
+                      },
+                      { transaction: t }
+                    );
+                  }
+                }
+              }
+            }
+          }
+        });
 
         res.send("Ok");
         log(null, "/battery/secure", "POST", req.rawBodySize, 0, user.id);
