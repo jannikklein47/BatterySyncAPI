@@ -493,7 +493,7 @@ router.post("/secure", async (req, res) => {
               await models.OrderedNotifications.findAll(
                 {
                   where: {
-                    devideId: device.id,
+                    deviceId: device.id,
                     type: "CHARGEREMINDER",
                   },
                 },
