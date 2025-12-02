@@ -467,7 +467,8 @@ router.post("/newUuid", async (req, res) => {
             "/device/newUuid",
             "POST",
             req.rawBodySize,
-            0
+            0,
+            user.id
           );
           return;
         }
@@ -477,7 +478,14 @@ router.post("/newUuid", async (req, res) => {
           new Date(foundDevice.otpTime) < Date.now() - 5 * 60 * 1000
         ) {
           res.status(410).send("OTP expired. Generate a new one.");
-          log("OTP Expired", "/device/newUuid", "POST", req.rawBodySize, 0);
+          log(
+            "OTP Expired",
+            "/device/newUuid",
+            "POST",
+            req.rawBodySize,
+            0,
+            user.id
+          );
           return;
         }
 
