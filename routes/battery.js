@@ -238,11 +238,21 @@ router.get("/withNotificationInfo", async (req, res) => {
           order: [["favorite", "DESC"]],
         });
 
-        const processed = result.map((device) => {
+        const processed = await result.map(async (device) => {
           const isLegacy = device.uuid === null;
           delete device.uuid;
+
+          const permanentNoti = await models.OrderedNotifications.findOne({
+            where: {
+              deviceId: device.id,
+              type: "CHARGEREMINDER",
+              permanent: true,
+            },
+          });
+
           return {
             ...device,
+            permanentNotification: permanentNoti !== null,
             isLegacy: isLegacy,
           };
         });
