@@ -519,7 +519,9 @@ router.post("/secure", async (req, res) => {
                 where: {
                   deviceId: device.id,
                   type: "CHARGEREMINDER",
-                  permanent: false, // only destroy the ordered notification if the user wanted it only one time!
+                  permanent: {
+                    [Op.ne]: true,
+                  }, // only destroy the ordered notification if the user wanted it only one time!
                 },
               },
               { transaction: t }
