@@ -159,6 +159,24 @@ router.get("/", async (req, res) => {
           { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
         );
 
+        // -----------------------------------------------------
+        // User Id Usage
+        // -----------------------------------------------------
+        const userIdUsage = await sequelize.query(
+          `
+          SELECT
+            userId,
+            ${timeBucket},
+            COUNT(*) AS count
+          FROM logs
+          WHERE userId IS NOT NULL
+            AND "createdAt" >= NOW() - INTERVAL :timeframe
+          GROUP BY userId, interval_start
+          ORDER BY userId, interval_start;
+        `,
+          { type: QueryTypes.SELECT, replacements: { interval, timeframe } }
+        );
+
         const getRouteUsage = async () => {
           const rows = routeUsage;
 
@@ -180,7 +198,29 @@ router.get("/", async (req, res) => {
           return result;
         };
 
+        const getUserIdUsage = async () => {
+          const rows = userIdUsage;
+
+          const result = {};
+
+          for (const row of rows) {
+            const userId = row.userId;
+
+            if (!result["total_userId-" + userId]) {
+              result["total_userId-" + userId] = [];
+            }
+
+            result["total_userId-" + userId].push({
+              interval_start: row.interval_start,
+              count: row.count,
+            });
+          }
+
+          return result;
+        };
+
         const perRouteUsage = await getRouteUsage();
+        const perUserIdUsage = await getUserIdUsage();
 
         result = {
           requestCounts,
@@ -190,6 +230,7 @@ router.get("/", async (req, res) => {
           blockedCounts,
           successCounts,
           ...perRouteUsage,
+          ...perUserIdUsage,
         };
         res.send(result);
         log(
