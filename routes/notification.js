@@ -645,4 +645,21 @@ router.post("/debug5", async (req, res) => {
   res.send(orderedWithoutSchedule);
 });
 
+router.post("/debug6", async (req, res) => {
+  const orderedWithoutSchedule = await models.OrderedNotifications.findAll({
+    include: [
+      {
+        model: models.ScheduledNotifications,
+        required: false, // LEFT OUTER JOIN
+        as: "scheduledNotifications",
+      },
+    ],
+    where: {
+      deviceId: 3,
+    },
+  });
+
+  res.send(orderedWithoutSchedule);
+});
+
 module.exports = router;
