@@ -634,10 +634,11 @@ router.post("/debug5", async (req, res) => {
       {
         model: models.ScheduledNotifications,
         required: false, // LEFT OUTER JOIN
+        as: "scheduledNotifications",
       },
     ],
     where: {
-      "$ScheduledNotification.id$": null, // keine zugeordnete SN
+      "$scheduledNotifications.id$": null, // keine zugeordnete SN
     },
   });
 
