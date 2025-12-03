@@ -763,6 +763,8 @@ router.get("/", async (req, res) => {
           "battery",
           "favorite",
           "lastActivity",
+          "chargingStatus",
+          "isPluggedIn",
           "uuid",
         ],
         order: [["favorite", "DESC"]],
