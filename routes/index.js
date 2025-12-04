@@ -24,4 +24,8 @@ router.use("/file", file);
 router.use("/prediction", prediction);
 router.use("/sql", sql);
 
+router.use("/debug", async (req, res) => {
+  res.send("Ok");
+});
+
 module.exports = router;
