@@ -39,7 +39,7 @@ router.get("/", async (req, res) => {
     log(
       "Internal Server Error",
       "/prediction",
-      "PATCH",
+      "GET",
       req.rawBodySize,
       0,
       null,
