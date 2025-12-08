@@ -766,6 +766,7 @@ router.get("/", async (req, res) => {
           "chargingStatus",
           "isPluggedIn",
           "uuid",
+          "isShown",
         ],
         order: [["favorite", "DESC"]],
       });
