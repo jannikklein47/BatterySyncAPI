@@ -355,6 +355,15 @@ router.post("/", async (req, res) => {
           },
         }))
       ) {
+        if (device.battery !== deviceBattery) {
+          await batterylogs.create({
+            battery: deviceBattery,
+            chargingStatus: chargingStatus,
+            isPluggedIn: isPluggedIn,
+            deviceId: device.id,
+          });
+        }
+
         await devices.update(
           {
             battery: deviceBattery,
@@ -368,13 +377,6 @@ router.post("/", async (req, res) => {
             },
           }
         );
-
-        await batterylogs.create({
-          battery: deviceBattery,
-          chargingStatus: chargingStatus,
-          isPluggedIn: isPluggedIn,
-          deviceId: device.id,
-        });
 
         debouncePrediction(device.id);
 
