@@ -807,8 +807,6 @@ router.get("/history/all", async (req, res) => {
     if ((auth = req.headers.authorization)) {
       let user;
       if ((user = await users.findOne({ where: { password: auth } }))) {
-        const name = req.body?.device || req.query?.device;
-
         let foundDevices;
 
         if (
@@ -925,6 +923,13 @@ router.get("/history/all", async (req, res) => {
                 isPluggedIn: firstOlderThan24Hours.isPluggedIn,
               });
             }
+
+            result.push({
+              createdAt: new Date(),
+              battery: foundDevices[i].battery,
+              chargingStatus: foundDevices[i].chargingStatus,
+              isPluggedIn: foundDevices[i].isPluggedIn,
+            });
 
             /*
             if (result[0]) {
