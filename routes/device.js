@@ -36,6 +36,12 @@ router.put("/", async (req, res) => {
           where: { password: req.headers.authorization },
         }))
       ) {
+        if (user.admin !== true) {
+          res.status(403).send("User is not admin");
+          log("Access denied", "/device", "PUT", req.rawBodySize, 0);
+          return;
+        }
+
         let updated;
         if (
           (updated = await devices.update(req.body, {
