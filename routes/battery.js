@@ -924,7 +924,7 @@ router.get("/history/all", async (req, res) => {
               });
             }
 
-            result.push({
+            result.unshift({
               createdAt: new Date(),
               battery: foundDevices[i].battery,
               chargingStatus: foundDevices[i].chargingStatus,
