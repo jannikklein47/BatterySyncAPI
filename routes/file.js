@@ -38,4 +38,32 @@ router.get("/android", async (req, res) => {
   }
 });
 
+router.get("/macos", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    const user = await Users.findOne({ where: { password: auth } });
+    if (user) {
+      const filePath = path.join(__dirname, "..", "batterysync-macos.dmg");
+      res.sendFile(filePath);
+      const stats = fs.statSync(filePath);
+      log(
+        null,
+        "/file/macos",
+        "GET",
+        req.rawBodySize,
+        stats.size || 0,
+        user.id
+      );
+    } else {
+      const filePath = path.join(__dirname, "..", "batterysync-macos.dmg");
+      res.sendFile(filePath);
+      const stats = fs.statSync(filePath);
+      log(null, "/file/macos", "GET", req.rawBodySize, stats.size || 0);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
 module.exports = router;
