@@ -395,11 +395,7 @@ router.post("/new", async (req, res) => {
           );
           //console.log("User devices:", userDevices.length)
           if (userDevices.length > 0) {
-            const deviceThatNeedScheduling = userDevices.filter(
-              (dev) => dev.id !== deviceId
-            );
-            //console.log("dev that need sched:", deviceThatNeedScheduling.length)
-            for (const dev of deviceThatNeedScheduling) {
+            for (const dev of userDevices) {
               //console.log("Creating sched entry")
 
               await models.ScheduledNotifications.create(
