@@ -81,14 +81,17 @@ router.get("/", async (req, res) => {
             model: Downvote,
             as: "DownvoteEntries",
           },
+          [fn("COUNT", col("UpvoteEntries.id")), "upvoteCount"],
+          [fn("COUNT", col("DownvoteEntries.id")), "downvoteCount"],
+          [
+            literal(
+              `COUNT("UpvoteEntries"."id") - COUNT("DownvoteEntries"."id")`
+            ),
+            "score",
+          ],
         ],
-        order: [
-          // 1. Put status === 2 at the bottom
-          [Sequelize.literal(`CASE WHEN status = 2 THEN 1 ELSE 0 END`), "ASC"],
-
-          // 2. Then sort everything by newest updated first
-          ["updatedAt", "DESC"],
-        ],
+        group: ["issue.id"],
+        order: [[literal(`score`), "DESC"]],
       });
       res.send(result);
       log(
