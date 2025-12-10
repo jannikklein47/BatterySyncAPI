@@ -101,7 +101,7 @@ router.get("/", async (req, res) => {
           },
         ],
 
-        group: ["Issue.id", "user.id"],
+        group: ["issue.id", "user.id"],
 
         order: [[literal("score"), "DESC"]],
       });
