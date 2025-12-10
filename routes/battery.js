@@ -443,6 +443,8 @@ router.post("/", async (req, res) => {
   }
 });
 
+// MacOS always sends battery, chargingStatus and isPluggedIn ONLY on change.
+// Android always sends battery, chargingStatus and isPluggedIn more often
 router.post("/secure", async (req, res) => {
   try {
     let auth, uuid, battery, chargingStatus, isPluggedIn;
@@ -478,22 +480,28 @@ router.post("/secure", async (req, res) => {
         }))
       ) {
         await models.sequelize.transaction(async (t) => {
+          if (
+            device.battery !== battery ||
+            device.chargingStatus !== chargingStatus ||
+            device.isPluggedIn !== isPluggedIn
+          ) {
+            await batterylogs.create(
+              {
+                battery: deviceBattery,
+                chargingStatus: chargingStatus,
+                isPluggedIn: isPluggedIn,
+                deviceId: device.id,
+              },
+              { transaction: t }
+            );
+          }
+
           await device.update(
             {
               battery: battery,
               chargingStatus: chargingStatus,
               isPluggedIn: isPluggedIn,
               lastActivity: new Date(),
-            },
-            { transaction: t }
-          );
-
-          await batterylogs.create(
-            {
-              battery: device.battery,
-              chargingStatus: device.chargingStatus,
-              isPluggedIn: device.isPluggedIn,
-              deviceId: device.id,
             },
             { transaction: t }
           );
