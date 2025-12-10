@@ -29,5 +29,5 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "upvotes",
     }
   );
-  return issue;
+  return upvotes;
 };
