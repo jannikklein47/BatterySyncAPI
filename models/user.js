@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
         through: models.upvotes,
         foreignKey: "userId",
         otherKey: "issueId",
+        as: "upvotedIssues",
       });
     }
   }

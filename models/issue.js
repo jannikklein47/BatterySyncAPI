@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         through: models.upvotes,
         foreignKey: "issueId",
         otherKey: "userId",
+        as: "upvoters",
       });
 
       issue.hasMany(models.upvotes, { foreignKey: "issueId" });
