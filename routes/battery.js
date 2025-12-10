@@ -487,7 +487,7 @@ router.post("/secure", async (req, res) => {
           ) {
             await batterylogs.create(
               {
-                battery: deviceBattery,
+                battery: battery,
                 chargingStatus: chargingStatus,
                 isPluggedIn: isPluggedIn,
                 deviceId: device.id,
