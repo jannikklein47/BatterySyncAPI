@@ -499,7 +499,9 @@ router.post("/downvote", async (req, res) => {
         });
       } else {
         // Remove the Downvote
-        await Downvote.destroy({ userId: user.id, issueId: toDownvote.id });
+        await Downvote.destroy({
+          where: { userId: user.id, issueId: toDownvote.id },
+        });
       }
 
       const result = await Issue.findByPk(id, {
