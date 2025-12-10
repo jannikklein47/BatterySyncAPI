@@ -198,6 +198,45 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.put("/", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    const data = req.body;
+    const user = await Users.findOne({ where: { password: auth } });
+    if (user) {
+      const issue = await Issue.findByPk(data.id);
+      delete data.id;
+      await issue.update(data);
+
+      res.send(issue);
+
+      log(
+        null,
+        "/issue",
+        "PUT",
+        req.rawBodySize,
+        new Blob([JSON.stringify(issue)]).size,
+        user.id
+      );
+    } else {
+      res.status(403).send("Invalid access token");
+      log("Access denied", "/issue", "PUT", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/issue",
+      "PUT",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
 router.patch("/", async (req, res) => {
   try {
     const auth = req.headers.authorization;
