@@ -67,6 +67,18 @@ router.get("/", async (req, res) => {
         where: {
           archived: false,
         },
+        attributes: {
+          include: [
+            [fn("COUNT", col("UpvoteEntries.id")), "upvoteCount"],
+            [fn("COUNT", col("DownvoteEntries.id")), "downvoteCount"],
+            [
+              literal(
+                `COUNT("UpvoteEntries"."id") - COUNT("DownvoteEntries"."id")`
+              ),
+              "score",
+            ],
+          ],
+        },
         include: [
           {
             model: models.User,
@@ -81,14 +93,6 @@ router.get("/", async (req, res) => {
             model: Downvote,
             as: "DownvoteEntries",
           },
-          [fn("COUNT", col("UpvoteEntries.id")), "upvoteCount"],
-          [fn("COUNT", col("DownvoteEntries.id")), "downvoteCount"],
-          [
-            literal(
-              `COUNT("UpvoteEntries"."id") - COUNT("DownvoteEntries"."id")`
-            ),
-            "score",
-          ],
         ],
         group: ["issue.id"],
         order: [[literal(`score`), "DESC"]],
