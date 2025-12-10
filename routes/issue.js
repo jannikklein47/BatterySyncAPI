@@ -74,6 +74,7 @@ router.get("/", async (req, res) => {
           },
           {
             model: Upvote,
+            as: "UpvoteEntries",
           },
         ],
         order: [
@@ -98,7 +99,7 @@ router.get("/", async (req, res) => {
         where: {
           archived: false,
         },
-        include: [{ model: Upvote }],
+        include: [{ model: Upvote, as: "UpvoteEntries" }],
         order: [
           // 1. Put status === 2 at the bottom
           [Sequelize.literal(`CASE WHEN status = 2 THEN 1 ELSE 0 END`), "ASC"],
@@ -160,6 +161,7 @@ router.post("/", async (req, res) => {
           },
           {
             model: Upvote,
+            as: "UpvoteEntries",
           },
         ],
       });
@@ -217,7 +219,7 @@ router.put("/", async (req, res) => {
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const issue = await Issue.findByPk(data.id, {
-        include: [{ model: Upvote }],
+        include: [{ model: Upvote, as: "UpvoteEntries" }],
       });
       delete data.id;
       await issue.update(data);
@@ -258,7 +260,7 @@ router.patch("/", async (req, res) => {
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const issue = await Issue.findByPk(data.id, {
-        include: [{ model: Upvote }],
+        include: [{ model: Upvote, as: "UpvoteEntries" }],
       });
       delete data.id;
       await issue.update(data);
@@ -313,7 +315,7 @@ router.delete("/", async (req, res) => {
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const toDelete = await Issue.findByPk(id, {
-        include: [{ model: Upvote }],
+        include: [{ model: Upvote, as: "UpvoteEntries" }],
       });
       await toDelete.update({ archived: true });
 
@@ -374,7 +376,7 @@ router.post("/upvote", async (req, res) => {
       }
 
       const result = await Issue.findByPk(id, {
-        include: [{ model: Upvote }],
+        include: [{ model: Upvote, as: "UpvoteEntries" }],
       });
     } else {
       res.status(403).send("Invalid access token");
