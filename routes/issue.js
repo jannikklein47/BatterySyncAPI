@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const { Op, Sequelize, where } = require("sequelize");
 
 const Issue = models.issue;
+const Upvote = models.issue;
 const Users = models.User;
 const Notifications = models.OrderedNotifications;
 const router = express.Router();
@@ -65,11 +66,16 @@ router.get("/", async (req, res) => {
         where: {
           archived: false,
         },
-        include: {
-          model: models.User,
-          attributes: ["email"],
-          as: "user",
-        },
+        include: [
+          {
+            model: models.User,
+            as: "user",
+            attributes: ["email"],
+          },
+          {
+            model: Upvote,
+          },
+        ],
         order: [
           // 1. Put status === 2 at the bottom
           [Sequelize.literal(`CASE WHEN status = 2 THEN 1 ELSE 0 END`), "ASC"],
@@ -92,6 +98,7 @@ router.get("/", async (req, res) => {
         where: {
           archived: false,
         },
+        include: [{ model: Upvote }],
         order: [
           // 1. Put status === 2 at the bottom
           [Sequelize.literal(`CASE WHEN status = 2 THEN 1 ELSE 0 END`), "ASC"],
@@ -145,11 +152,16 @@ router.post("/", async (req, res) => {
       const created = await Issue.create({ ...data, userId: user.id });
 
       const createdWithUser = await Issue.findByPk(created.id, {
-        include: {
-          model: models.User,
-          as: "user",
-          attributes: ["email"],
-        },
+        include: [
+          {
+            model: models.User,
+            as: "user",
+            attributes: ["email"],
+          },
+          {
+            model: Upvote,
+          },
+        ],
       });
 
       res.send(createdWithUser);
@@ -204,7 +216,9 @@ router.put("/", async (req, res) => {
     const data = req.body;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const issue = await Issue.findByPk(data.id);
+      const issue = await Issue.findByPk(data.id, {
+        include: [{ model: Upvote }],
+      });
       delete data.id;
       await issue.update(data);
 
@@ -243,7 +257,9 @@ router.patch("/", async (req, res) => {
     const data = req.body;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const issue = await Issue.findByPk(data.id);
+      const issue = await Issue.findByPk(data.id, {
+        include: [{ model: Upvote }],
+      });
       delete data.id;
       await issue.update(data);
 
@@ -296,7 +312,9 @@ router.delete("/", async (req, res) => {
     const id = req.query.id;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const toDelete = await Issue.findByPk(id);
+      const toDelete = await Issue.findByPk(id, {
+        include: [{ model: Upvote }],
+      });
       await toDelete.update({ archived: true });
 
       res.send(toDelete);
@@ -315,6 +333,49 @@ router.delete("/", async (req, res) => {
         new Blob([JSON.stringify(toDelete)]).size,
         user.id
       );
+    } else {
+      res.status(403).send("Invalid access token");
+      log("Access denied", "/issue", "DELETE", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/issue",
+      "DELETE",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
+router.post("/upvote", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    const id = req.query.id;
+    const user = await Users.findOne({ where: { password: auth } });
+    if (user) {
+      const toUpvote = await Issue.findByPk(id);
+
+      const hasUpvoted =
+        (await Upvote.findOne({
+          where: { userId: user.id, issueId: toUpvote.id },
+        })) !== null;
+
+      if (!hasUpvoted) {
+        // Add the upvote
+        await Upvote.create({ userId: user.id, issueId: toUpvote.id });
+      } else {
+        // Remove the upvote
+        await Upvote.destroy({ userId: user.id, issueId: toUpvote.id });
+      }
+
+      const result = await Issue.findByPk(id, {
+        include: [{ model: Upvote }],
+      });
     } else {
       res.status(403).send("Invalid access token");
       log("Access denied", "/issue", "DELETE", req.rawBodySize, 0);

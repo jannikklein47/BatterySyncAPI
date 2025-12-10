@@ -13,6 +13,12 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "userId",
         as: "issues",
       });
+
+      User.belongsToMany(models.issue, {
+        through: models.upvotes,
+        foreignKey: "userId",
+        otherKey: "issueId",
+      });
     }
   }
   User.init(
