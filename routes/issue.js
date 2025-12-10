@@ -403,9 +403,14 @@ router.post("/upvote", async (req, res) => {
       if (!hasUpvoted) {
         // Add the upvote
         await Upvote.create({ userId: user.id, issueId: toUpvote.id });
+        await Downvote.destroy({
+          where: { userId: user.id, issueId: toUpvote.id },
+        });
       } else {
         // Remove the upvote
-        await Upvote.destroy({ userId: user.id, issueId: toUpvote.id });
+        await Upvote.destroy({
+          where: { userId: user.id, issueId: toUpvote.id },
+        });
       }
 
       const result = await Issue.findByPk(id, {
@@ -454,6 +459,9 @@ router.post("/downvote", async (req, res) => {
       if (!hasDownvoted) {
         // Add the Downvote
         await Downvote.create({ userId: user.id, issueId: toDownvote.id });
+        await Upvote.destroy({
+          where: { userId: user.id, issueId: toDownvote.id },
+        });
       } else {
         // Remove the Downvote
         await Downvote.destroy({ userId: user.id, issueId: toDownvote.id });
