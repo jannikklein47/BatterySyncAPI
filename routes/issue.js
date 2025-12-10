@@ -83,7 +83,7 @@ router.get("/", async (req, res) => {
               literal(`EXISTS (
                 SELECT 1 FROM "Upvotes" u
                 WHERE u."issueId" = "issue"."id"
-                  AND u."userId" = ${userId}
+                  AND u."userId" = ${user.id}
               )`),
               "hasUpvoted",
             ],
@@ -93,7 +93,7 @@ router.get("/", async (req, res) => {
               literal(`EXISTS (
                 SELECT 1 FROM "Downvotes" d
                 WHERE d."issueId" = "issue"."id"
-                  AND d."userId" = ${userId}
+                  AND d."userId" = ${user.id}
               )`),
               "hasDownvoted",
             ],
