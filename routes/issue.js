@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 const { Op, Sequelize, where } = require("sequelize");
 
 const Issue = models.issue;
-const Upvote = models.upvotes;
+const Upvote = models.Upvotes;
 const Users = models.User;
 const Notifications = models.OrderedNotifications;
 const router = express.Router();
