@@ -24,6 +24,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "issueId",
         as: "UpvoteEntries",
       });
+
+      issue.belongsToMany(models.User, {
+        through: models.Downvotes,
+        foreignKey: "issueId",
+        as: "downvoters",
+        otherKey: "userId",
+      });
+
+      issue.hasMany(models.Downvotes, {
+        foreignKey: "issueId",
+        as: "DownvoteEntries",
+      });
     }
   }
   issue.init(
