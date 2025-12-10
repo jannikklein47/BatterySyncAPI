@@ -311,7 +311,14 @@ router.post("/otp", async (req, res) => {
         new Date(foundDevice.otpTime) > Date.now() - 5 * 60 * 1000
       ) {
         res.status(410).send(foundDevice.otpTime);
-        log("OTP Expired", "/device/otp", "POST", req.rawBodySize, 0, user.id);
+        log(
+          "OTP Already generated",
+          "/device/otp",
+          "POST",
+          req.rawBodySize,
+          0,
+          user.id
+        );
         return;
       }
 
@@ -324,7 +331,7 @@ router.post("/otp", async (req, res) => {
 
       sendNotification(
         generated + " ist dein Einmalpasswort",
-        "Gib diesen Code niemals weiter. Er ist für 5 Minuten gültig.",
+        "Gebe diesen Code niemals weiter. Er ist nur für 5 Minuten gültig.",
         user.id,
         foundDevice.id
       );
