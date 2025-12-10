@@ -78,6 +78,25 @@ router.get("/", async (req, res) => {
               ),
               "score",
             ],
+            // Did user upvote?
+            [
+              literal(`EXISTS (
+                SELECT 1 FROM "Upvotes" u
+                WHERE u."issueId" = "issue"."id"
+                  AND u."userId" = ${userId}
+              )`),
+              "hasUpvoted",
+            ],
+
+            // Did user downvote?
+            [
+              literal(`EXISTS (
+                SELECT 1 FROM "Downvotes" d
+                WHERE d."issueId" = "issue"."id"
+                  AND d."userId" = ${userId}
+              )`),
+              "hasDownvoted",
+            ],
           ],
         },
 
