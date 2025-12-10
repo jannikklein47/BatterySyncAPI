@@ -469,7 +469,7 @@ router.post("/downvote", async (req, res) => {
 
       const result = await Issue.findByPk(id, {
         include: [
-          { model: Downvote, as: "UpvoteEntries" },
+          { model: Upvote, as: "UpvoteEntries" },
           {
             model: Downvote,
             as: "DownvoteEntries",
