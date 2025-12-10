@@ -14,13 +14,13 @@ module.exports = (sequelize, DataTypes) => {
         as: "user",
       });
       issue.belongsToMany(models.User, {
-        through: models.upvotes,
+        through: models.Upvotes,
+        as: "upvoters",
         foreignKey: "issueId",
         otherKey: "userId",
-        as: "upvoters",
       });
 
-      issue.hasMany(models.upvotes, { foreignKey: "issueId" });
+      issue.hasMany(models.Upvotes, { foreignKey: "issueId" });
     }
   }
   issue.init(
