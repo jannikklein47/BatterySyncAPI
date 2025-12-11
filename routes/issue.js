@@ -99,7 +99,6 @@ router.get("/", async (req, res) => {
               "hasDownvoted",
             ],
 
-            // aggregate comments
             [
               literal(`
                 COALESCE(
@@ -107,6 +106,7 @@ router.get("/", async (req, res) => {
                     DISTINCT jsonb_build_object(
                       'id', "CommentEntries"."id",
                       'userId', "CommentEntries"."userId",
+                      'username', "CommentEntries->user"."email",
                       'text', "CommentEntries"."text",
                       'createdAt', "CommentEntries"."createdAt"
                     )
@@ -140,8 +140,15 @@ router.get("/", async (req, res) => {
           {
             model: Comment,
             as: "CommentEntries",
-            attributes: [],
+            attributes: [], // prevent row inflation
             required: false,
+            include: [
+              {
+                model: models.User,
+                as: "user",
+                attributes: ["email"], // this appears in aggregated JSON
+              },
+            ],
           },
         ],
 
