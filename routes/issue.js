@@ -669,6 +669,19 @@ router.post("/comment", async (req, res) => {
         userId: user.id,
         issueId: issueId,
       });
+
+      const targetIssue = await Issue.findByPk(issueId);
+      if (user.id !== targetIssue.userId) {
+        sendUpdateNotification(
+          "Neuer Kommentar",
+          `@${user.email} hat "${targetIssue.title.substring(
+            0,
+            30
+          )}" kommentiert.`,
+          targetIssue.userId
+        );
+      }
+
       res.send(created);
     } else {
       res.status(403).send("Invalid access token");
