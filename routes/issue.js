@@ -213,13 +213,13 @@ router.get("/", async (req, res) => {
         "Issue"."archived" = FALSE
 
     GROUP BY
-        "Issue"."id", "user"."id", "AggregatedComments"."comments" -- Must group by final aggregated JSON column
+        "Issue"."id", "user"."id"
         
     ORDER BY
         "score" DESC;
 `;
 
-      const [result, metadata] = await models.sequelize.query(query, {
+      const result = await models.sequelize.query(query, {
         replacements: { userId: user.id },
         type: Sequelize.QueryTypes.SELECT,
         // Add the model definition here if you want Sequelize to map the results to Model instances
