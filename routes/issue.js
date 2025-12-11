@@ -677,7 +677,7 @@ router.post("/comment", async (req, res) => {
           `@${user.email} hat "${targetIssue.title.substring(
             0,
             30
-          )}" kommentiert.`,
+          )}" kommentiert: "${text}"`,
           targetIssue.userId
         );
       }
