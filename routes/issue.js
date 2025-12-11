@@ -98,6 +98,24 @@ router.get("/", async (req, res) => {
               )`),
               "hasDownvoted",
             ],
+
+            // aggregate comments
+            [
+              literal(`
+                COALESCE(
+                  json_agg(
+                    DISTINCT jsonb_build_object(
+                      'id', "CommentEntries"."id",
+                      'userId', "CommentEntries"."userId",
+                      'text', "CommentEntries"."text",
+                      'createdAt', "CommentEntries"."createdAt"
+                    )
+                  ) FILTER (WHERE "CommentEntries"."id" IS NOT NULL),
+                  '[]'
+                )
+              `),
+              "comments",
+            ],
           ],
         },
 
@@ -122,16 +140,12 @@ router.get("/", async (req, res) => {
           {
             model: Comment,
             as: "CommentEntries",
+            attributes: [],
             required: false,
           },
         ],
 
-        group: [
-          "issue.id",
-          "user.id",
-          "CommentEntries.userId",
-          "CommentEntries.issueId",
-        ],
+        group: ["issue.id", "user.id"],
 
         order: [[literal("score"), "DESC"]],
       });
