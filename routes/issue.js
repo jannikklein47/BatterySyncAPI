@@ -176,7 +176,7 @@ router.get("/", async (req, res) => {
               AND d."userId" = :userId
         ) AS "hasDownvoted",
         COALESCE("AggregatedComments"."comments", '[]'::jsonb) AS "comments"
-    FROM "Issues" AS "Issue"
+    FROM "issues" AS "Issue"
     
     -- 1. Join the Issue Creator (User)
     INNER JOIN "Users" AS "user"
