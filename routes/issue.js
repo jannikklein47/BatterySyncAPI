@@ -64,61 +64,55 @@ router.get("/", async (req, res) => {
     const auth = req.headers.authorization || "";
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const result = await Issue.findAll({
+      const issuesWithAggregatedComments = await Issue.findAll({
         where: {
           archived: false,
         },
-
+        // The main query now joins the aggregated comments
         attributes: {
           include: [
-            [fn("COUNT", col("UpvoteEntries.id")), "upvoteCount"],
-            [fn("COUNT", col("DownvoteEntries.id")), "downvoteCount"],
             [
-              literal(
+              Sequelize.fn("COUNT", Sequelize.col("UpvoteEntries.id")),
+              "upvoteCount",
+            ],
+            [
+              Sequelize.fn("COUNT", Sequelize.col("DownvoteEntries.id")),
+              "downvoteCount",
+            ],
+            [
+              Sequelize.literal(
                 `COUNT("UpvoteEntries"."id") - COUNT("DownvoteEntries"."id")`
               ),
               "score",
             ],
-            // Did user upvote?
+            // Did user upvote? (Same as before)
             [
-              literal(`EXISTS (
+              Sequelize.literal(`EXISTS (
                 SELECT 1 FROM "Upvotes" u
-                WHERE u."issueId" = "issue"."id"
+                WHERE u."issueId" = "Issue"."id"
                   AND u."userId" = ${user.id}
               )`),
               "hasUpvoted",
             ],
 
-            // Did user downvote?
+            // Did user downvote? (Same as before)
             [
-              literal(`EXISTS (
+              Sequelize.literal(`EXISTS (
                 SELECT 1 FROM "Downvotes" d
-                WHERE d."issueId" = "issue"."id"
+                WHERE d."issueId" = "Issue"."id"
                   AND d."userId" = ${user.id}
               )`),
               "hasDownvoted",
             ],
-
+            // 💡 Get the pre-aggregated comments from the joined sub-query
             [
-              literal(`
-                COALESCE(
-                  json_agg(
-                    DISTINCT jsonb_build_object(
-                      'id', "CommentEntries"."id",
-                      'userId', "CommentEntries"."userId",
-                      'username', "CommentEntries->User"."email",
-                      'text', "CommentEntries"."text",
-                      'createdAt', "CommentEntries"."createdAt"
-                    )
-                  ) FILTER (WHERE "CommentEntries"."id" IS NOT NULL),
-                  '[]'
-                )
-              `),
+              Sequelize.literal(
+                `COALESCE("AggregatedComments"."comments", '[]'::jsonb)`
+              ),
               "comments",
             ],
           ],
         },
-
         include: [
           {
             model: models.User,
@@ -128,33 +122,44 @@ router.get("/", async (req, res) => {
           {
             model: Upvote,
             as: "UpvoteEntries",
-            attributes: [], // Prevent row inflation
+            attributes: [],
             required: false,
           },
           {
             model: Downvote,
             as: "DownvoteEntries",
-            attributes: [], // Prevent row inflation
+            attributes: [],
             required: false,
           },
           {
-            model: Comment,
-            as: "CommentEntries",
-            attributes: [], // prevent row inflation
+            // ⭐️ This is the new sub-query join
+            model: Sequelize.literal(`(
+                SELECT
+                    "Comment"."issueId",
+                    jsonb_agg(
+                        jsonb_build_object(
+                            'id', "Comment"."id",
+                            'userId', "Comment"."userId",
+                            'username', "CommentCreator"."email",
+                            'text', "Comment"."text",
+                            'createdAt', "Comment"."createdAt"
+                        )
+                    ) AS comments
+                FROM "Comments" AS "Comment"
+                INNER JOIN "Users" AS "CommentCreator"
+                    ON "Comment"."userId" = "CommentCreator"."id"
+                GROUP BY "Comment"."issueId"
+            ) AS "AggregatedComments"`),
+            as: "AggregatedComments",
+            attributes: [],
             required: false,
-            include: [
-              {
-                model: models.User,
-                as: "User",
-                attributes: ["email"], // this appears in aggregated JSON
-              },
-            ],
+            // ⭐️ Define the ON clause for the literal join
+            on: { issueId: Sequelize.col("Issue.id") },
           },
         ],
-
-        group: ["issue.id", "user.id"],
-
-        order: [[literal("score"), "DESC"]],
+        // 🥳 The GROUP BY is now clean!
+        group: ["Issue.id", "user.id", "AggregatedComments.issueId"],
+        order: [[Sequelize.literal("score"), "DESC"]],
       });
 
       res.send(result);
