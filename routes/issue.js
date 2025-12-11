@@ -110,7 +110,7 @@ router.get("/", async (req, res) => {
           {
             model: models.User,
             as: "user",
-            attributes: ["email", "admin"],
+            attributes: ["email"],
           },
           {
             model: Upvote,
@@ -142,7 +142,7 @@ router.get("/", async (req, res) => {
           {
             model: models.User,
             as: "User", // Match the 'as' used in the Comment model association
-            attributes: ["email"],
+            attributes: ["email", "admin"],
           },
         ],
         order: [["createdAt", "ASC"]], // Sort comments by time
@@ -162,6 +162,7 @@ router.get("/", async (req, res) => {
           userId: comment.userId,
           // Sequelize prefixes nested raw attributes with the association name
           username: comment["User.email"],
+          byAdmin: comment["User.admin"],
           text: comment.text,
           createdAt: comment.createdAt,
         };
