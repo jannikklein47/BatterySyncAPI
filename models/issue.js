@@ -36,6 +36,18 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "issueId",
         as: "DownvoteEntries",
       });
+
+      issue.belongsToMany(models.User, {
+        through: models.Comments,
+        foreignKey: "issueId",
+        as: "commenters",
+        otherKey: "userId",
+      });
+
+      issue.hasMany(models.Comments, {
+        foreignKey: "issueId",
+        as: "CommentEntries",
+      });
     }
   }
   issue.init(

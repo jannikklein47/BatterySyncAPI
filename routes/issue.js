@@ -7,6 +7,7 @@ const { Op, Sequelize, fn, literal, col } = require("sequelize");
 const Issue = models.issue;
 const Upvote = models.Upvotes;
 const Downvote = models.Downvotes;
+const Comment = models.Comments;
 const Users = models.User;
 const Notifications = models.OrderedNotifications;
 const router = express.Router();
@@ -116,6 +117,11 @@ router.get("/", async (req, res) => {
             model: Downvote,
             as: "DownvoteEntries",
             attributes: [], // Prevent row inflation
+            required: false,
+          },
+          {
+            model: Comment,
+            as: "CommentEntries",
             required: false,
           },
         ],
@@ -432,35 +438,54 @@ router.post("/upvote", async (req, res) => {
         const toUpvote = await Issue.findByPk(id);
 
         const hasUpvoted =
-          (await Upvote.findOne({
-            where: { userId: user.id, issueId: toUpvote.id },
-          })) !== null;
+          (await Upvote.findOne(
+            {
+              where: { userId: user.id, issueId: toUpvote.id },
+            },
+            { transaction: t }
+          )) !== null;
 
         if (!hasUpvoted) {
           // Add the upvote
-          await Upvote.create({ userId: user.id, issueId: toUpvote.id });
-          await Downvote.destroy({
-            where: { userId: user.id, issueId: toUpvote.id },
-          });
+          await Upvote.create(
+            { userId: user.id, issueId: toUpvote.id },
+            { transaction: t }
+          );
+          await Downvote.destroy(
+            {
+              where: { userId: user.id, issueId: toUpvote.id },
+            },
+            { transaction: t }
+          );
         } else {
           // Remove the upvote
-          await Upvote.destroy({
-            where: { userId: user.id, issueId: toUpvote.id },
-          });
-          await Downvote.destroy({
-            where: { userId: user.id, issueId: toUpvote.id },
-          });
+          await Upvote.destroy(
+            {
+              where: { userId: user.id, issueId: toUpvote.id },
+            },
+            { transaction: t }
+          );
+          await Downvote.destroy(
+            {
+              where: { userId: user.id, issueId: toUpvote.id },
+            },
+            { transaction: t }
+          );
         }
 
-        const result = await Issue.findByPk(id, {
-          include: [
-            { model: Upvote, as: "UpvoteEntries" },
-            {
-              model: Downvote,
-              as: "DownvoteEntries",
-            },
-          ],
-        });
+        const result = await Issue.findByPk(
+          id,
+          {
+            include: [
+              { model: Upvote, as: "UpvoteEntries" },
+              {
+                model: Downvote,
+                as: "DownvoteEntries",
+              },
+            ],
+          },
+          { transaction: t }
+        );
 
         res.send(result);
         log(
@@ -497,38 +522,57 @@ router.post("/downvote", async (req, res) => {
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       await models.sequelize.transaction(async (t) => {
-        const toDownvote = await Issue.findByPk(id);
+        const toDownvote = await Issue.findByPk(id, { transaction: t });
 
         const hasDownvoted =
-          (await Downvote.findOne({
-            where: { userId: user.id, issueId: toDownvote.id },
-          })) !== null;
+          (await Downvote.findOne(
+            {
+              where: { userId: user.id, issueId: toDownvote.id },
+            },
+            { transaction: t }
+          )) !== null;
 
         if (!hasDownvoted) {
           // Add the Downvote
-          await Downvote.create({ userId: user.id, issueId: toDownvote.id });
-          await Upvote.destroy({
-            where: { userId: user.id, issueId: toDownvote.id },
-          });
+          await Downvote.create(
+            { userId: user.id, issueId: toDownvote.id },
+            { transaction: t }
+          );
+          await Upvote.destroy(
+            {
+              where: { userId: user.id, issueId: toDownvote.id },
+            },
+            { transaction: t }
+          );
         } else {
           // Remove the Downvote
-          await Downvote.destroy({
-            where: { userId: user.id, issueId: toDownvote.id },
-          });
-          await Upvote.destroy({
-            where: { userId: user.id, issueId: toDownvote.id },
-          });
+          await Downvote.destroy(
+            {
+              where: { userId: user.id, issueId: toDownvote.id },
+            },
+            { transaction: t }
+          );
+          await Upvote.destroy(
+            {
+              where: { userId: user.id, issueId: toDownvote.id },
+            },
+            { transaction: t }
+          );
         }
 
-        const result = await Issue.findByPk(id, {
-          include: [
-            { model: Upvote, as: "UpvoteEntries" },
-            {
-              model: Downvote,
-              as: "DownvoteEntries",
-            },
-          ],
-        });
+        const result = await Issue.findByPk(
+          id,
+          {
+            include: [
+              { model: Upvote, as: "UpvoteEntries" },
+              {
+                model: Downvote,
+                as: "DownvoteEntries",
+              },
+            ],
+          },
+          { transaction: t }
+        );
 
         res.send(result);
         log(
@@ -558,6 +602,77 @@ router.post("/downvote", async (req, res) => {
   }
 });
 
-router.get("/downvote", async (req, res) => {});
+router.post("/comment", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    const issueId = req.query.issueId;
+    const text = req.body.text;
+
+    if (!issueId || !text) {
+      res.status(400).send("Invalid Request");
+      log("Invalid Request", "/issue/comment", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    const user = await Users.findOne({ where: { password: auth } });
+    if (user) {
+      const created = await Comment.create({
+        text: text,
+        userId: user.id,
+        issueId: issueId,
+      });
+      res.send(created);
+    } else {
+      res.status(403).send("Invalid access token");
+      log("Access denied", "/issue/comment", "POST", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/issue/comment",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
+router.delete("/comment", async (req, res) => {
+  try {
+    const auth = req.headers.authorization;
+    const commentId = req.query.id;
+
+    if (!commentId) {
+      res.status(400).send("Invalid Request");
+      log("Invalid Request", "/issue/comment", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    const user = await Users.findOne({ where: { password: auth } });
+    if (user && user.admin === true) {
+      const deleted = await Comment.destroy({ where: { id: commentId } });
+      res.send(deleted);
+    } else {
+      res.status(403).send("Invalid access token");
+      log("Access denied", "/issue/comment", "POST", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/issue/comment",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
 
 module.exports = router;
