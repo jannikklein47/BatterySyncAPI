@@ -131,9 +131,9 @@ router.get("/", async (req, res) => {
             attributes: [],
             required: false,
           },
-          {
-            // ⭐️ This is the new sub-query join
-            model: Sequelize.literal(`(
+
+          Sequelize.literal(`
+            LEFT JOIN (
                 SELECT
                     "Comment"."issueId",
                     jsonb_agg(
@@ -149,16 +149,11 @@ router.get("/", async (req, res) => {
                 INNER JOIN "Users" AS "CommentCreator"
                     ON "Comment"."userId" = "CommentCreator"."id"
                 GROUP BY "Comment"."issueId"
-            ) AS "AggregatedComments"`),
-            as: "AggregatedComments",
-            attributes: [],
-            required: false,
-            // ⭐️ Define the ON clause for the literal join
-            on: { issueId: Sequelize.col("Issue.id") },
-          },
+            ) AS "AggregatedComments" ON "AggregatedComments"."issueId" = "Issue"."id"
+        `),
         ],
         // 🥳 The GROUP BY is now clean!
-        group: ["Issue.id", "user.id", "AggregatedComments.issueId"],
+        group: ["Issue.id", "user.id"],
         order: [[Sequelize.literal("score"), "DESC"]],
       });
 
