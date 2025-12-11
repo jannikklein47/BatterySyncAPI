@@ -126,7 +126,7 @@ router.get("/", async (req, res) => {
           },
         ],
 
-        group: ["Issue.id", "user.id"], // Clean group by
+        group: ["issue.id", "user.id"], // Clean group by
         order: [[Sequelize.literal("score"), "DESC"]],
         raw: true, // Fetch results as plain objects for easier merging
       });
