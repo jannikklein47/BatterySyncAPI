@@ -106,7 +106,7 @@ router.get("/", async (req, res) => {
                     DISTINCT jsonb_build_object(
                       'id', "CommentEntries"."id",
                       'userId', "CommentEntries"."userId",
-                      'username', "CommentEntries->user"."email",
+                      'username', "CommentEntries->User"."email",
                       'text', "CommentEntries"."text",
                       'createdAt', "CommentEntries"."createdAt"
                     )
@@ -145,7 +145,7 @@ router.get("/", async (req, res) => {
             include: [
               {
                 model: models.User,
-                as: "user",
+                as: "User",
                 attributes: ["email"], // this appears in aggregated JSON
               },
             ],
