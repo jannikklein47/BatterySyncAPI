@@ -64,58 +64,44 @@ router.get("/", async (req, res) => {
     const auth = req.headers.authorization || "";
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      /*
-      const result = await Issue.findAll({
+      const issues = await Issue.findAll({
         where: {
           archived: false,
         },
 
         attributes: {
           include: [
-            [fn("COUNT", col("UpvoteEntries.id")), "upvoteCount"],
-            [fn("COUNT", col("DownvoteEntries.id")), "downvoteCount"],
+            // Standard aggregates
             [
-              literal(
+              Sequelize.fn("COUNT", Sequelize.col("UpvoteEntries.id")),
+              "upvoteCount",
+            ],
+            [
+              Sequelize.fn("COUNT", Sequelize.col("DownvoteEntries.id")),
+              "downvoteCount",
+            ],
+            [
+              Sequelize.literal(
                 `COUNT("UpvoteEntries"."id") - COUNT("DownvoteEntries"."id")`
               ),
               "score",
             ],
-            // Did user upvote?
+            // User-specific booleans
             [
-              literal(`EXISTS (
+              Sequelize.literal(`EXISTS (
                 SELECT 1 FROM "Upvotes" u
-                WHERE u."issueId" = "issue"."id"
+                WHERE u."issueId" = "Issue"."id"
                   AND u."userId" = ${user.id}
               )`),
               "hasUpvoted",
             ],
-
-            // Did user downvote?
             [
-              literal(`EXISTS (
+              Sequelize.literal(`EXISTS (
                 SELECT 1 FROM "Downvotes" d
-                WHERE d."issueId" = "issue"."id"
+                WHERE d."issueId" = "Issue"."id"
                   AND d."userId" = ${user.id}
               )`),
               "hasDownvoted",
-            ],
-
-            [
-              literal(`
-                COALESCE(
-                  json_agg(
-                    DISTINCT jsonb_build_object(
-                      'id', "CommentEntries"."id",
-                      'userId', "CommentEntries"."userId",
-                      'username', "CommentEntries->User"."email",
-                      'text', "CommentEntries"."text",
-                      'createdAt', "CommentEntries"."createdAt"
-                    )
-                  ) FILTER (WHERE "CommentEntries"."id" IS NOT NULL),
-                  '[]'
-                )
-              `),
-              "comments",
             ],
           ],
         },
@@ -129,114 +115,77 @@ router.get("/", async (req, res) => {
           {
             model: Upvote,
             as: "UpvoteEntries",
-            attributes: [], // Prevent row inflation
+            attributes: [],
             required: false,
           },
           {
             model: Downvote,
             as: "DownvoteEntries",
-            attributes: [], // Prevent row inflation
+            attributes: [],
             required: false,
-          },
-          {
-            model: Comment,
-            as: "CommentEntries",
-            attributes: [], // prevent row inflation
-            required: false,
-            include: [
-              {
-                model: models.User,
-                as: "User",
-                attributes: ["email"], // this appears in aggregated JSON
-              },
-            ],
           },
         ],
 
-        group: ["issue.id", "user.id"],
-
-        order: [[literal("score"), "DESC"]],
-      });*/
-
-      const query = `
-    SELECT
-        "Issue".*,
-        "user"."email" AS "user.email",
-        COUNT("UpvoteEntries"."id") AS "upvoteCount",
-        COUNT("DownvoteEntries"."id") AS "downvoteCount",
-        COUNT("UpvoteEntries"."id") - COUNT("DownvoteEntries"."id") AS "score",
-        EXISTS (
-            SELECT 1 FROM "Upvotes" u
-            WHERE u."issueId" = "Issue"."id"
-              AND u."userId" = :userId
-        ) AS "hasUpvoted",
-        EXISTS (
-            SELECT 1 FROM "Downvotes" d
-            WHERE d."issueId" = "Issue"."id"
-              AND d."userId" = :userId
-        ) AS "hasDownvoted",
-        COALESCE("AggregatedComments"."comments", '[]'::jsonb) AS "comments"
-    FROM "issues" AS "Issue"
-    
-    -- 1. Join the Issue Creator (User)
-    INNER JOIN "Users" AS "user"
-        ON "Issue"."userId" = "user"."id"
-
-    -- 2. Left Join Upvotes
-    LEFT OUTER JOIN "Upvotes" AS "UpvoteEntries"
-        ON "Issue"."id" = "UpvoteEntries"."issueId"
-        
-    -- 3. Left Join Downvotes
-    LEFT OUTER JOIN "Downvotes" AS "DownvoteEntries"
-        ON "Issue"."id" = "DownvoteEntries"."issueId"
-        
-    -- 4. Left Join the Pre-Aggregated Comments Sub-query
-    LEFT JOIN (
-        SELECT
-            "Comment"."issueId",
-            jsonb_agg(
-                jsonb_build_object(
-                    'id', "Comment"."id",
-                    'userId', "Comment"."userId",
-                    'username', "CommentCreator"."email",
-                    'text', "Comment"."text",
-                    'createdAt', "Comment"."createdAt"
-                )
-            ) AS comments
-        FROM "Comments" AS "Comment"
-        INNER JOIN "Users" AS "CommentCreator"
-            ON "Comment"."userId" = "CommentCreator"."id"
-        GROUP BY "Comment"."issueId"
-    ) AS "AggregatedComments" ON "AggregatedComments"."issueId" = "Issue"."id"
-
-    WHERE
-        "Issue"."archived" = FALSE
-
-    GROUP BY
-        "Issue"."id", "user"."id", "AggregatedComments"."issueId"
-        
-    ORDER BY
-        "score" DESC;
-`;
-
-      const result = await models.sequelize.query(query, {
-        replacements: { userId: user.id },
-        type: Sequelize.QueryTypes.SELECT,
-        // Add the model definition here if you want Sequelize to map the results to Model instances
-        // model: Issue,
-        // mapToModel: true,
+        group: ["Issue.id", "user.id"], // Clean group by
+        order: [[Sequelize.literal("score"), "DESC"]],
+        raw: true, // Fetch results as plain objects for easier merging
       });
 
-      // The result will be a plain array of JavaScript objects.
-      // If you use 'model: Issue, mapToModel: true', the array will contain Issue model instances.
+      // Get the IDs of all issues fetched in the first step
+      const issueIds = issues.map((issue) => issue.id);
 
-      res.send(result);
+      const comments = await Comment.findAll({
+        where: {
+          issueId: { [Sequelize.Op.in]: issueIds },
+        },
+        include: [
+          {
+            model: models.User,
+            as: "User", // Match the 'as' used in the Comment model association
+            attributes: ["email"],
+          },
+        ],
+        order: [["createdAt", "ASC"]], // Sort comments by time
+        raw: true,
+        // Add attributes to get fields like text, id, userId, createdAt
+        attributes: ["id", "userId", "text", "createdAt", "issueId"],
+      });
+
+      // 3a. Prepare an organized map of comments for quick lookup
+      const commentsMap = {};
+      for (const comment of comments) {
+        const issueId = comment.issueId;
+
+        // Format the comment object to match the desired JSON structure
+        const formattedComment = {
+          id: comment.id,
+          userId: comment.userId,
+          // Sequelize prefixes nested raw attributes with the association name
+          username: comment["User.email"],
+          text: comment.text,
+          createdAt: comment.createdAt,
+        };
+
+        if (!commentsMap[issueId]) {
+          commentsMap[issueId] = [];
+        }
+        commentsMap[issueId].push(formattedComment);
+      }
+
+      // 3b. Add the comments array to each issue
+      const finalResult = issues.map((issue) => {
+        // Attach the comments array, or an empty array if none exist
+        issue.comments = commentsMap[issue.id] || [];
+        return issue;
+      });
+
+      res.send(finalResult);
       log(
         null,
         "/issue",
         "GET",
         req.rawBodySize,
-        new Blob([JSON.stringify(result)]).size,
+        new Blob([JSON.stringify(finalResult)]).size,
         user.id
       );
     } else {
