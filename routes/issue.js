@@ -90,7 +90,7 @@ router.get("/", async (req, res) => {
             [
               Sequelize.literal(`EXISTS (
                 SELECT 1 FROM "Upvotes" u
-                WHERE u."issueId" = "Issue"."id"
+                WHERE u."issueId" = "issue"."id"
                   AND u."userId" = ${user.id}
               )`),
               "hasUpvoted",
@@ -98,7 +98,7 @@ router.get("/", async (req, res) => {
             [
               Sequelize.literal(`EXISTS (
                 SELECT 1 FROM "Downvotes" d
-                WHERE d."issueId" = "Issue"."id"
+                WHERE d."issueId" = "issue"."id"
                   AND d."userId" = ${user.id}
               )`),
               "hasDownvoted",
