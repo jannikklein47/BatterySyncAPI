@@ -110,7 +110,7 @@ router.get("/", async (req, res) => {
           {
             model: models.User,
             as: "user",
-            attributes: ["email"],
+            attributes: ["email", "admin"],
           },
           {
             model: Upvote,
