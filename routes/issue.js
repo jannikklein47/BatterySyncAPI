@@ -213,7 +213,7 @@ router.get("/", async (req, res) => {
         "Issue"."archived" = FALSE
 
     GROUP BY
-        "Issue"."id", "user"."id"
+        "Issue"."id", "user"."id", "AggregatedComments"."issueId"
         
     ORDER BY
         "score" DESC;
