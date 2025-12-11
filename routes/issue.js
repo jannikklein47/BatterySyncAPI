@@ -428,48 +428,60 @@ router.post("/upvote", async (req, res) => {
     const id = req.query.id;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const toUpvote = await Issue.findByPk(id);
+      await models.sequelize.transaction(async (t) => {
+        const toUpvote = await Issue.findByPk(id);
 
-      const hasUpvoted =
-        (await Upvote.findOne({
-          where: { userId: user.id, issueId: toUpvote.id },
-        })) !== null;
+        const hasUpvoted =
+          (await Upvote.findOne({
+            where: { userId: user.id, issueId: toUpvote.id },
+          })) !== null;
 
-      if (!hasUpvoted) {
-        // Add the upvote
-        await Upvote.create({ userId: user.id, issueId: toUpvote.id });
-        await Downvote.destroy({
-          where: { userId: user.id, issueId: toUpvote.id },
+        if (!hasUpvoted) {
+          // Add the upvote
+          await Upvote.create({ userId: user.id, issueId: toUpvote.id });
+          await Downvote.destroy({
+            where: { userId: user.id, issueId: toUpvote.id },
+          });
+        } else {
+          // Remove the upvote
+          await Upvote.destroy({
+            where: { userId: user.id, issueId: toUpvote.id },
+          });
+          await Downvote.destroy({
+            where: { userId: user.id, issueId: toUpvote.id },
+          });
+        }
+
+        const result = await Issue.findByPk(id, {
+          include: [
+            { model: Upvote, as: "UpvoteEntries" },
+            {
+              model: Downvote,
+              as: "DownvoteEntries",
+            },
+          ],
         });
-      } else {
-        // Remove the upvote
-        await Upvote.destroy({
-          where: { userId: user.id, issueId: toUpvote.id },
-        });
-      }
 
-      const result = await Issue.findByPk(id, {
-        include: [
-          { model: Upvote, as: "UpvoteEntries" },
-          {
-            model: Downvote,
-            as: "DownvoteEntries",
-          },
-        ],
+        res.send(result);
+        log(
+          null,
+          "/issue/upvote",
+          "POST",
+          req.rawBodySize,
+          new Blob([JSON.stringify(result)]).size
+        );
       });
-
-      res.send(result);
     } else {
       res.status(403).send("Invalid access token");
-      log("Access denied", "/issue", "DELETE", req.rawBodySize, 0);
+      log("Access denied", "/issue/upvote", "POST", req.rawBodySize, 0);
     }
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
     log(
       "Internal Server Error",
-      "/issue",
-      "DELETE",
+      "/issue/upvote",
+      "POST",
       req.rawBodySize,
       0,
       null,
@@ -484,48 +496,60 @@ router.post("/downvote", async (req, res) => {
     const id = req.query.id;
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const toDownvote = await Issue.findByPk(id);
+      await models.sequelize.transaction(async (t) => {
+        const toDownvote = await Issue.findByPk(id);
 
-      const hasDownvoted =
-        (await Downvote.findOne({
-          where: { userId: user.id, issueId: toDownvote.id },
-        })) !== null;
+        const hasDownvoted =
+          (await Downvote.findOne({
+            where: { userId: user.id, issueId: toDownvote.id },
+          })) !== null;
 
-      if (!hasDownvoted) {
-        // Add the Downvote
-        await Downvote.create({ userId: user.id, issueId: toDownvote.id });
-        await Upvote.destroy({
-          where: { userId: user.id, issueId: toDownvote.id },
+        if (!hasDownvoted) {
+          // Add the Downvote
+          await Downvote.create({ userId: user.id, issueId: toDownvote.id });
+          await Upvote.destroy({
+            where: { userId: user.id, issueId: toDownvote.id },
+          });
+        } else {
+          // Remove the Downvote
+          await Downvote.destroy({
+            where: { userId: user.id, issueId: toDownvote.id },
+          });
+          await Upvote.destroy({
+            where: { userId: user.id, issueId: toDownvote.id },
+          });
+        }
+
+        const result = await Issue.findByPk(id, {
+          include: [
+            { model: Upvote, as: "UpvoteEntries" },
+            {
+              model: Downvote,
+              as: "DownvoteEntries",
+            },
+          ],
         });
-      } else {
-        // Remove the Downvote
-        await Downvote.destroy({
-          where: { userId: user.id, issueId: toDownvote.id },
-        });
-      }
 
-      const result = await Issue.findByPk(id, {
-        include: [
-          { model: Upvote, as: "UpvoteEntries" },
-          {
-            model: Downvote,
-            as: "DownvoteEntries",
-          },
-        ],
+        res.send(result);
+        log(
+          null,
+          "/issue/downvote",
+          "POST",
+          req.rawBodySize,
+          new Blob([JSON.stringify(result)]).size
+        );
       });
-
-      res.send(result);
     } else {
       res.status(403).send("Invalid access token");
-      log("Access denied", "/issue", "DELETE", req.rawBodySize, 0);
+      log("Access denied", "/issue/downvote", "POST", req.rawBodySize, 0);
     }
   } catch (error) {
     console.error(error);
     res.status(500).send("Internal Server Error");
     log(
       "Internal Server Error",
-      "/issue",
-      "DELETE",
+      "/issue/downvote",
+      "POST",
       req.rawBodySize,
       0,
       null,
@@ -533,5 +557,7 @@ router.post("/downvote", async (req, res) => {
     );
   }
 });
+
+router.get("/downvote", async (req, res) => {});
 
 module.exports = router;
