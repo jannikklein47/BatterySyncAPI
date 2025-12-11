@@ -126,7 +126,7 @@ router.get("/", async (req, res) => {
           },
         ],
 
-        group: ["issue.id", "user.id"],
+        group: ["issue.id", "user.id", "CommentEntries.userId"],
 
         order: [[literal("score"), "DESC"]],
       });
