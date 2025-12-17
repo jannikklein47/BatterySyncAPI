@@ -620,8 +620,8 @@ router.patch("/name", async (req, res) => {
       return;
     }
 
-    let uuid;
-    if (!(uuid = req.query.uuid)) {
+    let uuid, id;
+    if (!(uuid = req.query.uuid) || !(id = req.query.id)) {
       res.status(403).send("Access denied");
       log("Access denied", "/device/name", "PATCH", req.rawBodySize, 0);
       return;
@@ -637,7 +637,12 @@ router.patch("/name", async (req, res) => {
     if ((user = await users.findOne({ where: { password: auth } }))) {
       const foundDevice = await devices.findOne({
         where: {
-          uuid: uuid,
+          [Op.or]: [
+            {
+              uuid: uuid,
+            },
+            { id: id },
+          ],
           userId: user.id,
         },
       });
