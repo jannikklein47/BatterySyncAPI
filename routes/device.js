@@ -635,17 +635,23 @@ router.patch("/name", async (req, res) => {
 
     let user;
     if ((user = await users.findOne({ where: { password: auth } }))) {
-      const foundDevice = await devices.findOne({
-        where: {
-          [Op.or]: [
-            {
-              uuid: uuid,
-            },
-            { id: id },
-          ],
-          userId: user.id,
-        },
-      });
+      let foundDevice;
+      if (uuid) {
+        foundDevice = await devices.findOne({
+          where: {
+            uuid: uuid,
+            userId: user.id,
+          },
+        });
+      }
+      if (id) {
+        foundDevice = await devices.findOne({
+          where: {
+            id: id,
+            userId: user.id,
+          },
+        });
+      }
 
       if (!foundDevice) {
         res.status(404).send("Device not found");
