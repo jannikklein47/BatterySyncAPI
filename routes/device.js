@@ -621,7 +621,7 @@ router.patch("/name", async (req, res) => {
     }
 
     let uuid, id;
-    if (!(uuid = req.query.uuid) || !(id = req.query.id)) {
+    if (!(uuid = req.query.uuid) && !(id = req.query.id)) {
       res.status(403).send("Access denied");
       log("Access denied", "/device/name", "PATCH", req.rawBodySize, 0);
       return;
