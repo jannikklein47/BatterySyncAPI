@@ -66,25 +66,26 @@ router.get("/", async (req, res) => {
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const issues = await Issue.findAll({
-        where: search
-          ? {
-              archived: false,
-              [Op.or]: [
-                {
-                  title: {
-                    [Op.iLike]: `%${search}%`,
+        where:
+          search && !search.includes("@")
+            ? {
+                archived: false,
+                [Op.or]: [
+                  {
+                    title: {
+                      [Op.iLike]: `%${search}%`,
+                    },
                   },
-                },
-                {
-                  description: {
-                    [Op.iLike]: `%${search}%`,
+                  {
+                    description: {
+                      [Op.iLike]: `%${search}%`,
+                    },
                   },
-                },
-              ],
-            }
-          : {
-              archived: false,
-            },
+                ],
+              }
+            : {
+                archived: false,
+              },
 
         attributes: {
           include: [
@@ -147,6 +148,15 @@ router.get("/", async (req, res) => {
         order: [[Sequelize.literal("score"), "DESC"]],
         raw: true, // Fetch results as plain objects for easier merging
       });
+
+      // Check if the search includes an @
+      if (search.includes("@")) {
+        issues = issues.filter(
+          (issue) =>
+            issue["user.email"].toLowerCase() ===
+            search.split("@")[2].toLowerCase()
+        );
+      }
 
       // Get the IDs of all issues fetched in the first step
       const issueIds = issues.map((issue) => issue.id);
