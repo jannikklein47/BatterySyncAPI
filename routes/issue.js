@@ -151,6 +151,9 @@ router.get("/", async (req, res) => {
 
       // Check if the search includes an @
       if (search.includes("@")) {
+        for (const issue of issues) {
+          console.log(issue);
+        }
         issues = issues.filter(
           (issue) =>
             issue["user.email"].toLowerCase() ===
