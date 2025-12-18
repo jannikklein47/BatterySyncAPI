@@ -62,11 +62,26 @@ async function sendUpdateNotification(title, content, userId) {
 router.get("/", async (req, res) => {
   try {
     const auth = req.headers.authorization || "";
+    const search = req.query.search || "";
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const issues = await Issue.findAll({
         where: {
           archived: false,
+          [Op.or]: search
+            ? [
+                {
+                  title: {
+                    [Op.iLike]: search,
+                  },
+                },
+                {
+                  description: {
+                    [Op.iLike]: search,
+                  },
+                },
+              ]
+            : [],
         },
 
         attributes: {
