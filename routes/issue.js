@@ -72,12 +72,12 @@ router.get("/", async (req, res) => {
               [Op.or]: [
                 {
                   title: {
-                    [Op.iLike]: search,
+                    [Op.iLike]: `%${search}%`,
                   },
                 },
                 {
                   description: {
-                    [Op.iLike]: search,
+                    [Op.iLike]: `%${search}%`,
                   },
                 },
               ],
