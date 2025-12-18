@@ -91,16 +91,22 @@ router.get("/", async (req, res) => {
           include: [
             // Standard aggregates
             [
-              Sequelize.fn("COUNT", Sequelize.col("UpvoteEntries.id")),
+              Sequelize.fn(
+                "COUNT",
+                Sequelize.fn("DISTINCT", Sequelize.col("UpvoteEntries.id"))
+              ),
               "upvoteCount",
             ],
             [
-              Sequelize.fn("COUNT", Sequelize.col("DownvoteEntries.id")),
+              Sequelize.fn(
+                "COUNT",
+                Sequelize.fn("DISTINCT", Sequelize.col("DownvoteEntries.id"))
+              ),
               "downvoteCount",
             ],
             [
               Sequelize.literal(
-                `COUNT("UpvoteEntries"."id") - COUNT("DownvoteEntries"."id")`
+                `COUNT(DISTINCT "UpvoteEntries"."id") - COUNT(DISTINCT "DownvoteEntries"."id")`
               ),
               "score",
             ],
