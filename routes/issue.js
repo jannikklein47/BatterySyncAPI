@@ -156,7 +156,7 @@ router.get("/", async (req, res) => {
         }
         issues = issues.filter(
           (issue) =>
-            issue["user.email"].toLowerCase() ===
+            (issue["user.email"] || "").toLowerCase() ===
             search.split("@")[2].toLowerCase()
         );
       }
