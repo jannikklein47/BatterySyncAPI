@@ -65,7 +65,7 @@ router.get("/", async (req, res) => {
     const search = req.query.search || "";
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
-      const issues = await Issue.findAll({
+      let issues = await Issue.findAll({
         where:
           search && !search.includes("@")
             ? {
