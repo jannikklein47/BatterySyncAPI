@@ -66,10 +66,10 @@ router.get("/", async (req, res) => {
     const user = await Users.findOne({ where: { password: auth } });
     if (user) {
       const issues = await Issue.findAll({
-        where: {
-          archived: false,
-          [Op.or]: search
-            ? [
+        where: search
+          ? {
+              archived: false,
+              [Op.or]: [
                 {
                   title: {
                     [Op.iLike]: search,
@@ -80,9 +80,11 @@ router.get("/", async (req, res) => {
                     [Op.iLike]: search,
                   },
                 },
-              ]
-            : [],
-        },
+              ],
+            }
+          : {
+              archived: false,
+            },
 
         attributes: {
           include: [
