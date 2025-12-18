@@ -151,10 +151,10 @@ router.get("/", async (req, res) => {
 
       // Check if the search includes an @
       if (search.includes("@")) {
-        issues = issues.filter(
-          (issue) =>
-            (issue["user.email"] || "").toLowerCase() ===
-            (search.split("@")[1] || "").toLowerCase()
+        issues = issues.filter((issue) =>
+          (issue["user.email"] || "")
+            .toLowerCase()
+            .includes((search.split("@")[1] || "").toLowerCase())
         );
       }
 
