@@ -506,4 +506,68 @@ router.patch("/user", async (req, res) => {
   }
 });
 
+router.patch("/renameUser", async (req, res) => {
+  try {
+    if (req.headers.authorization) {
+      let user;
+      if (
+        (user = await users.findOne({
+          where: { password: req.headers.authorization },
+        }))
+      ) {
+        if (req.body.name < 4) {
+          res.status(400).send("Invalid name");
+          log(
+            "Access denied",
+            "/login/renameUser",
+            "PATCH",
+            req.rawBodySize,
+            0
+          );
+          return;
+        }
+
+        const existingUser = await users.findOne({
+          where: {
+            email: req.body.name,
+          },
+        });
+        if (existingUser) {
+          res.status(400).send("Username already taken");
+          log(
+            "Access denied",
+            "/login/renameUser",
+            "PATCH",
+            req.rawBodySize,
+            0
+          );
+          return;
+        }
+
+        await user.update({ email: req.body.name, lastRename: new Date() });
+
+        res.send("ok");
+        log(null, "/login/renameUser", "PATCH", req.rawBodySize, 0, user.id);
+      } else {
+        res.status(403).send("Invalid access token");
+        log("Access denied", "/login/renameUser", "PATCH", req.rawBodySize, 0);
+      }
+    } else {
+      res.status(400).send("Bad request");
+      log("Access denied", "/login/renameUser", "PATCH", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/login/renameUser",
+      "PATCH",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
 module.exports = router;
