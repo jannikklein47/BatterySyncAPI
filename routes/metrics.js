@@ -25,53 +25,56 @@ function formatDuration(seconds) {
 // stats.service.js
 
 /**
- * Calculates the user's activity percentile relative to all other users.
- * Returns a string like "Top 1%" or "Top 24%".
+ * Calculates the user's activity percentile based on the "logs" table.
+ * Filter: text IS NULL and grouped by userId.
  */
 async function getUserPercentile(targetUserId) {
   const query = `
     WITH UserActivity AS (
-      -- 1. Calculate total logs per user
+      -- 1. Count logs where text is null for every user
       SELECT 
-        "d"."userId", 
-        COUNT("b"."id") as "activityCount"
-      FROM "Device" d
-      JOIN "batteryLogs" b ON "b"."deviceId" = "d"."id"
-      GROUP BY "d"."userId"
+        "userId", 
+        COUNT("id") as "activityCount"
+      FROM "logs"
+      WHERE "text" IS NULL
+      GROUP BY "userId"
     ),
     RankedUsers AS (
-      -- 2. Calculate percentile rank (0 to 1)
-      -- ORDER BY ASC means 0 is least active, 1 is most active
+      -- 2. Calculate the percentile rank
+      -- PERCENT_RANK returns a value from 0 to 1
       SELECT 
         "userId",
         PERCENT_RANK() OVER (ORDER BY "activityCount" ASC) as "rawPercentile"
       FROM UserActivity
     )
-    -- 3. Select only the requested user
+    -- 3. Get the rank for the specific user
     SELECT "rawPercentile"
     FROM RankedUsers
     WHERE "userId" = :targetUserId;
   `;
 
-  const result = await sequelize.query(query, {
-    replacements: { targetUserId },
-    type: QueryTypes.SELECT,
-  });
+  try {
+    const result = await sequelize.query(query, {
+      replacements: { targetUserId },
+      type: QueryTypes.SELECT,
+    });
 
-  if (!result || result.length === 0) {
-    // User has no activity or doesn't exist in logs yet
+    if (!result || result.length === 0) {
+      // If the user has 0 logs matching the criteria
+      return "Top 100%";
+    }
+
+    const percentile = result[0].rawPercentile;
+
+    // Logic: If percentile is 0.99 (better than 99% of people),
+    // it becomes (1 - 0.99) * 100 = 1%.
+    const topPercentage = Math.max(1, Math.round((1 - percentile) * 100));
+
+    return `Top ${topPercentage}%`;
+  } catch (error) {
+    console.error("Database error in getUserPercentile:", error);
     return "Top 100%";
   }
-
-  // Raw percentile is e.g., 0.95 (better than 95% of users)
-  // We want to display "Top 5%"
-  const percentile = result[0].rawPercentile;
-
-  // Convert 0.95 -> 5
-  // We use Math.max(1, ...) to ensure we never say "Top 0%" which looks weird
-  const topPercentage = Math.max(1, Math.round((1 - percentile) * 100));
-
-  return `Top ${topPercentage}%`;
 }
 
 router.get("/", async (req, res) => {
