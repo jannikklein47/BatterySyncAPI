@@ -2,13 +2,26 @@ const express = require("express");
 const models = require("../models");
 const users = models.User;
 const sequelize = models.sequelize;
-const { QueryTypes } = require("sequelize");
+const { QueryTypes, Op } = require("sequelize");
 
 const log = require("../services/logsystem");
+const device = require("../models/device");
 
 const logs = models.logs;
 
 const router = express.Router();
+
+// Helper to make "172800 seconds" look like "2d 0h"
+function formatDuration(seconds) {
+  if (!seconds) return "0h";
+  const d = Math.floor(seconds / (3600 * 24));
+  const h = Math.floor((seconds % (3600 * 24)) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
 
 router.get("/", async (req, res) => {
   try {
@@ -290,6 +303,146 @@ router.get("/raw", async (req, res) => {
     log(
       "Internal Server Error",
       "/metrics/raw",
+      "GET",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
+router.get("/userStats", async (req, res) => {
+  try {
+    let auth;
+    if ((auth = req.headers.authorization)) {
+      let user;
+      if ((user = await users.findOne({ where: { password: auth } }))) {
+        const devices = await device.findAll({
+          where: { userId: user.id },
+          attributes: ["id", "name"],
+          raw: true,
+        });
+
+        if (devices.length === 0) {
+          return {
+            totalSyncs: 0,
+            totalCharges: 0,
+            longestWithoutCharge: { durationHours: 0, deviceName: "N/A" },
+          };
+        }
+
+        const deviceIds = devices.map((d) => d.id);
+
+        const totalSyncs = await logs.count({
+          where: {
+            userId: user.id,
+            text: {
+              [Op.is]: null,
+            },
+          },
+        });
+
+        // --- STAT 2: Total Charges (Complex: State Change Detection) ---
+        // We look for rows where chargingStatus IS TRUE and the PREVIOUS row was FALSE
+        const chargeCountQuery = `
+          SELECT COUNT(*) as "chargeCount"
+          FROM (
+            SELECT 
+              "chargingStatus",
+              LAG("chargingStatus") OVER (PARTITION BY "deviceId" ORDER BY "createdAt") as "prevStatus"
+            FROM "batteryLogs"
+            WHERE "deviceId" IN (:deviceIds)
+          ) as subquery
+          WHERE "chargingStatus" = true AND ("prevStatus" = false OR "prevStatus" IS NULL);
+        `;
+
+        const totalChargesResult = await sequelize.query(chargeCountQuery, {
+          replacements: { deviceIds },
+          type: QueryTypes.SELECT,
+        });
+
+        const totalCharges = parseInt(totalChargesResult[0].chargeCount, 10);
+
+        // --- STAT 3: Longest Period Without Charging (Complex: Time Gap) ---
+        // We find 'islands' of consecutive non-charging logs and calculate the time diff between the start and end of that island.
+        // Note: This approximates by taking the difference between min and max timestamp of a non-charging sequence.
+
+        const longestPeriodQuery = `
+          WITH Gaps AS (
+            SELECT 
+              "deviceId",
+              "createdAt",
+              "chargingStatus",
+              -- Create a grouping ID that changes every time chargingStatus changes
+              SUM(CASE WHEN "chargingStatus" = true THEN 1 ELSE 0 END) 
+              OVER (PARTITION BY "deviceId" ORDER BY "createdAt") as "grp"
+            FROM "batteryLogs"
+            WHERE "deviceId" IN (:deviceIds)
+          ),
+          Durations AS (
+            SELECT 
+              "deviceId",
+              MIN("createdAt") as "startTime",
+              MAX("createdAt") as "endTime",
+              EXTRACT(EPOCH FROM (MAX("createdAt") - MIN("createdAt"))) as "durationSeconds"
+            FROM Gaps
+            WHERE "chargingStatus" = false -- We only care about discharging periods
+            GROUP BY "deviceId", "grp"
+          )
+          SELECT 
+            "deviceId", 
+            "durationSeconds"
+          FROM Durations
+          ORDER BY "durationSeconds" DESC
+          LIMIT 1;
+        `;
+
+        const longestPeriodResult = await sequelize.query(longestPeriodQuery, {
+          replacements: { deviceIds },
+          type: QueryTypes.SELECT,
+        });
+
+        // Format the result for the frontend
+        let longestStat = { durationSeconds: 0, deviceName: "None" };
+
+        if (longestPeriodResult.length > 0) {
+          const winner = longestPeriodResult[0];
+          const winningDevice = devices.find((d) => d.id === winner.deviceId);
+
+          longestStat = {
+            durationSeconds: parseFloat(winner.durationSeconds),
+            deviceName: winningDevice ? winningDevice.name : "Unknown Device",
+            formatted: formatDuration(winner.durationSeconds),
+          };
+        }
+
+        const result = {
+          totalSyncs,
+          totalCharges,
+          longestWithoutCharge: longestStat,
+        };
+
+        res.send(result);
+
+        log(
+          null,
+          "/metrics/userStats",
+          "GET",
+          req.rawBodySize,
+          new Blob([JSON.stringify(result)]).size,
+          user.id
+        );
+      }
+    } else {
+      res.status(403).send("Access denied");
+      log("Access denied", "/metrics/userStats", "GET", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/metrics/userStats",
       "GET",
       req.rawBodySize,
       0,
