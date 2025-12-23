@@ -570,4 +570,72 @@ router.patch("/renameUser", async (req, res) => {
   }
 });
 
+router.patch("/resetPassword", async (req, res) => {
+  try {
+    if (req.headers.authorization) {
+      let user;
+      if (
+        (user = await users.findOne({
+          where: { password: req.headers.authorization },
+        }))
+      ) {
+        if (req.body.password < 8) {
+          res.status(400).send("Invalid password");
+          log(
+            "Access denied",
+            "/login/resetPassword",
+            "PATCH",
+            req.rawBodySize,
+            0
+          );
+          return;
+        }
+
+        const hashedPw = await bcrypt.hash(req.body.password, 11);
+
+        await user.update({ password: hashedPw });
+
+        // Log out of all devices and set them free - set uuid to null
+
+        await models.Device.update(
+          {
+            uuid: null,
+          },
+          {
+            where: {
+              userId: user.id,
+            },
+          }
+        );
+
+        res.send("Ok");
+        log(null, "/login/resetPassword", "PATCH", req.rawBodySize, 0, user.id);
+      } else {
+        res.status(403).send("Invalid access token");
+        log(
+          "Access denied",
+          "/login/resetPassword",
+          "PATCH",
+          req.rawBodySize,
+          0
+        );
+      }
+    } else {
+      res.status(400).send("Bad request");
+      log("Access denied", "/login/resetPassword", "PATCH", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/login/resetPassword",
+      "PATCH",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
 module.exports = router;
