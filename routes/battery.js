@@ -496,6 +496,12 @@ router.post("/secure", async (req, res) => {
             );
           }
 
+          const lastBatteryState = {
+            battery: device.battery,
+            chargingStatus: device.chargingStatus,
+            isPluggedIn: device.isPluggedIn,
+          };
+
           await device.update(
             {
               battery: battery,
@@ -557,52 +563,58 @@ router.post("/secure", async (req, res) => {
               device.chargingStatus === false) &&
             (device.sPluggedIn === "false" || device.isPluggedIn === false)
           ) {
-            // Does the device have a permanent ordered notification?
-            const permanentNoti = await models.OrderedNotifications.findOne(
-              {
-                where: {
-                  deviceId: device.id,
-                  permanent: true,
-                  type: "CHARGEREMINDER",
+            // Only recreated the scheduled notification, if the device's LAST state was plugged in or charging. If this is always recreated, we will see a bunch of notifications every time a percentage drops after the 2-hour threshold.
+            if (
+              lastBatteryState.chargingStatus ||
+              lastBatteryState.isPluggedIn
+            ) {
+              // Does the device have a permanent ordered notification?
+              const permanentNoti = await models.OrderedNotifications.findOne(
+                {
+                  where: {
+                    deviceId: device.id,
+                    permanent: true,
+                    type: "CHARGEREMINDER",
+                  },
                 },
-              },
-              { transaction: t }
-            );
-
-            if (permanentNoti) {
-              // Re-Create scheduled permanent notifications for the devices that have already displayed them
-              const userDevices = await devices.findAll(
-                { where: { userId: user.id } },
                 { transaction: t }
               );
-              //console.log("User devices:", userDevices.length)
-              if (userDevices.length > 0) {
-                const deviceThatNeedScheduling = userDevices.filter(
-                  (dev) => dev.id !== device.id
+
+              if (permanentNoti) {
+                // Re-Create scheduled permanent notifications for the devices that have already displayed them
+                const userDevices = await devices.findAll(
+                  { where: { userId: user.id } },
+                  { transaction: t }
                 );
-                //console.log("dev that need sched:", deviceThatNeedScheduling.length)
-                for (const dev of deviceThatNeedScheduling) {
-                  //console.log("Creating sched entry")
+                //console.log("User devices:", userDevices.length)
+                if (userDevices.length > 0) {
+                  const deviceThatNeedScheduling = userDevices.filter(
+                    (dev) => dev.id !== device.id
+                  );
+                  //console.log("dev that need sched:", deviceThatNeedScheduling.length)
+                  for (const dev of deviceThatNeedScheduling) {
+                    //console.log("Creating sched entry")
 
-                  const hasScheduled =
-                    await models.ScheduledNotifications.findOne(
-                      {
-                        where: {
-                          notificationId: permanentNoti.id,
-                          deviceId: dev.id,
+                    const hasScheduled =
+                      await models.ScheduledNotifications.findOne(
+                        {
+                          where: {
+                            notificationId: permanentNoti.id,
+                            deviceId: dev.id,
+                          },
                         },
-                      },
-                      { transaction: t }
-                    );
+                        { transaction: t }
+                      );
 
-                  if (!hasScheduled) {
-                    await models.ScheduledNotifications.create(
-                      {
-                        deviceId: dev.id,
-                        notificationId: permanentNoti.id,
-                      },
-                      { transaction: t }
-                    );
+                    if (!hasScheduled) {
+                      await models.ScheduledNotifications.create(
+                        {
+                          deviceId: dev.id,
+                          notificationId: permanentNoti.id,
+                        },
+                        { transaction: t }
+                      );
+                    }
                   }
                 }
               }
