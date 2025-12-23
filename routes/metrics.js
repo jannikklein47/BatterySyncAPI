@@ -22,6 +22,58 @@ function formatDuration(seconds) {
   return `${m}m`;
 }
 
+// stats.service.js
+
+/**
+ * Calculates the user's activity percentile relative to all other users.
+ * Returns a string like "Top 1%" or "Top 24%".
+ */
+async function getUserPercentile(targetUserId) {
+  const query = `
+    WITH UserActivity AS (
+      -- 1. Calculate total logs per user
+      SELECT 
+        "d"."userId", 
+        COUNT("b"."id") as "activityCount"
+      FROM "Device" d
+      JOIN "batteryLogs" b ON "b"."deviceId" = "d"."id"
+      GROUP BY "d"."userId"
+    ),
+    RankedUsers AS (
+      -- 2. Calculate percentile rank (0 to 1)
+      -- ORDER BY ASC means 0 is least active, 1 is most active
+      SELECT 
+        "userId",
+        PERCENT_RANK() OVER (ORDER BY "activityCount" ASC) as "rawPercentile"
+      FROM UserActivity
+    )
+    -- 3. Select only the requested user
+    SELECT "rawPercentile"
+    FROM RankedUsers
+    WHERE "userId" = :targetUserId;
+  `;
+
+  const result = await sequelize.query(query, {
+    replacements: { targetUserId },
+    type: QueryTypes.SELECT,
+  });
+
+  if (!result || result.length === 0) {
+    // User has no activity or doesn't exist in logs yet
+    return "Top 100%";
+  }
+
+  // Raw percentile is e.g., 0.95 (better than 95% of users)
+  // We want to display "Top 5%"
+  const percentile = result[0].rawPercentile;
+
+  // Convert 0.95 -> 5
+  // We use Math.max(1, ...) to ensure we never say "Top 0%" which looks weird
+  const topPercentage = Math.max(1, Math.round((1 - percentile) * 100));
+
+  return `Top ${topPercentage}%`;
+}
+
 router.get("/", async (req, res) => {
   try {
     if (
@@ -416,10 +468,13 @@ router.get("/userStats", async (req, res) => {
           };
         }
 
+        const communityRank = await getUserPercentile(user.id);
+
         const result = {
           totalSyncs,
           totalCharges,
           longestWithoutCharge: longestStat,
+          communityRank,
         };
 
         res.send(result);
