@@ -5,7 +5,6 @@ const sequelize = models.sequelize;
 const { QueryTypes, Op } = require("sequelize");
 
 const log = require("../services/logsystem");
-const device = require("../models/device");
 
 const logs = models.logs;
 
@@ -318,7 +317,7 @@ router.get("/userStats", async (req, res) => {
     if ((auth = req.headers.authorization)) {
       let user;
       if ((user = await users.findOne({ where: { password: auth } }))) {
-        const devices = await device.findAll({
+        const devices = await models.Device.findAll({
           where: { userId: user.id },
           attributes: ["id", "name"],
           raw: true,
