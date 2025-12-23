@@ -86,7 +86,7 @@ router.post("/web", async (req, res) => {
 
     if (!password || !email) {
       res.status(400).send("Invalid request");
-      log("Invalid request", "/login", "POST", req.rawBodySize, 0);
+      log("Invalid request", "/login/web", "POST", req.rawBodySize, 0);
       return;
     }
 
@@ -112,23 +112,23 @@ router.post("/web", async (req, res) => {
           return;
         } else {
           res.status(403).send("Wrong credentials.");
-          log("Access denied", "/login", "POST", req.rawBodySize, 0);
+          log("Access denied", "/login/web", "POST", req.rawBodySize, 0);
         }
       } catch (error) {
         res.status(403).send("Wrong credentials.");
-        log("Access denied", "/login", "POST", req.rawBodySize, 0);
+        log("Access denied", "/login/web", "POST", req.rawBodySize, 0);
       }
 
       return;
     } else {
       res.status(404).send("User does not exist.");
-      log("Access denied", "/login", "POST", req.rawBodySize, 0);
+      log("Access denied", "/login/web", "POST", req.rawBodySize, 0);
     }
   } catch (error) {
     res.status(500).send("Internal Server Error");
     log(
       "Internal Server Error",
-      "/login",
+      "/login/web",
       "POST",
       req.rawBodySize,
       0,
@@ -152,7 +152,7 @@ router.post("/register", async (req, res) => {
 
     if (!password || !email) {
       res.status(400).send("Invalid request");
-      log("Invalid request", "/login", "POST", req.rawBodySize, 0);
+      log("Invalid request", "/login/register", "POST", req.rawBodySize, 0);
       return;
     }
 
@@ -187,6 +187,78 @@ router.post("/register", async (req, res) => {
     res.send(hashedPw);
     log(
       null,
+      "/login/register",
+      "POST",
+      req.rawBodySize,
+      new Blob([JSON.stringify(hashedPw)]).size,
+      user.id
+    );
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+    log(
+      "Internal Server Error",
+      "/login/register",
+      "POST",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
+router.post("/register/web", async (req, res) => {
+  try {
+    let email, password;
+
+    if (req.body && req.body.password && req.body.email) {
+      email = req.body.email;
+      password = req.body.password;
+    } else if (req.query && req.query.password && req.query.email) {
+      email = req.query.email;
+      password = req.query.password;
+    }
+
+    if (!password || !email) {
+      res.status(400).send("Invalid request");
+      log("Invalid request", "/login/register/web", "POST", req.rawBodySize, 0);
+      return;
+    }
+
+    let existingUser;
+    if ((existingUser = await users.findOne({ where: { email: email } }))) {
+      res.status(403).send("User already exists.");
+      log("Access denied", "/login/register/web", "POST", req.rawBodySize, 0);
+
+      return;
+    }
+
+    if ((password || "").length < 8) {
+      res.status(403).send("Password must be at least 8 characters long.");
+      log("Access denied", "/login/register/web", "POST", req.rawBodySize, 0);
+
+      return;
+    }
+    if ((email || "").length < 4) {
+      res.status(403).send("Username must be at least 4 characters long.");
+      log("Access denied", "/login/register/web", "POST", req.rawBodySize, 0);
+
+      return;
+    }
+
+    const hashedPw = await bcrypt.hash(password, 11);
+
+    const user = await users.create({
+      email: email,
+      password: hashedPw,
+    });
+
+    const data = JSON.parse(JSON.stringify(user));
+    delete data.password;
+
+    res.send({ token: hashedPw, data: data });
+    log(
+      null,
       "/login",
       "POST",
       req.rawBodySize,
@@ -197,7 +269,7 @@ router.post("/register", async (req, res) => {
     res.status(500).send("Internal Server Error");
     log(
       "Internal Server Error",
-      "/login",
+      "/login/register/web",
       "POST",
       req.rawBodySize,
       0,
@@ -239,6 +311,48 @@ router.get("/auth", async (req, res) => {
     log(
       "Internal Server Error",
       "/login/auth",
+      "GET",
+      req.rawBodySize,
+      0,
+      null,
+      error
+    );
+  }
+});
+
+router.get("/auth/web", async (req, res) => {
+  try {
+    if (req.headers.authorization) {
+      let user;
+      if (
+        (user = await users.findOne({
+          where: { password: req.headers.authorization },
+        }))
+      ) {
+        const data = JSON.parse(JSON.stringify(user));
+        delete data.password;
+        res.send({ email: user.email, data: data });
+        log(
+          null,
+          "/login/auth/web",
+          "GET",
+          req.rawBodySize,
+          new Blob([JSON.stringify(data)]).size,
+          user.id
+        );
+      } else {
+        res.status(403).send("Invalid access token");
+        log("Access denied", "/login/auth/web", "GET", req.rawBodySize, 0);
+      }
+    } else {
+      res.status(400).send("Bad request");
+      log("Access denied", "/login/auth/web", "GET", req.rawBodySize, 0);
+    }
+  } catch (error) {
+    res.status(500).send("Internal server error");
+    log(
+      "Internal Server Error",
+      "/login/auth/web",
       "GET",
       req.rawBodySize,
       0,
