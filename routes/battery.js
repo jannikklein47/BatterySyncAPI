@@ -139,7 +139,10 @@ async function getDeviceHealthStats(deviceId) {
   const safePercent = (safeCharged / totalCharged) * 100;
 
   // Score mapping: 0 stress = 100, 4 stress (standard) = 80, 20 stress = 0
-  let healthScore = Math.max(0, Math.min(100, Math.round(100 - avgStress * 5)));
+  let healthScore = Math.max(
+    0,
+    Math.min(100, Math.round(100 - avgStress * 10))
+  );
 
   return {
     healthScore,
