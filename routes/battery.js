@@ -58,10 +58,14 @@ function debouncePerId(fn, wait) {
 
 const debouncePrediction = debouncePerId(generatePredictions, 2000);
 
-async function getDeviceHealthScore(deviceId) {
+/**
+ * Returns detailed battery health statistics including a score, total volume,
+ * and a breakdown of safe vs. stressed charging.
+ */
+async function getDeviceHealthStats(deviceId) {
   const query = `
     WITH RawLogs AS (
-      -- 1. Fetch data and Normalize Scale (0-1 -> 0-100)
+      -- 1. Normalize Data (0.0-1.0 becomes 0-100)
       SELECT 
         "battery" * 100.0 as "battery_norm",
         "createdAt"
@@ -74,9 +78,13 @@ async function getDeviceHealthScore(deviceId) {
         LAG("battery_norm") OVER (ORDER BY "createdAt") as "prev"
       FROM RawLogs
     ),
-    StressCalc AS (
+    Analysis AS (
       SELECT 
         ("curr" - "prev") as "charged_amount",
+
+        -- Calculate overlap with Safe Zone (20-80)
+        -- Logic: Intersection of [prev, curr] with [20, 80]
+        GREATEST(0, LEAST("curr", 80) - GREATEST("prev", 20)) as "safe_amount",
         
         -- Stress C(curr)
         (CASE 
@@ -94,14 +102,15 @@ async function getDeviceHealthScore(deviceId) {
 
       FROM Logs
       WHERE 
-        "curr" > "prev" -- Only charging logs
+        "curr" > "prev"         -- Only charging
         AND "curr" IS NOT NULL 
         AND "prev" IS NOT NULL
     )
     SELECT 
       SUM("charged_amount") as "totalCharged",
+      SUM("safe_amount") as "safeCharged",
       SUM("stress_at_curr" - "stress_at_prev") as "totalStress"
-    FROM StressCalc;
+    FROM Analysis;
   `;
 
   const result = await sequelize.query(query, {
@@ -109,27 +118,49 @@ async function getDeviceHealthScore(deviceId) {
     type: QueryTypes.SELECT
   });
 
-  const totalCharged = result[0]?.totalCharged ? parseFloat(result[0].totalCharged) : 0;
-  const totalStress = result[0]?.totalStress ? parseFloat(result[0].totalStress) : 0;
+  const row = result[0];
+  const totalCharged = row?.totalCharged ? parseFloat(row.totalCharged) : 0;
+  const safeCharged = row?.safeCharged ? parseFloat(row.safeCharged) : 0;
+  const totalStress = row?.totalStress ? parseFloat(row.totalStress) : 0;
 
-  // 1. Data Validity Check
-  // Now that we fixed the scale, 51 becomes 5100%. 
-  // If totalCharged is still tiny (<100%), return a default score.
-  if (totalCharged < 100) return 100;
+  // 1. Handle New/Empty Devices
+  if (totalCharged < 100) {
+    return {
+      healthScore: 100,
+      totalCharged: totalCharged.toFixed(0),
+      explanation: {
+        verdict: "New",
+        safeZonePercent: 100,
+        stressLevel: "None"
+      }
+    };
+  }
 
-  // 2. Calculate Average Stress (Standard Charge = 4.0)
+  // 2. Calculate Stats
   const avgStress = totalStress / totalCharged;
-
-  // 3. Score Calculation
-  // We map Average Stress to a 0-100 score.
-  // Avg Stress 0 (Perfect) -> 100
-  // Avg Stress 4 (Standard 0-100% charge) -> 80
-  // Avg Stress 6+ (Careless) -> <70
-  // Avg Stress 20 (Worst) -> 0
+  const safePercent = (safeCharged / totalCharged) * 100;
   
-  let score = 100 - (avgStress * 5);
+  // 3. Calculate Score (Multiplier 5)
+  // Maps AvgStress 0->100, 4->80, 20->0
+  let rawScore = 100 - (avgStress * 5);
+  const healthScore = Math.max(0, Math.min(100, Math.round(rawScore)));
 
-  return Math.max(0, Math.min(100, Math.round(score)));
+  // 4. Generate Text Verdict
+  let verdict = "Good";
+  if (healthScore >= 90) verdict = "Excellent";
+  else if (healthScore >= 75) verdict = "Good";
+  else if (healthScore >= 50) verdict = "Fair";
+  else verdict = "Poor";
+
+  return {
+    healthScore,
+    totalCharged: Math.round(totalCharged), // e.g., 15430 (%)
+    explanation: {
+      verdict,
+      safeZonePercent: Math.round(safePercent), // e.g., 65 (%)
+      avgStress: parseFloat(avgStress.toFixed(2)) // e.g., 3.4
+    }
+  };
 }
 
 router.get("/", async (req, res) => {
