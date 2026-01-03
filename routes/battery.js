@@ -4,7 +4,8 @@ const downsampler = require("downsample-lttb");
 
 const log = require("../services/logsystem.js");
 
-const { Op, fn, col } = require("sequelize");
+const { Op, fn, col, QueryTypes
+ } = require("sequelize");
 
 const users = models.User;
 const devices = models.Device;
