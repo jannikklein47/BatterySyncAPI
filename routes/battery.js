@@ -359,13 +359,13 @@ router.get("/withNotificationInfo", async (req, res) => {
             },
           });
 
-          const healthScore = await getDeviceHealthScore(device.id)
+          const healthStats = await getDeviceHealthStats(device.id)
 
           processed.push({
             ...device,
             permanentNotification: permanentNoti !== null,
             isLegacy,
-            healthScore
+            healthStats
           });
         }
 
