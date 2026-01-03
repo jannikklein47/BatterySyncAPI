@@ -9,6 +9,7 @@ const { Op, fn, col } = require("sequelize");
 const users = models.User;
 const devices = models.Device;
 const batterylogs = models.batteryLogs;
+const sequelize = models.sequelize;
 
 const generatePredictions = require("../services/generatePredictions.js");
 
@@ -55,6 +56,77 @@ function debouncePerId(fn, wait) {
 }
 
 const debouncePrediction = debouncePerId(generatePredictions, 2000);
+
+async function getDeviceHealthScore(deviceId) {
+  // We calculate "Stress Units" per percent charged.
+  // 0-100% charge = 400 Total Stress Units (Average 4.0/%)
+  // 20-80% charge = 0 Total Stress Units (Average 0.0/%)
+  
+  const query = `
+    WITH Logs AS (
+      SELECT 
+        "battery" as "curr",
+        LAG("battery") OVER (ORDER BY "createdAt") as "prev"
+      FROM "batteryLogs"
+      WHERE "deviceId" = :deviceId
+    ),
+    StressCalc AS (
+      SELECT 
+        ("curr" - "prev") as "charged_amount",
+        
+        -- Calculate Cumulative Stress at Current Level C(curr)
+        (CASE 
+          WHEN "curr" < 20 THEN (20 * "curr" - 0.5 * Power("curr", 2))
+          WHEN "curr" <= 80 THEN 200
+          ELSE (200 + 0.5 * Power("curr" - 80, 2))
+        END) as "stress_at_curr",
+
+        -- Calculate Cumulative Stress at Previous Level C(prev)
+        (CASE 
+          WHEN "prev" < 20 THEN (20 * "prev" - 0.5 * Power("prev", 2))
+          WHEN "prev" <= 80 THEN 200
+          ELSE (200 + 0.5 * Power("prev" - 80, 2))
+        END) as "stress_at_prev"
+
+      FROM Logs
+      WHERE 
+        "curr" > "prev" -- Only charging
+        AND "curr" IS NOT NULL 
+        AND "prev" IS NOT NULL
+    )
+    SELECT 
+      SUM("charged_amount") as "totalCharged",
+      SUM("stress_at_curr" - "stress_at_prev") as "totalStress"
+    FROM StressCalc;
+  `;
+
+  const result = await sequelize.query(query, {
+    replacements: { deviceId },
+    type: QueryTypes.SELECT
+  });
+
+  const { totalCharged, totalStress } = result[0];
+
+  // 1. Handle edge case (no data)
+  if (!totalCharged || totalCharged == 0) return 100;
+
+  // 2. Calculate Average Stress per percent
+  // Range: 0 (Perfect 20-80) to ~20 (Worst case 99-100 constantly)
+  // A standard 0-100 charge has an average stress of 4.0.
+  const avgStress = totalStress / totalCharged;
+
+  // 3. Convert to 0-100 Score
+  // We calibrate so that a standard 0-100 charge (AvgStress 4.0) gives a "Mediocre" score of 60.
+  // Formula: Score = 100 - (AvgStress * 10)
+  // AvgStress 0 (Perfect) -> 100
+  // AvgStress 4 (Standard) -> 60
+  // AvgStress 10 (Bad habits) -> 0
+  
+  let score = 100 - (avgStress * 10);
+
+  // Clamp result
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
 
 router.get("/", async (req, res) => {
   try {
@@ -252,10 +324,13 @@ router.get("/withNotificationInfo", async (req, res) => {
             },
           });
 
+          const healthScore = await getDeviceHealthScore(device.id)
+
           processed.push({
             ...device,
             permanentNotification: permanentNoti !== null,
-            isLegacy: isLegacy,
+            isLegacy,
+            healthScore
           });
         }
 
