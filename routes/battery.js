@@ -4,8 +4,7 @@ const downsampler = require("downsample-lttb");
 
 const log = require("../services/logsystem.js");
 
-const { Op, fn, col, QueryTypes
- } = require("sequelize");
+const { Op, fn, col, QueryTypes } = require("sequelize");
 
 const users = models.User;
 const devices = models.Device;
@@ -65,7 +64,6 @@ const debouncePrediction = debouncePerId(generatePredictions, 2000);
 async function getDeviceHealthStats(deviceId) {
   const query = `
     WITH RawLogs AS (
-      -- 1. Normalize Data (0.0-1.0 becomes 0-100)
       SELECT 
         "battery" * 100.0 as "battery_norm",
         "createdAt"
@@ -82,40 +80,38 @@ async function getDeviceHealthStats(deviceId) {
       SELECT 
         ("curr" - "prev") as "charged_amount",
 
-        -- Calculate overlap with Safe Zone (20-80)
-        -- Logic: Intersection of [prev, curr] with [20, 80]
         GREATEST(0, LEAST("curr", 80) - GREATEST("prev", 20)) as "safe_amount",
         
-        -- Stress C(curr)
+        -- Simplified stress calculations using x * x instead of Power()
         (CASE 
-          WHEN "curr" < 20 THEN (20 * "curr" - 0.5 * Power("curr", 2))
+          WHEN "curr" < 20 THEN (20 * "curr" - 0.5 * ("curr" * "curr"))
           WHEN "curr" <= 80 THEN 200
-          ELSE (200 + 0.5 * Power("curr" - 80, 2))
+          ELSE (200 + 0.5 * (("curr" - 80) * ("curr" - 80)))
         END) as "stress_at_curr",
 
-        -- Stress C(prev)
         (CASE 
-          WHEN "prev" < 20 THEN (20 * "prev" - 0.5 * Power("prev", 2))
+          WHEN "prev" < 20 THEN (20 * "prev" - 0.5 * ("prev" * "prev"))
           WHEN "prev" <= 80 THEN 200
-          ELSE (200 + 0.5 * Power("prev" - 80, 2))
+          ELSE (200 + 0.5 * (("prev" - 80) * ("prev" - 80)))
         END) as "stress_at_prev"
 
       FROM Logs
       WHERE 
-        "curr" > "prev"         -- Only charging
+        "curr" > "prev"
         AND "curr" IS NOT NULL 
         AND "prev" IS NOT NULL
     )
     SELECT 
-      SUM("charged_amount") as "totalCharged",
-      SUM("safe_amount") as "safeCharged",
-      SUM("stress_at_curr" - "stress_at_prev") as "totalStress"
+      -- Cast sums to numeric to prevent overflow on large datasets
+      SUM("charged_amount")::numeric as "totalCharged",
+      SUM("safe_amount")::numeric as "safeCharged",
+      SUM("stress_at_curr" - "stress_at_prev")::numeric as "totalStress"
     FROM Analysis;
   `;
 
   const result = await sequelize.query(query, {
     replacements: { deviceId },
-    type: QueryTypes.SELECT
+    type: QueryTypes.SELECT,
   });
 
   const row = result[0];
@@ -131,18 +127,18 @@ async function getDeviceHealthStats(deviceId) {
       explanation: {
         verdict: "New",
         safeZonePercent: 100,
-        stressLevel: "None"
-      }
+        stressLevel: "None",
+      },
     };
   }
 
   // 2. Calculate Stats
   const avgStress = totalStress / totalCharged;
   const safePercent = (safeCharged / totalCharged) * 100;
-  
+
   // 3. Calculate Score (Multiplier 10)
   // Maps AvgStress 0->100, 4->80, 20->0
-  let rawScore = 100 - (avgStress * 10);
+  let rawScore = 100 - avgStress * 10;
   const healthScore = Math.max(0, Math.min(100, Math.round(rawScore)));
 
   // 4. Generate Text Verdict
@@ -158,8 +154,8 @@ async function getDeviceHealthStats(deviceId) {
     explanation: {
       verdict,
       safeZonePercent: Math.round(safePercent), // e.g., 65 (%)
-      avgStress: parseFloat(avgStress.toFixed(2)) // e.g., 3.4
-    }
+      avgStress: parseFloat(avgStress.toFixed(2)), // e.g., 3.4
+    },
   };
 }
 
@@ -359,13 +355,13 @@ router.get("/withNotificationInfo", async (req, res) => {
             },
           });
 
-          const healthStats = await getDeviceHealthStats(device.id)
+          const healthStats = await getDeviceHealthStats(device.id);
 
           processed.push({
             ...device,
             permanentNotification: permanentNoti !== null,
             isLegacy,
-            healthStats
+            healthStats,
           });
         }
 
@@ -402,7 +398,7 @@ router.get("/withNotificationInfo", async (req, res) => {
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).send("Fehler");
     log(
       "Internal Server Error",
