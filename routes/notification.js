@@ -145,6 +145,7 @@ router.get("/due", async (req, res) => {
                         '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")'
                       ),
                     },
+                    permanent: false
                   },
                 },
                 { transaction: t }
