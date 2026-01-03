@@ -64,8 +64,13 @@ const debouncePrediction = debouncePerId(generatePredictions, 2000);
 async function getDeviceHealthStats(deviceId) {
   const query = `
     WITH RawLogs AS (
+      -- 1. Strictly normalize 0.0-1.0 scale to 0-100
       SELECT 
-        "battery" * 100.0 as "battery_norm",
+        (CASE 
+          WHEN "battery" > 1.0 THEN 100.0  -- Clamp glitches
+          WHEN "battery" < 0.0 THEN 0.0    -- Clamp glitches
+          ELSE "battery" * 100.0 
+        END) as "battery_norm",
         "createdAt"
       FROM "batteryLogs"
       WHERE "deviceId" = :deviceId
@@ -79,16 +84,18 @@ async function getDeviceHealthStats(deviceId) {
     Analysis AS (
       SELECT 
         ("curr" - "prev") as "charged_amount",
-
+        
+        -- Intersection with the Safe Zone (20-80)
         GREATEST(0, LEAST("curr", 80) - GREATEST("prev", 20)) as "safe_amount",
         
-        -- Simplified stress calculations using x * x instead of Power()
+        -- Stress C(curr) 
         (CASE 
           WHEN "curr" < 20 THEN (20 * "curr" - 0.5 * ("curr" * "curr"))
           WHEN "curr" <= 80 THEN 200
           ELSE (200 + 0.5 * (("curr" - 80) * ("curr" - 80)))
         END) as "stress_at_curr",
 
+        -- Stress C(prev)
         (CASE 
           WHEN "prev" < 20 THEN (20 * "prev" - 0.5 * ("prev" * "prev"))
           WHEN "prev" <= 80 THEN 200
@@ -97,15 +104,14 @@ async function getDeviceHealthStats(deviceId) {
 
       FROM Logs
       WHERE 
-        "curr" > "prev"
+        "curr" > "prev"             -- Only look at charging
         AND "curr" IS NOT NULL 
         AND "prev" IS NOT NULL
     )
     SELECT 
-      -- Cast sums to numeric to prevent overflow on large datasets
-      SUM("charged_amount")::numeric as "totalCharged",
-      SUM("safe_amount")::numeric as "safeCharged",
-      SUM("stress_at_curr" - "stress_at_prev")::numeric as "totalStress"
+      COALESCE(SUM("charged_amount"), 0)::numeric as "totalCharged",
+      COALESCE(SUM("safe_amount"), 0)::numeric as "safeCharged",
+      COALESCE(SUM("stress_at_curr" - "stress_at_prev"), 0)::numeric as "totalStress"
     FROM Analysis;
   `;
 
@@ -115,46 +121,33 @@ async function getDeviceHealthStats(deviceId) {
   });
 
   const row = result[0];
-  const totalCharged = row?.totalCharged ? parseFloat(row.totalCharged) : 0;
-  const safeCharged = row?.safeCharged ? parseFloat(row.safeCharged) : 0;
-  const totalStress = row?.totalStress ? parseFloat(row.totalStress) : 0;
+  const totalCharged = parseFloat(row.totalCharged);
+  const totalStress = parseFloat(row.totalStress);
+  const safeCharged = parseFloat(row.safeCharged);
 
-  // 1. Handle New/Empty Devices
-  if (totalCharged < 100) {
+  // If data is insufficient, return a "Perfect" base score
+  if (totalCharged < 50) {
     return {
       healthScore: 100,
-      totalCharged: totalCharged.toFixed(0),
-      explanation: {
-        verdict: "New",
-        safeZonePercent: 100,
-        stressLevel: "None",
-      },
+      totalCharged: Math.round(totalCharged),
+      explanation: { verdict: "New" },
     };
   }
 
-  // 2. Calculate Stats
   const avgStress = totalStress / totalCharged;
   const safePercent = (safeCharged / totalCharged) * 100;
 
-  // 3. Calculate Score (Multiplier 10)
-  // Maps AvgStress 0->100, 4->80, 20->0
-  let rawScore = 100 - avgStress * 10;
-  const healthScore = Math.max(0, Math.min(100, Math.round(rawScore)));
-
-  // 4. Generate Text Verdict
-  let verdict = "Gut";
-  if (healthScore >= 90) verdict = "Exzellent";
-  else if (healthScore >= 75) verdict = "Gut";
-  else if (healthScore >= 50) verdict = "Mittelmäßig";
-  else verdict = "Schlecht";
+  // Score mapping: 0 stress = 100, 4 stress (standard) = 80, 20 stress = 0
+  let healthScore = Math.max(0, Math.min(100, Math.round(100 - avgStress * 5)));
 
   return {
     healthScore,
-    totalCharged: Math.round(totalCharged), // e.g., 15430 (%)
+    totalCharged: Math.round(totalCharged),
     explanation: {
-      verdict,
-      safeZonePercent: Math.round(safePercent), // e.g., 65 (%)
-      avgStress: parseFloat(avgStress.toFixed(2)), // e.g., 3.4
+      verdict:
+        healthScore > 85 ? "Excellent" : healthScore > 70 ? "Good" : "Fair",
+      safeZonePercent: Math.round(safePercent),
+      avgStress: parseFloat(avgStress.toFixed(2)),
     },
   };
 }
