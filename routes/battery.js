@@ -64,13 +64,13 @@ const debouncePrediction = debouncePerId(generatePredictions, 2000);
 async function getDeviceHealthStats(deviceId) {
   const query = `
     WITH RawLogs AS (
-      -- 1. Strictly normalize 0.0-1.0 scale to 0-100
       SELECT 
-        (CASE 
-          WHEN "battery" > 1.0 THEN 100.0  -- Clamp glitches
-          WHEN "battery" < 0.0 THEN 0.0    -- Clamp glitches
+        "id", -- Include the primary key
+        CASE 
+          WHEN "battery" > 1.0 THEN 100.0 
+          WHEN "battery" < 0.0 THEN 0.0
           ELSE "battery" * 100.0 
-        END) as "battery_norm",
+        END as "battery_norm",
         "createdAt"
       FROM "batteryLogs"
       WHERE "deviceId" = :deviceId
@@ -78,7 +78,8 @@ async function getDeviceHealthStats(deviceId) {
     Logs AS (
       SELECT 
         "battery_norm" as "curr",
-        LAG("battery_norm") OVER (ORDER BY "createdAt") as "prev"
+        -- ADD "id" HERE to force a deterministic sequence
+        LAG("battery_norm") OVER (ORDER BY "createdAt" ASC, "id" ASC) as "prev"
       FROM RawLogs
     ),
     Analysis AS (
