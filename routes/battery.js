@@ -59,30 +59,33 @@ function debouncePerId(fn, wait) {
 const debouncePrediction = debouncePerId(generatePredictions, 2000);
 
 async function getDeviceHealthScore(deviceId) {
-  // We calculate "Stress Units" per percent charged.
-  // 0-100% charge = 400 Total Stress Units (Average 4.0/%)
-  // 20-80% charge = 0 Total Stress Units (Average 0.0/%)
-  
   const query = `
-    WITH Logs AS (
+    WITH RawLogs AS (
+      -- 1. Fetch data and Normalize Scale (0-1 -> 0-100)
       SELECT 
-        "battery" as "curr",
-        LAG("battery") OVER (ORDER BY "createdAt") as "prev"
+        "battery" * 100.0 as "battery_norm",
+        "createdAt"
       FROM "batteryLogs"
       WHERE "deviceId" = :deviceId
+    ),
+    Logs AS (
+      SELECT 
+        "battery_norm" as "curr",
+        LAG("battery_norm") OVER (ORDER BY "createdAt") as "prev"
+      FROM RawLogs
     ),
     StressCalc AS (
       SELECT 
         ("curr" - "prev") as "charged_amount",
         
-        -- Calculate Cumulative Stress at Current Level C(curr)
+        -- Stress C(curr)
         (CASE 
           WHEN "curr" < 20 THEN (20 * "curr" - 0.5 * Power("curr", 2))
           WHEN "curr" <= 80 THEN 200
           ELSE (200 + 0.5 * Power("curr" - 80, 2))
         END) as "stress_at_curr",
 
-        -- Calculate Cumulative Stress at Previous Level C(prev)
+        -- Stress C(prev)
         (CASE 
           WHEN "prev" < 20 THEN (20 * "prev" - 0.5 * Power("prev", 2))
           WHEN "prev" <= 80 THEN 200
@@ -91,7 +94,7 @@ async function getDeviceHealthScore(deviceId) {
 
       FROM Logs
       WHERE 
-        "curr" > "prev" -- Only charging
+        "curr" > "prev" -- Only charging logs
         AND "curr" IS NOT NULL 
         AND "prev" IS NOT NULL
     )
@@ -106,28 +109,26 @@ async function getDeviceHealthScore(deviceId) {
     type: QueryTypes.SELECT
   });
 
-  console.log(result[0])
+  const totalCharged = result[0]?.totalCharged ? parseFloat(result[0].totalCharged) : 0;
+  const totalStress = result[0]?.totalStress ? parseFloat(result[0].totalStress) : 0;
 
-  const { totalCharged, totalStress } = result[0];
+  // 1. Data Validity Check
+  // Now that we fixed the scale, 51 becomes 5100%. 
+  // If totalCharged is still tiny (<100%), return a default score.
+  if (totalCharged < 100) return 100;
 
-  // 1. Handle edge case (no data)
-  if (!totalCharged || totalCharged == 0) return 100;
-
-  // 2. Calculate Average Stress per percent
-  // Range: 0 (Perfect 20-80) to ~20 (Worst case 99-100 constantly)
-  // A standard 0-100 charge has an average stress of 4.0.
+  // 2. Calculate Average Stress (Standard Charge = 4.0)
   const avgStress = totalStress / totalCharged;
 
-  // 3. Convert to 0-100 Score
-  // We calibrate so that a standard 0-100 charge (AvgStress 4.0) gives a "Mediocre" score of 60.
-  // Formula: Score = 100 - (AvgStress * 10)
-  // AvgStress 0 (Perfect) -> 100
-  // AvgStress 4 (Standard) -> 60
-  // AvgStress 10 (Bad habits) -> 0
+  // 3. Score Calculation
+  // We map Average Stress to a 0-100 score.
+  // Avg Stress 0 (Perfect) -> 100
+  // Avg Stress 4 (Standard 0-100% charge) -> 80
+  // Avg Stress 6+ (Careless) -> <70
+  // Avg Stress 20 (Worst) -> 0
   
-  let score = 100 - (avgStress * 10);
+  let score = 100 - (avgStress * 5);
 
-  // Clamp result
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
