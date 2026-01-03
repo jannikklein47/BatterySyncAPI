@@ -122,16 +122,20 @@ async function getDeviceHealthStats(deviceId) {
   });
 
   const row = result[0];
-  const totalCharged = parseFloat(row.totalCharged);
-  const totalStress = parseFloat(row.totalStress);
-  const safeCharged = parseFloat(row.safeCharged);
+  const totalCharged = row?.totalCharged ? parseFloat(row.totalCharged) : 0;
+  const safeCharged = row?.safeCharged ? parseFloat(row.safeCharged) : 0;
+  const totalStress = row?.totalStress ? parseFloat(row.totalStress) : 0;
 
-  // If data is insufficient, return a "Perfect" base score
-  if (totalCharged < 50) {
+  // 1. Handle New/Empty Devices
+  if (totalCharged < 100) {
     return {
       healthScore: 100,
-      totalCharged: Math.round(totalCharged),
-      explanation: { verdict: "New" },
+      totalCharged: totalCharged.toFixed(0),
+      explanation: {
+        verdict: "Neu",
+        safeZonePercent: 100,
+        avgStress: 0,
+      },
     };
   }
 
@@ -144,14 +148,20 @@ async function getDeviceHealthStats(deviceId) {
     Math.min(100, Math.round(100 - avgStress * 10))
   );
 
+  // 4. Generate Text Verdict
+  let verdict = "Gut";
+  if (healthScore >= 90) verdict = "Exzellent";
+  else if (healthScore >= 75) verdict = "Gut";
+  else if (healthScore >= 50) verdict = "Mittelmäßig";
+  else verdict = "Schlecht";
+
   return {
     healthScore,
-    totalCharged: Math.round(totalCharged),
+    totalCharged: Math.round(totalCharged), // e.g., 15430 (%)
     explanation: {
-      verdict:
-        healthScore > 85 ? "Excellent" : healthScore > 70 ? "Good" : "Fair",
-      safeZonePercent: Math.round(safePercent),
-      avgStress: parseFloat(avgStress.toFixed(2)),
+      verdict,
+      safeZonePercent: Math.round(safePercent), // e.g., 65 (%)
+      avgStress: parseFloat(avgStress.toFixed(2)), // e.g., 3.4
     },
   };
 }
