@@ -106,6 +106,8 @@ async function getDeviceHealthScore(deviceId) {
     type: QueryTypes.SELECT
   });
 
+  console.log(result[0])
+
   const { totalCharged, totalStress } = result[0];
 
   // 1. Handle edge case (no data)
