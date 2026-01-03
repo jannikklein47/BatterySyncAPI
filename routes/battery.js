@@ -402,6 +402,7 @@ router.get("/withNotificationInfo", async (req, res) => {
 
     //res.send('{"devices":[{"name":"MacBook Pro", "battery":0.2},{"name":"Iphone von Maya","battery":0.8}]}');
   } catch (error) {
+    console.error(error)
     res.status(500).send("Fehler");
     log(
       "Internal Server Error",
