@@ -140,17 +140,17 @@ async function getDeviceHealthStats(deviceId) {
   const avgStress = totalStress / totalCharged;
   const safePercent = (safeCharged / totalCharged) * 100;
   
-  // 3. Calculate Score (Multiplier 5)
+  // 3. Calculate Score (Multiplier 10)
   // Maps AvgStress 0->100, 4->80, 20->0
-  let rawScore = 100 - (avgStress * 5);
+  let rawScore = 100 - (avgStress * 10);
   const healthScore = Math.max(0, Math.min(100, Math.round(rawScore)));
 
   // 4. Generate Text Verdict
-  let verdict = "Good";
-  if (healthScore >= 90) verdict = "Excellent";
-  else if (healthScore >= 75) verdict = "Good";
-  else if (healthScore >= 50) verdict = "Fair";
-  else verdict = "Poor";
+  let verdict = "Gut";
+  if (healthScore >= 90) verdict = "Exzellent";
+  else if (healthScore >= 75) verdict = "Gut";
+  else if (healthScore >= 50) verdict = "Mittelmäßig";
+  else verdict = "Schlecht";
 
   return {
     healthScore,
