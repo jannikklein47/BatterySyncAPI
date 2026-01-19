@@ -135,20 +135,20 @@ router.get("/due", async (req, res) => {
                     },
                   },
                 },
-                { transaction: t }
+                { transaction: t },
               );
               await models.OrderedNotifications.destroy(
                 {
                   where: {
                     id: {
                       [Op.notIn]: Sequelize.literal(
-                        '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")'
+                        '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")',
                       ),
                     },
-                    permanent: false
+                    permanent: false,
                   },
                 },
-                { transaction: t }
+                { transaction: t },
               );
             });
           }
@@ -183,7 +183,7 @@ router.get("/due", async (req, res) => {
             "GET",
             req.rawBodySize,
             new Blob([JSON.stringify(data)]).size,
-            user.id
+            user.id,
           );
         }
       } else {
@@ -193,7 +193,7 @@ router.get("/due", async (req, res) => {
           "/notification/new/custom",
           "POST",
           req.rawBodySize,
-          0
+          0,
         );
       }
     } else {
@@ -277,19 +277,20 @@ router.get("/due", async (req, res) => {
                     },
                   },
                 },
-                { transaction: t }
+                { transaction: t },
               );
               await models.OrderedNotifications.destroy(
                 {
                   where: {
                     id: {
                       [Op.notIn]: Sequelize.literal(
-                        '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")'
+                        '(SELECT DISTINCT "notificationId" FROM "ScheduledNotifications")',
                       ),
                     },
+                    permanent: false,
                   },
                 },
-                { transaction: t }
+                { transaction: t },
               );
             });
           }
@@ -324,7 +325,7 @@ router.get("/due", async (req, res) => {
             "GET",
             req.rawBodySize,
             new Blob([JSON.stringify(data)]).size,
-            user.id
+            user.id,
           );
         }
       } else {
@@ -334,7 +335,7 @@ router.get("/due", async (req, res) => {
           "/notification/new/custom",
           "POST",
           req.rawBodySize,
-          0
+          0,
         );
       }
     }
@@ -347,7 +348,7 @@ router.get("/due", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error
+      error,
     );
   }
 });
@@ -376,7 +377,7 @@ router.post("/new", async (req, res) => {
       await models.sequelize.transaction(async (t) => {
         let user = await users.findOne(
           { where: { password: auth } },
-          { transaction: t }
+          { transaction: t },
         );
         if (user) {
           //console.log("Creating new noti order")
@@ -388,11 +389,11 @@ router.post("/new", async (req, res) => {
                 content: req.body.content,
                 permanent: permanent,
               },
-              { transaction: t }
+              { transaction: t },
             );
           const userDevices = await devices.findAll(
             { where: { userId: user.id } },
-            { transaction: t }
+            { transaction: t },
           );
           //console.log("User devices:", userDevices.length)
           if (userDevices.length > 0) {
@@ -404,7 +405,7 @@ router.post("/new", async (req, res) => {
                   deviceId: dev.id,
                   notificationId: newOrderedNotification.id,
                 },
-                { transaction: t }
+                { transaction: t },
               );
             }
           }
@@ -428,7 +429,7 @@ router.post("/new", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error
+      error,
     );
   }
 });
@@ -471,7 +472,7 @@ router.post("/new/custom", async (req, res) => {
                       content: req.body.content,
                       title: req.body.title,
                     },
-                    { transaction: t }
+                    { transaction: t },
                   );
 
                 for (const d of uDevices) {
@@ -480,7 +481,7 @@ router.post("/new/custom", async (req, res) => {
                       deviceId: d.id,
                       notificationId: newOrderedNotification.id,
                     },
-                    { transaction: t }
+                    { transaction: t },
                   );
                 }
               }
@@ -492,7 +493,7 @@ router.post("/new/custom", async (req, res) => {
               "POST",
               req.rawBodySize,
               0,
-              user.id
+              user.id,
             );
           } else {
             res.status(403).send("Access denied");
@@ -501,7 +502,7 @@ router.post("/new/custom", async (req, res) => {
               "/notification/new/custom",
               "POST",
               req.rawBodySize,
-              0
+              0,
             );
           }
         } else {
@@ -511,7 +512,7 @@ router.post("/new/custom", async (req, res) => {
             "/notification/new/custom",
             "POST",
             req.rawBodySize,
-            0
+            0,
           );
         }
       });
@@ -522,7 +523,7 @@ router.post("/new/custom", async (req, res) => {
         "/notification/new/custom",
         "POST",
         req.rawBodySize,
-        0
+        0,
       );
     }
   } catch (error) {
@@ -534,7 +535,7 @@ router.post("/new/custom", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error
+      error,
     );
   }
 });
@@ -581,7 +582,7 @@ router.post("/off", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error
+      error,
     );
   }
 });
@@ -591,7 +592,7 @@ router.post("/off", async (req, res) => {
 router.post("/debug", async (req, res) => {
   await devices.update(
     { predictedZeroAt: new Date(Date.now() + 1.5 * 60 * 60 * 1000) },
-    { where: { id: 9 } }
+    { where: { id: 9 } },
   );
 });
 router.post("/debug2", async (req, res) => {
@@ -603,7 +604,7 @@ router.post("/debug2", async (req, res) => {
           as: "device",
         },
       ],
-    })
+    }),
   );
   //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 });
@@ -615,12 +616,12 @@ router.post("/debug4", async (req, res) => {
   res.send(
     await models.ScheduledNotifications.destroy({
       where: { id: { [Op.ne]: -1 } },
-    })
+    }),
   );
   res.send(
     await models.OrderedNotifications.destroy({
       where: { id: { [Op.ne]: -1 } },
-    })
+    }),
   );
   //await devices.update({predictedZeroAt: new Date(Date.now() + 1,5 * 60 * 60 * 1000)}, {where: {id: 2}})
 });
