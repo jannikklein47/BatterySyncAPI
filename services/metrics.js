@@ -292,3 +292,5 @@ async function getApiUsage(timeframe = "1 day", interval = "30 minutes") {
 
   return result;
 }
+
+module.exports = { getUserPercentile, getApiUsage };
