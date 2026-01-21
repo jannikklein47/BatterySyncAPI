@@ -27,8 +27,8 @@ function downsample(data) {
   const reduced = downsampler.processData(
     standardized,
     Math.floor(
-      Math.sqrt(standardized.length) + 100 / (standardized.length + 10) + 10,
-    ),
+      Math.sqrt(standardized.length) + 100 / (standardized.length + 10) + 10
+    )
     //20,
   );
 
@@ -50,7 +50,7 @@ function debouncePerId(fn, wait) {
       setTimeout(() => {
         fn(id, ...args);
         timers.delete(id); // Clean up
-      }, wait),
+      }, wait)
     );
   };
 }
@@ -145,7 +145,7 @@ async function getDeviceHealthStats(deviceId) {
   // Score mapping: 0 stress = 100, 4 stress (standard) = 80, 20 stress = 0
   let healthScore = Math.max(
     0,
-    Math.min(100, Math.round(100 - avgStress * 10)),
+    Math.min(100, Math.round(100 - avgStress * 10))
   );
 
   // 4. Generate Text Verdict
@@ -201,7 +201,7 @@ router.get("/", async (req, res) => {
           "GET",
           req.rawBodySize,
           new Blob([JSON.stringify(result)]).size,
-          user.id,
+          user.id
         );
       } else {
         res.status(403).send("Access denied");
@@ -222,7 +222,7 @@ router.get("/", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -278,7 +278,7 @@ router.get("/secure", async (req, res) => {
           "GET",
           req.rawBodySize,
           new Blob([JSON.stringify(result)]).size,
-          user.id,
+          user.id
         );
       } else {
         res.status(403).send("Access denied");
@@ -299,7 +299,7 @@ router.get("/secure", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -380,7 +380,7 @@ router.get("/withNotificationInfo", async (req, res) => {
           "GET",
           req.rawBodySize,
           new Blob([JSON.stringify(processed)]).size,
-          user.id,
+          user.id
         );
       } else {
         res.status(403).send("Access denied");
@@ -389,7 +389,7 @@ router.get("/withNotificationInfo", async (req, res) => {
           "/battery/withNotificationInfo",
           "GET",
           req.rawBodySize,
-          0,
+          0
         );
       }
     } else {
@@ -399,7 +399,7 @@ router.get("/withNotificationInfo", async (req, res) => {
         "/battery/withNotificationInfo",
         "GET",
         req.rawBodySize,
-        0,
+        0
       );
     }
 
@@ -414,7 +414,7 @@ router.get("/withNotificationInfo", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -489,7 +489,7 @@ router.post("/", async (req, res) => {
               name: name,
               userId: user.id,
             },
-          },
+          }
         );
 
         debouncePrediction(device.id);
@@ -519,7 +519,7 @@ router.post("/", async (req, res) => {
           "POST",
           req.rawBodySize,
           0,
-          user.id,
+          user.id
         );
         /*
         const newDevice = await devices.create({
@@ -552,7 +552,7 @@ router.post("/", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -606,7 +606,7 @@ router.post("/secure", async (req, res) => {
                 isPluggedIn: isPluggedIn,
                 deviceId: device.id,
               },
-              { transaction: t },
+              { transaction: t }
             );
           }
 
@@ -623,7 +623,7 @@ router.post("/secure", async (req, res) => {
               isPluggedIn: isPluggedIn,
               lastActivity: new Date(),
             },
-            { transaction: t },
+            { transaction: t }
           );
 
           debouncePrediction(device.id);
@@ -643,7 +643,7 @@ router.post("/secure", async (req, res) => {
                     type: "CHARGEREMINDER",
                   },
                 },
-                { transaction: t },
+                { transaction: t }
               );
 
             for (const noti of deviceOrderedNotifications) {
@@ -654,7 +654,7 @@ router.post("/secure", async (req, res) => {
                       notificationId: noti.id,
                     },
                   },
-                  { transaction: t },
+                  { transaction: t }
                 );
               } else {
                 await noti.destroy({ transaction: t });
@@ -668,7 +668,7 @@ router.post("/secure", async (req, res) => {
                   permanent: false, // only destroy the ordered notification if the user wanted it only one time!
                 },
               },
-              { transaction: t },
+              { transaction: t }
             );
           } else if (
             (device.chargingStatus === "false" ||
@@ -689,19 +689,19 @@ router.post("/secure", async (req, res) => {
                     type: "CHARGEREMINDER",
                   },
                 },
-                { transaction: t },
+                { transaction: t }
               );
 
               if (permanentNoti) {
                 // Re-Create scheduled permanent notifications for the devices that have already displayed them
                 const userDevices = await devices.findAll(
                   { where: { userId: user.id } },
-                  { transaction: t },
+                  { transaction: t }
                 );
                 //console.log("User devices:", userDevices.length)
                 if (userDevices.length > 0) {
                   const deviceThatNeedScheduling = userDevices.filter(
-                    (dev) => dev.id !== device.id,
+                    (dev) => dev.id !== device.id
                   );
                   //console.log("dev that need sched:", deviceThatNeedScheduling.length)
                   for (const dev of deviceThatNeedScheduling) {
@@ -715,7 +715,7 @@ router.post("/secure", async (req, res) => {
                             deviceId: dev.id,
                           },
                         },
-                        { transaction: t },
+                        { transaction: t }
                       );
 
                     if (!hasScheduled) {
@@ -724,7 +724,7 @@ router.post("/secure", async (req, res) => {
                           deviceId: dev.id,
                           notificationId: permanentNoti.id,
                         },
-                        { transaction: t },
+                        { transaction: t }
                       );
                     }
                   }
@@ -744,7 +744,7 @@ router.post("/secure", async (req, res) => {
           "POST",
           req.rawBodySize,
           0,
-          user.id,
+          user.id
         );
       }
     } else {
@@ -761,7 +761,7 @@ router.post("/secure", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -838,7 +838,7 @@ router.put("/", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -898,7 +898,7 @@ router.get("/history", async (req, res) => {
             "GET",
             req.rawBodySize,
             new Blob([JSON.stringify(result)]).size,
-            user.id,
+            user.id
           );
         } else {
           res.status(404).send("Device not found.");
@@ -908,7 +908,7 @@ router.get("/history", async (req, res) => {
             "GET",
             req.rawBodySize,
             0,
-            user.id,
+            user.id
           );
         }
       } else {
@@ -930,7 +930,7 @@ router.get("/history", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -1005,10 +1005,10 @@ router.get("/history/all", async (req, res) => {
               const newestDate = result[result.length - 1].createdAt;
 
               const oldestBattery = Math.round(
-                firstOlderThan24Hours.battery * 100,
+                firstOlderThan24Hours.battery * 100
               );
               const newestBattery = Math.round(
-                result[result.length - 1].battery * 100,
+                result[result.length - 1].battery * 100
               );
               /*
               console.log(
@@ -1095,7 +1095,7 @@ router.get("/history/all", async (req, res) => {
             "GET",
             req.rawBodySize,
             new Blob([JSON.stringify(results)]).size,
-            user.id,
+            user.id
           );
         } else {
           res.status(404).send("Device not found.");
@@ -1105,7 +1105,7 @@ router.get("/history/all", async (req, res) => {
             "GET",
             req.rawBodySize,
             0,
-            user.id,
+            user.id
           );
         }
       } else {
@@ -1127,7 +1127,7 @@ router.get("/history/all", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -1151,7 +1151,7 @@ router.get("/history/all/week", async (req, res) => {
         ) {
           // Zeitpunkt 24h zurück
           const twentyFourHoursAgo = new Date(
-            Date.now() - 7 * 24 * 60 * 60 * 1000,
+            Date.now() - 7 * 24 * 60 * 60 * 1000
           );
 
           const results = {};
@@ -1210,7 +1210,7 @@ router.get("/history/all/week", async (req, res) => {
             "GET",
             req.rawBodySize,
             new Blob([JSON.stringify(results)]).size,
-            user.id,
+            user.id
           );
         } else {
           res.status(404).send("Device not found.");
@@ -1219,7 +1219,7 @@ router.get("/history/all/week", async (req, res) => {
             "/battery/history/all/week",
             "GET",
             req.rawBodySize,
-            0,
+            0
           );
         }
       } else {
@@ -1229,7 +1229,7 @@ router.get("/history/all/week", async (req, res) => {
           "/battery/history/all/week",
           "GET",
           req.rawBodySize,
-          0,
+          0
         );
       }
     } else {
@@ -1239,7 +1239,7 @@ router.get("/history/all/week", async (req, res) => {
         "/battery/history/all/week",
         "GET",
         req.rawBodySize,
-        0,
+        0
       );
     }
 
@@ -1253,7 +1253,7 @@ router.get("/history/all/week", async (req, res) => {
       req.rawBodySize,
       0,
       null,
-      error,
+      error
     );
   }
 });
@@ -1314,7 +1314,7 @@ router.get("/history/all/fromStart", async (req, res) => {
             "GET",
             req.rawBodySize,
             new Blob([JSON.stringify(results)]).size,
-            user.id,
+            user.id
           );
         } else {
           res.status(404).send("Device not found.");
@@ -1323,7 +1323,7 @@ router.get("/history/all/fromStart", async (req, res) => {
             "/battery/history/all/week",
             "GET",
             req.rawBodySize,
-            0,
+            0
           );
         }
       } else {
@@ -1333,7 +1333,7 @@ router.get("/history/all/fromStart", async (req, res) => {
           "/battery/history/all/week",
           "GET",
           req.rawBodySize,
-          0,
+          0
         );
       }
     } else {
@@ -1343,7 +1343,7 @@ router.get("/history/all/fromStart", async (req, res) => {
         "/battery/history/all/week",
         "GET",
         req.rawBodySize,
-        0,
+        0
       );
     }
 
@@ -1358,7 +1358,7 @@ router.get("/history/all/fromStart", async (req, res) => {
       0,
 
       null,
-      error,
+      error
     );
   }
 });

@@ -1,5 +1,7 @@
 "use strict";
 const { Model, Sequelize } = require("sequelize");
+
+const OTP_REQUIRED_FOR = 12 * 60 * 60 * 1000;
 module.exports = (sequelize, DataTypes) => {
   class Device extends Model {
     /**
@@ -73,6 +75,15 @@ module.exports = (sequelize, DataTypes) => {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal("NOW()"),
         allowNull: false,
+      },
+      requiresOtp: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return (
+            !!this.otp &&
+            new Date(this.lastActivity) > Date.now() - OTP_REQUIRED_FOR
+          );
+        },
       },
     },
     {
