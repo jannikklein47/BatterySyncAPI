@@ -8,7 +8,6 @@ const BatteryLogs = models.batteryLogs;
 const sequelize = models.sequelize;
 
 const NotificationService = require("./notification");
-const DeviceService = require("./device");
 
 const GeneralUtils = require("../utils/general");
 
@@ -64,7 +63,7 @@ function predictOldestDataPoint(
   oldestBattery,
   newestDate,
   newestBattery,
-  targetDate
+  targetDate,
 ) {
   oldestBattery = Math.round(oldestBattery * 100);
   newestBattery = Math.round(newestBattery * 100);
@@ -133,26 +132,28 @@ async function getBatteryLogs(deviceId, interval = "day") {
     raw: true,
   });
 
-  result.push({
-    ...predictOldestDataPoint(
-      firstOlderThanStartDate.createdAt,
-      firstOlderThanStartDate.battery,
-      result[result.length - 1].createdAt,
-      result[result.length - 1].battery,
-      startDate
-    ),
-    chargingStatus: firstOlderThanStartDate.chargingStatus,
-    isPluggedIn: firstOlderThanStartDate.isPluggedIn,
-  });
+  if (firstOlderThanStartDate) {
+    result.push({
+      ...predictOldestDataPoint(
+        firstOlderThanStartDate.createdAt,
+        firstOlderThanStartDate.battery,
+        result[result.length - 1].createdAt,
+        result[result.length - 1].battery,
+        startDate,
+      ),
+      chargingStatus: firstOlderThanStartDate.chargingStatus,
+      isPluggedIn: firstOlderThanStartDate.isPluggedIn,
+    });
 
-  const device = await DeviceService.getDevice(deviceId);
+    const device = await require("./device").getDevice(deviceId);
 
-  result.unshift({
-    createdAt: new Date(),
-    battery: device.battery,
-    chargingStatus: device.chargingStatus,
-    isPluggedIn: device.isPluggedIn,
-  });
+    result.unshift({
+      createdAt: new Date(),
+      battery: device.battery,
+      chargingStatus: device.chargingStatus,
+      isPluggedIn: device.isPluggedIn,
+    });
+  }
 
   const downsampled = GeneralUtils.downsample(result);
 

@@ -2,14 +2,6 @@ const models = require("../models");
 const downsampler = require("downsample-lttb");
 const { Op } = require("sequelize");
 
-function sameDay(d1, d2) {
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-}
-
 function analyzeSinceLastUnplug(log, device) {
   if (!log || !log.length || log[0].isPluggedIn) return null;
 
@@ -102,12 +94,12 @@ module.exports = async function (deviceId) {
     if (analysis && analysis.predictedZeroAt) {
       await models.Device.update(
         { predictedZeroAt: analysis.predictedZeroAt },
-        { where: { id: device.id } }
+        { where: { id: device.id } },
       );
     } else {
       await models.Device.update(
         { predictedZeroAt: null },
-        { where: { id: device.id } }
+        { where: { id: device.id } },
       );
     }
   });

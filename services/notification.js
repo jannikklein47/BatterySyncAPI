@@ -6,15 +6,15 @@ const { Op } = require("sequelize");
 
 /**
  * Gets scheduled notifications for a device with optional filters.
- * @param {string} deviceUUID The uuid of the device to get scheduled notifications for.
+ * @param {string} deviceId The id of the device to get scheduled notifications for.
  * @param {Object} [options] Optional filters.
  * @param {string} [options.type] The type of notification to filter by.
  * @param {boolean} [options.due] If true, includes the device in the query so that only notifications that are due can be retrieved.
  * @returns {Promise<Array<Object>>} A promise that resolves to an array of scheduled notifications.
  * @throws {Error} If there is an error getting the scheduled notifications.
  */
-async function getScheduledNotificationsForDevice(deviceUUID, options = {}) {
-  const whereClause = { deviceUUID };
+async function getScheduledNotificationsForDevice(deviceId, options = {}) {
+  const whereClause = { deviceId };
 
   if (options.type === "CHARGEREMINDER") {
     const includeClause = {
@@ -39,7 +39,10 @@ async function getScheduledNotificationsForDevice(deviceUUID, options = {}) {
       ];
     }
 
-    const queryOptions = { where: whereClause, include: [includeClause] };
+    const queryOptions = {
+      where: whereClause,
+      include: [includeClause],
+    };
 
     try {
       const scheduledNotifications =
@@ -47,7 +50,7 @@ async function getScheduledNotificationsForDevice(deviceUUID, options = {}) {
       return scheduledNotifications;
     } catch (error) {
       throw new Error(
-        `Error getting scheduled notifications for device ${deviceId}: ${error.message}`
+        `Error getting scheduled notifications for device ${deviceId}: ${error.message}`,
       );
     }
   } else {
@@ -66,7 +69,7 @@ async function getScheduledNotificationsForDevice(deviceUUID, options = {}) {
       return scheduledNotifications;
     } catch (error) {
       throw new Error(
-        `Error getting scheduled notifications for device ${deviceId}: ${error.message}`
+        `Error getting scheduled notifications for device ${deviceId}: ${error.message}`,
       );
     }
   }
@@ -88,7 +91,27 @@ async function getOrderedNotifcationsForDevice(deviceId, type, permanent) {
     return orderedNotifications;
   } catch (error) {
     throw new Error(
-      `Error getting ordered notifications for device ${deviceId}: ${error.message}`
+      `Error getting ordered notifications for device ${deviceId}: ${error.message}`,
+    );
+  }
+}
+
+/**
+ * Retrieves all ordered notifications for a device with the given parameters.
+ * @param {number} deviceId The id of the device to retrieve notifications for.
+ * @param {string} type The type of notifications to retrieve.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of ordered notifications.
+ * @throws {Error} If there is an error retrieving the ordered notifications.
+ */
+async function getAllOrderedNotifcationsForDevice(deviceId, type) {
+  try {
+    const orderedNotifications = await OrderedNotifications.findAll({
+      where: { deviceId, type },
+    });
+    return orderedNotifications;
+  } catch (error) {
+    throw new Error(
+      `Error getting ordered notifications for device ${deviceId}: ${error.message}`,
     );
   }
 }
@@ -128,7 +151,7 @@ async function descheduleNotifications(orderedNotificationId) {
  */
 async function rescheduleNotifications(orderedNotificationId, userId) {
   const orderedNotification = await OrderedNotifications.findByPk(
-    orderedNotificationId
+    orderedNotificationId,
   );
 
   await descheduleNotifications(orderedNotificationId);
@@ -194,6 +217,7 @@ async function deleteAllDisplayedOrderedNotifications() {
  * @param {boolean} [permanent=false] Whether the notification should be permanent or not.
  * @param {number} deviceId The id of the device to create the notification for.
  * @param {number} userId The id of the user to create the notification for.
+ * @param {string} title The title for the notification.
  * @returns {Promise<OrderedNotifications>} A promise that resolves to the created notification order.
  * @throws {Error} If there is an error creating the notification order.
  */
@@ -202,7 +226,8 @@ async function createNewNotification(
   content = "",
   permanent = false,
   deviceId,
-  userId
+  userId,
+  title,
 ) {
   if (type === "CHARGEREMINDER" && !deviceId) {
     throw new Error("No device id provided");
@@ -216,13 +241,14 @@ async function createNewNotification(
         type: type.toUpperCase(),
         content,
         permanent,
+        title,
       },
-      { transaction: t }
+      { transaction: t },
     );
 
     const userDevices = await Device.findAll(
       { where: { userId } },
-      { transaction: t }
+      { transaction: t },
     );
 
     for (const device of userDevices) {
@@ -231,7 +257,7 @@ async function createNewNotification(
           deviceId: device.id,
           notificationId: newOrderedNotification.id,
         },
-        { transaction: t }
+        { transaction: t },
       );
     }
 
@@ -248,25 +274,25 @@ async function createNewNotification(
  * @throws {Error} If there is an error creating the notification order.
  */
 async function createTargetedNotification(deviceId, content, title) {
-  await models.sequelize.transaction(
-    async (t) => {
-      const newOrderedNotification = await OrderedNotifications.create(
-        {
-          deviceId,
-          type: "CONTENT",
-          content,
-          title,
-        },
-        { transaction: t }
-      );
+  await models.sequelize.transaction(async (t) => {
+    const newOrderedNotification = await OrderedNotifications.create(
+      {
+        deviceId,
+        type: "CONTENT",
+        content,
+        title,
+      },
+      { transaction: t },
+    );
 
-      await ScheduledNotifications.create({
+    await ScheduledNotifications.create(
+      {
         deviceId,
         notificationId: newOrderedNotification.id,
-      });
-    },
-    { transaction: t }
-  );
+      },
+      { transaction: t },
+    );
+  });
 }
 
 module.exports = {
@@ -280,4 +306,5 @@ module.exports = {
   deleteAllDisplayedOrderedNotifications,
   createNewNotification,
   createTargetedNotification,
+  getAllOrderedNotifcationsForDevice,
 };

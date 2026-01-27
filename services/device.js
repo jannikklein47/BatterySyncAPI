@@ -2,6 +2,8 @@ const models = require("../models");
 const downsampler = require("downsample-lttb");
 const { Op, fn, col, QueryTypes } = require("sequelize");
 
+const APIError = require("../utils/error");
+
 const User = models.User;
 const Device = models.Device;
 const OrderedNotifications = models.OrderedNotifications;
@@ -109,7 +111,7 @@ async function getDeviceHealthStats(deviceId) {
   // Score mapping: 0 stress = 100, 4 stress (standard) = 80, 20 stress = 0
   let healthScore = Math.max(
     0,
-    Math.min(100, Math.round(100 - avgStress * 10))
+    Math.min(100, Math.round(100 - avgStress * 10)),
   );
 
   // 4. Generate Text Verdict
@@ -162,34 +164,73 @@ async function getDevices(userId, includeChargereminders = false) {
         required: false,
       },
     ];
+    optionsObj.group = ["Device.id"];
+    optionsObj.attributes = [
+      "name",
+      "battery",
+      "isShown",
+      "chargingStatus",
+      "id",
+      "type",
+      "color",
+      "isPluggedIn",
+      "predictedZeroAt",
+      "favorite",
+      "lastActivity",
+      "requiresOtp",
+      [fn("ARRAY_AGG", col("orderedNotifications.id")), "notificationIds"],
+    ];
   }
 
   const devices = await Device.findAll(optionsObj);
-  return devices;
+  if (!includeChargereminders) return devices;
+
+  const processed = [];
+
+  for (const device of devices) {
+    const healthStats = await getDeviceHealthStats(device.id);
+    const permanentNotification =
+      await NotificationService.getOrderedNotifcationsForDevice(
+        device.id,
+        "CHARGEREMINDER",
+        true,
+      );
+
+    processed.push({
+      ...device.dataValues,
+      healthStats,
+      permanentNotification: permanentNotification !== null,
+    });
+  }
+
+  return processed;
 }
 
 /**
- * Retrieves a single device by its ID.
+ * Retrieves a device by its ID.
  * @param {number} deviceId The ID of the device to retrieve.
- * @return {Promise<Device>} A promise that resolves with the device if found, or null if not found.
+ * @throws {APIError} If the device is not found.
+ * @returns {Promise<Device>} A promise that resolves with the device.
  */
 async function getDevice(deviceId) {
   const device = await Device.findByPk(deviceId);
+  if (!device) throw APIError.errorNotFound();
   return device;
 }
 
 /**
  * Retrieves a device by its UUID.
  * @param {string} uuid The UUID of the device to retrieve.
- * @return {Promise<Device|null>} A promise that resolves with the device if found, or null if not found.
+ * @throws {APIError} If the device is not found.
+ * @returns {Promise<Device>} A promise that resolves with the device.
  */
 async function getDeviceByUUID(uuid) {
   const device = await Device.findOne({
     where: {
       uuid,
     },
-    attributes: ["name"],
   });
+  if (!device) throw APIError.errorNotFound();
 
   return device;
 }
@@ -199,14 +240,15 @@ async function getDeviceByUUID(uuid) {
  * @param {number} deviceId The ID of the device to refresh the last activity timestamp for.
  */
 async function refreshLastActivity(deviceId) {
-  await Device.update(
+  const updatedDevice = await Device.update(
     { lastActivity: new Date() },
     {
       where: {
         id: deviceId,
       },
-    }
+    },
   );
+  if (updatedDevice[0] === 0) throw APIError.errorNotFound();
 }
 
 /**
@@ -229,7 +271,8 @@ async function hasPermanentChargereminder(deviceId) {
  * Updates a device with the given data.
  * @param {number} deviceId The ID of the device to update.
  * @param {Object} data The data to update the device with.
- * @returns {Promise<Device>} A promise that resolves to the updated device.
+ * @returns {Promise<Object[]>} A promise that resolves to the updated device.
+ * @throws {APIError} If the device does not exist.
  */
 async function updateDevice(deviceId, data) {
   const updated = await Device.update(
@@ -238,88 +281,87 @@ async function updateDevice(deviceId, data) {
       where: {
         id: deviceId,
       },
-    }
+    },
   );
-  return updated;
+  if (updated[0] === 0) {
+    throw APIError.errorNotFound();
+  }
+  return await getDevice(deviceId);
 }
 
 /**
- * Updates a device's battery status and handles chargereminder notifications.
+ * Updates the battery status of a device and updates the battery log.
+ * Also checks and updates the charger reminder notifications accordingly.
+ * If the device has a predicted zero at time and the charger is plugged in or charging,
+ * it deletes all temporary charger reminder notifications and all permanent charger reminder notifications scheduled for the device.
+ * If the device is charging or plugged in and has a predicted zero at time, and it has a permanent charger reminder notification,
+ * it reschedules the permanent charger reminder notification for the device.
  * @param {number} deviceId The ID of the device to update.
- * @param {number} battery The current battery percentage of the device.
+ * @param {number} battery The current battery level of the device in percent.
  * @param {boolean} chargingStatus Whether the device is currently charging.
  * @param {boolean} isPluggedIn Whether the device is currently plugged in.
- * @returns {Promise<void>} A promise that resolves when the device has been updated.
- * @throws {Error} If there is an error updating the device or handling the chargereminder notifications.
+ * @returns {Promise<void>} A promise that resolves when the device's battery status has been updated and the charger reminder notifications have been updated accordingly.
+ * @throws {APIError} If the device does not exist.
  */
 async function updateDeviceBatteryStatus(
   deviceId,
   battery,
   chargingStatus,
-  isPluggedIn
+  isPluggedIn,
 ) {
-  try {
-    const device = await Device.findByPk(deviceId);
-    if (!device) {
-      throw new Error(`Device with ID ${deviceId} not found`);
-    }
-    await updateDevice(deviceId, { battery, chargingStatus, isPluggedIn });
-    await BatteryLogService.addBatteryLog(
-      deviceId,
-      battery,
-      chargingStatus,
-      isPluggedIn
-    );
+  const device = await Device.findByPk(deviceId);
+  await updateDevice(deviceId, { battery, chargingStatus, isPluggedIn });
+  await BatteryLogService.addBatteryLog(
+    deviceId,
+    battery,
+    chargingStatus,
+    isPluggedIn,
+  );
 
-    if (
-      (chargingStatus || isPluggedIn) &&
-      device.predictedZeroAt < new Date(Date.now() + 2 * 60 * 60 * 1000)
-    ) {
-      const tempNotifications =
-        await NotificationService.getOrderedNotifcationsForDevice(
-          deviceId,
-          "CHARGEREMINDER",
-          false
-        );
-      const permanentNotifications =
-        await NotificationService.getOrderedNotifcationsForDevice(
-          deviceId,
-          "CHARGEREMINDER",
-          true
-        );
-      for (const notification of permanentNotifications) {
-        await NotificationService.deleteAllScheduledNotificationsOfOrderedNotification(
-          notification.id
-        );
-      }
-      if (tempNotifications.length > 0) {
-        await NotificationService.deleteOrderedNotifications(
-          tempNotifications.map((n) => n.id)
-        );
-      }
-    } else if (
-      chargingStatus &&
-      isPluggedIn &&
-      (device.chargingStatus || device.isPluggedIn) &&
-      (await hasPermanentChargereminder(deviceId))
-    ) {
-      const permanentNotification =
-        await NotificationService.getOrderedNotifcationsForDevice(
-          deviceId,
-          "CHARGEREMINDER",
-          true
-        );
-      if (permanentNotification[0]) {
-        await NotificationService.rescheduleNotifications(
-          permanentNotification[0].id,
-          device.userId
-        );
-      }
+  if (
+    (chargingStatus || isPluggedIn) &&
+    device.predictedZeroAt < new Date(Date.now() + 2 * 60 * 60 * 1000)
+  ) {
+    const tempNotifications =
+      await NotificationService.getOrderedNotifcationsForDevice(
+        deviceId,
+        "CHARGEREMINDER",
+        false,
+      );
+    const permanentNotifications =
+      await NotificationService.getOrderedNotifcationsForDevice(
+        deviceId,
+        "CHARGEREMINDER",
+        true,
+      );
+    for (const notification of permanentNotifications) {
+      await NotificationService.deleteAllScheduledNotificationsOfOrderedNotification(
+        notification.id,
+      );
     }
-  } catch (error) {
-    throw new Error(
-      `Error updating device ${deviceId} battery status: ${error.message}`
-    );
+    if (tempNotifications.length > 0) {
+      await NotificationService.deleteOrderedNotifications(
+        tempNotifications.map((n) => n.id),
+      );
+    }
+  } else if (
+    chargingStatus &&
+    isPluggedIn &&
+    (device.chargingStatus || device.isPluggedIn) &&
+    (await hasPermanentChargereminder(deviceId))
+  ) {
+    const permanentNotification =
+      await NotificationService.getOrderedNotifcationsForDevice(
+        deviceId,
+        "CHARGEREMINDER",
+        true,
+      );
+    if (permanentNotification[0]) {
+      await NotificationService.rescheduleNotifications(
+        permanentNotification[0].id,
+        device.userId,
+      );
+    }
   }
 }
 
@@ -349,9 +391,8 @@ async function createDevice(data) {
  */
 async function createOneTimePassword(deviceId) {
   const device = await getDevice(deviceId);
-  if (!device) throw new Error("Device not found");
-  if (device.otpTime && new Date(foundDevice.otpTime) > Date.now() - OTP_TTL) {
-    throw new Error("OTP already generated");
+  if (device.otpTime && new Date(device.otpTime) > Date.now() - OTP_TTL) {
+    throw APIError.errorOTPAlreadyGenerated();
   }
 
   const otp = GeneralUtils.generateRandomString(OTP_LENGTH);
@@ -361,7 +402,7 @@ async function createOneTimePassword(deviceId) {
   await NotificationService.createTargetedNotification(
     deviceId,
     otp + " ist dein Einmalpasswort",
-    "Gib diesen Code niemals weiter. Er ist 5 Minuten lang gültig."
+    "Gib diesen Code niemals weiter. Er ist 5 Minuten lang gültig.",
   );
 }
 
@@ -375,8 +416,7 @@ async function createOneTimePassword(deviceId) {
 
 async function checkOtpCreatable(deviceId) {
   const device = await getDevice(deviceId);
-  if (!device) throw new Error("Device not found");
-  if (device.otpTime && new Date(foundDevice.otpTime) > Date.now() - OTP_TTL) {
+  if (device.otpTime && new Date(device.otpTime) > Date.now() - OTP_TTL) {
     return false;
   }
   return true;
@@ -391,32 +431,10 @@ async function checkOtpCreatable(deviceId) {
  */
 async function reassignUUID(deviceId, otp) {
   const device = await getDevice(deviceId);
-  if (!device) throw new Error("Device not found");
   if (device.otp && new Date(device.otpTime) < Date.now() - OTP_TTL) {
     throw new Error("OTP expired");
   } else if (device.otp !== otp) {
     throw new Error("Invalid OTP");
-  }
-  await refreshLastActivity(deviceId);
-  const updatedDevice = await updateDevice(deviceId, {
-    uuid: sequelize.literal("gen_random_uuid()"),
-  });
-  await updatedDevice.reload();
-  return updatedDevice.uuid;
-}
-
-/**
- * Reassigns a new uuid to a device if the device has not been active in the last OTP_REQUIRED_FOR milliseconds.
- * If the device has been active in the last OTP_REQUIRED_FOR milliseconds, an Error is thrown.
- * @param {number} deviceId The id of the device to reassign the uuid to.
- * @returns {Promise<string>} A promise that resolves to the new uuid of the device.
- * @throws {Error} If the device does not exist or if the device has been active in the last OTP_REQUIRED_FOR milliseconds.
- */
-async function reassignUUID(deviceId) {
-  const device = await getDevice(deviceId);
-  if (!device) throw new Error("Device not found");
-  if (new Date(device.lastActivity) > Date.now() - OTP_REQUIRED_FOR) {
-    throw new Error("OTP is required.");
   }
   await refreshLastActivity(deviceId);
   const updatedDevice = await updateDevice(deviceId, {
@@ -429,14 +447,76 @@ async function reassignUUID(deviceId) {
 }
 
 /**
+ * Reassigns a new uuid to a device if the device has not been active in the last OTP_REQUIRED_FOR milliseconds.
+ * If the device has been active in the last OTP_REQUIRED_FOR milliseconds, an Error is thrown.
+ * @param {number} deviceId The id of the device to reassign the uuid to.
+ * @returns {Promise<string>} A promise that resolves to the new uuid of the device.
+ * @throws {Error} If the device does not exist or if the device has been active in the last OTP_REQUIRED_FOR milliseconds.
+ */
+async function reassignUUIDInactive(deviceId) {
+  const device = await getDevice(deviceId);
+  if (
+    new Date(device.lastActivity) > Date.now() - OTP_REQUIRED_FOR &&
+    device.uuid !== null
+  ) {
+    throw APIError.errorOTPAlreadyGenerated();
+  }
+  await refreshLastActivity(deviceId);
+  const updatedDevice = await updateDevice(deviceId, {
+    uuid: sequelize.literal("gen_random_uuid()"),
+    otp: null,
+    otpTime: null,
+  });
+  await updatedDevice.reload();
+  return updatedDevice.uuid;
+}
+
+/**
+ * Checks if a device has been inactive for the last OTP_REQUIRED_FOR milliseconds.
+ * @param {number} deviceId The id of the device to check.
+ * @returns {Promise<boolean>} A promise that resolves to true if the device has been inactive, false otherwise.
+ */
+async function checkDeviceInactive(deviceId) {
+  const device = await getDevice(deviceId);
+  if (
+    new Date(device.lastActivity) > Date.now() - OTP_REQUIRED_FOR &&
+    device.uuid !== null
+  ) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Deletes a device with the given ID.
  * @param {number} deviceId The ID of the device to delete.
  * @returns {Promise<number>} A promise that resolves to the number of deleted devices.
- * @throws {Error} If the device does not exist.
+ * @throws {APIError} If the device does not exist.
  */
-async function deleteDevice(deviceId) {
+async function deleteDeviceId(deviceId) {
   const deleted = await Device.destroy({ where: { id: deviceId } });
+  if (deleted === 0) {
+    throw APIError.errorNotFound();
+  }
   return deleted;
+}
+
+/**
+ * Deletes a device with the given uuid.
+ * @param {string} deviceUUID The uuid of the device to delete.
+ * @returns {Promise<number>} A promise that resolves to the number of deleted devices.
+ * @throws {APIError} If the device does not exist.
+ */
+async function deleteDeviceUUID(deviceUUID) {
+  const deleted = await Device.destroy({ where: { uuid: deviceUUID } });
+  if (deleted === 0) {
+    throw APIError.errorNotFound();
+  }
+  return deleted;
+}
+
+async function revokeAllDeviceRegistrations(userId) {
+  await Device.update({ uuid: null }, { where: { userId } });
 }
 
 module.exports = {
@@ -452,4 +532,9 @@ module.exports = {
   createOneTimePassword,
   checkOtpCreatable,
   reassignUUID,
+  reassignUUIDInactive,
+  deleteDeviceId,
+  deleteDeviceUUID,
+  checkDeviceInactive,
+  revokeAllDeviceRegistrations,
 };

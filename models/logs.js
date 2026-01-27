@@ -29,11 +29,19 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      statusCode: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      duration: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       sequelize,
       modelName: "logs",
-    }
+    },
   );
   return logs;
 };

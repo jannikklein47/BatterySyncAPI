@@ -36,8 +36,8 @@ function downsample(data) {
   const reduced = downsampler.processData(
     standardized,
     Math.floor(
-      Math.sqrt(standardized.length) + 100 / (standardized.length + 10) + 10
-    )
+      Math.sqrt(standardized.length) + 100 / (standardized.length + 10) + 10,
+    ),
     //20,
   );
 
@@ -65,4 +65,4 @@ function formatDuration(seconds) {
   return `${m}m`;
 }
 
-module.exports = { generateRandomString, downsample };
+module.exports = { generateRandomString, downsample, formatDuration };
