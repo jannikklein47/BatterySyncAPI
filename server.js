@@ -6,6 +6,7 @@ const https = require("https");
 const app = require("./app");
 const cleanupJob = require("./jobs/notificationCleanup");
 const port = process.env.PORT || 3000;
+const fs = require("fs");
 let server;
 
 /**
