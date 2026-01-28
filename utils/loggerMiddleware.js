@@ -9,13 +9,17 @@ const loggerMiddleware = (req, res, next) => {
     const requestHeaderSize = req.headersRaw
       ? JSON.stringify(req.headers).length
       : 0;
+    const requestQuerySize = req.query ? JSON.stringify(req.query).length : 0;
 
     const logData = {
       method: req.method,
       route: req.originalUrl.split("?")[0],
       statusCode: res.statusCode,
       resSize: res.get("Content-Length") || 0,
-      reqSize: parseInt(requestBodySize) + parseInt(requestHeaderSize),
+      reqSize:
+        parseInt(requestBodySize) +
+        parseInt(requestHeaderSize) +
+        parseInt(requestQuerySize),
       userId: req.user?.id || null,
       error:
         res.locals.error || req.error || res.statusCode >= 400

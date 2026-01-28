@@ -20,7 +20,7 @@ const errorHandler = (error, req, res, next) => {
   Logger.error(
     `${error.message}: responding with ${
       error.statusCode || 500
-    } / success => ${error.success || false} | ${error.stack}`,
+    } / success => ${error.success || false} | ${process.env.NODE_ENV !== "production" ? error.stack : "-"}`,
   );
   if (process.env.NODE_ENV !== "development") {
     delete error.stack;
