@@ -309,15 +309,6 @@ async function updateDevice(deviceId, data) {
   if (updated[0] === 0) {
     throw APIError.errorNotFound();
   }
-  // Predict the battery if it has changed
-  if (
-    Object.keys(data).includes("battery") ||
-    Object.keys(data).includes("isPluggedIn") ||
-    Object.keys(data).includes("chargingStatus")
-  ) {
-    debouncePrediction(deviceId);
-  }
-
   return await getDevice(deviceId);
 }
 
@@ -349,6 +340,7 @@ async function updateDeviceBatteryStatus(
     chargingStatus,
     isPluggedIn,
   );
+  debouncePrediction(deviceId);
 
   if (
     (chargingStatus || isPluggedIn) &&
