@@ -12,11 +12,11 @@ jest.mock("../models", () => ({
   },
 }));
 
-const generatePredictions = require("../services/generatePredictions"); // adjust path
+const predictionService = require("../services/predictionService"); // adjust path
 const { Device, batteryLogs, sequelize } = require("../models");
 const { Op } = require("sequelize");
 
-describe("Prediction Service - generatePredictions", () => {
+describe("Prediction Service", () => {
   const deviceId = 1;
   const mockNow = new Date("2026-01-25T12:00:00Z");
 
@@ -57,7 +57,7 @@ describe("Prediction Service - generatePredictions", () => {
     batteryLogs.findAll.mockResolvedValue(logs);
 
     // ACT
-    await generatePredictions(deviceId);
+    await predictionService(deviceId);
 
     // MATH:
     // Start point is index 0 (12:00) because unplug happened between 10:00 and 11:00.
@@ -80,7 +80,7 @@ describe("Prediction Service - generatePredictions", () => {
       { createdAt: new Date(), battery: 0.9, isPluggedIn: true },
     ]);
 
-    await generatePredictions(deviceId);
+    await predictionService(deviceId);
 
     expect(Device.update).toHaveBeenCalledWith(
       { predictedZeroAt: null },
@@ -105,7 +105,7 @@ describe("Prediction Service - generatePredictions", () => {
     ];
     batteryLogs.findAll.mockResolvedValue(logs);
 
-    await generatePredictions(deviceId);
+    await predictionService(deviceId);
 
     // Rate: (50-70) / 2 hours = -10%/hr.
     // 50% / 10% = 5 hours from 12:00.

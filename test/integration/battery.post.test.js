@@ -7,6 +7,9 @@ const APIError = require("../../utils/error");
 const app = express();
 app.use(express.json());
 
+const flushPromises = () =>
+  new Promise(jest.requireActual("timers").setImmediate);
+
 // Mock Auth - assuming this route also requires a user context
 app.use((req, res, next) => {
   req.user = { id: 1 };
@@ -37,9 +40,21 @@ describe("Battery POST /secure Integration", () => {
       uuid: validUUID,
       battery: 0.5,
     });
+    jest.useRealTimers();
+  });
+
+  beforeEach(() => {
+    jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] });
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   afterAll(async () => {
+    jest.runOnlyPendingTimers();
+    await flushPromises();
     await models.sequelize.close();
   });
 
@@ -53,6 +68,10 @@ describe("Battery POST /secure Integration", () => {
       });
 
       expect(res.status).toBe(200);
+
+      jest.advanceTimersByTime(2000);
+
+      await flushPromises();
 
       // Verify DB update
       const updatedDevice = await models.Device.findByPk(10);

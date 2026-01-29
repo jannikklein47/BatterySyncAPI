@@ -12,12 +12,35 @@ const sequelize = models.sequelize;
 
 const NotificationService = require("./notification");
 const BatteryLogService = require("./batteryLogs");
+const predict = require("./predictionService");
 
 const GeneralUtils = require("../utils/general");
 
 const OTP_TTL = 5 * 60 * 1000;
 const OTP_REQUIRED_FOR = 12 * 60 * 60 * 1000;
 const OTP_LENGTH = 6;
+
+function debouncePerId(fn, wait) {
+  const timers = new Map();
+
+  return function (id, ...args) {
+    // If a timer exists for this id, clear it
+    if (timers.has(id)) {
+      clearTimeout(timers.get(id));
+    }
+
+    // Set a new timer for this id
+    timers.set(
+      id,
+      setTimeout(() => {
+        fn(id, ...args);
+        timers.delete(id); // Clean up
+      }, wait),
+    );
+  };
+}
+
+const debouncePrediction = debouncePerId(predict, 2000);
 
 /**
  * Calculates the health score of a device based on its battery charging history.
@@ -286,6 +309,15 @@ async function updateDevice(deviceId, data) {
   if (updated[0] === 0) {
     throw APIError.errorNotFound();
   }
+  // Predict the battery if it has changed
+  if (
+    Object.keys(data).includes("battery") ||
+    Object.keys(data).includes("isPluggedIn") ||
+    Object.keys(data).includes("chargingStatus")
+  ) {
+    debouncePrediction(deviceId);
+  }
+
   return await getDevice(deviceId);
 }
 

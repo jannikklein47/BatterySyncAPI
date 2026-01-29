@@ -41,9 +41,12 @@ describe("Device POST Routes Integration", () => {
       uuid: testUuid,
       favorite: false,
     });
+    jest.useFakeTimers();
   });
 
   afterEach(async () => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
     await models.Device.destroy({ where: {}, truncate: { cascade: true } });
   });
 
