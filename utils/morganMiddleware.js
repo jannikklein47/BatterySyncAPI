@@ -25,8 +25,6 @@ var morganMiddleware = morgan(
       req.user ? `User (${req.user.id}): ${req.user.email}` : "",
     ].join(" ");
   },
-
-  ":method :url :status :res[content-length] - :response-time ms",
   { stream: stream },
 );
 
