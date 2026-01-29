@@ -222,7 +222,7 @@ async function getDevices(userId, includeChargereminders = false) {
     processed.push({
       ...device.dataValues,
       healthStats,
-      permanentNotification: permanentNotification !== null,
+      permanentNotification: permanentNotification.length > 0,
     });
   }
 
