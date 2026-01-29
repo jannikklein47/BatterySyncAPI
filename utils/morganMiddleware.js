@@ -20,10 +20,9 @@ var morganMiddleware = morgan(
       (tokens.res(req, res, "content-length") || "0")
         .padEnd(11, " ")
         .substring(0, 11),
-      "-",
       tokens["response-time"](req, res)?.padEnd(8, " ").substring(0, 8),
       "ms",
-      req.user ? ` - User (${req.user.id}): ${req.user.email}` : "",
+      req.user ? `User (${req.user.id}): ${req.user.email}` : "",
     ].join(" ");
   },
 
