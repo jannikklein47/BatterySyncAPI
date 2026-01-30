@@ -33,10 +33,13 @@ docker compose --build
 ### Production setup on MacOS:
 
 Either download Docker Desktop or use a NodeJS runtime.
-`git clone https://github.com/jannikklein47/BatterySyncAPI.git
+
+```
+git clone https://github.com/jannikklein47/BatterySyncAPI.git
 cd BatterySyncAPI
 brew install Docker postgresql
-docker compose --build`
+docker compose --build
+```
 
 ### To run (production):
 
