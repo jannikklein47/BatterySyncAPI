@@ -359,9 +359,7 @@ async function updateDeviceBatteryStatus(
         true,
       );
     for (const notification of permanentNotifications) {
-      await NotificationService.deleteAllScheduledNotificationsOfOrderedNotification(
-        notification.id,
-      );
+      await NotificationService.descheduleNotifications(notification.id);
     }
     if (tempNotifications.length > 0) {
       await NotificationService.deleteOrderedNotifications(
