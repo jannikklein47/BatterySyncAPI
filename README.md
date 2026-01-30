@@ -72,9 +72,11 @@ npm start
 ## Running tests
 
 BatterySync API features both unit and integration tests with Jest and Supertest. To run tests, simply run
-´´
+
+```
 npm test
-´´
+```
+
 For a preconfigured testing environment. If you wish, you can modifiy the testing configuration in the package.json file.
 
 ## Architecture
