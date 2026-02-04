@@ -31,7 +31,7 @@ router.patch("/", async (req, res, next) => {
                 : " aktiv."),
         false,
         userDevices[0].id,
-        req.user.id,
+        result.userId,
         "Issue Update",
       );
     }
