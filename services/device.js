@@ -230,6 +230,28 @@ async function getDevices(userId, includeChargereminders = false) {
 }
 
 /**
+ * Retrieves all devices that are either inactive or empty.
+ * @returns {Promise<Array<Device>>} - A promise that resolves with an array of devices.
+ */
+async function getAllDevicesAtZero() {
+  const devices = await Device.findAll({
+    where: {
+      [Op.or]: [
+        {
+          battery: 0.0,
+        },
+        {
+          lastActivity: {
+            [Op.lte]: new Date(Date.now() - 12 * 60 * 60 * 1000),
+          },
+        },
+      ],
+    },
+  });
+  return devices;
+}
+
+/**
  * Retrieves a device by its ID.
  * @param {number} deviceId The ID of the device to retrieve.
  * @throws {APIError} If the device is not found.
@@ -543,6 +565,7 @@ async function revokeAllDeviceRegistrations(userId) {
 
 module.exports = {
   getDevices,
+  getAllDevicesAtZero,
   getDevice,
   refreshLastActivity,
   hasPermanentChargereminder,
