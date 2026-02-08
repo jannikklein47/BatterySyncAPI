@@ -5,6 +5,7 @@ const http = require("http");
 const https = require("https");
 const app = require("./app");
 const cleanupJob = require("./jobs/notificationCleanup");
+const reminderJob = require("./jobs/offlineReminder");
 const port = process.env.PORT || 3000;
 const fs = require("fs");
 let server;
@@ -41,6 +42,7 @@ let onListening = () => {
   let addr = server.address();
   Logger.info(`Server is listening at ${addr.address} :${addr.port}`);
   cleanupJob();
+  reminderJob();
 };
 
 // Path of SSL ceritificates
