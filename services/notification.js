@@ -34,6 +34,9 @@ async function getScheduledNotificationsForDevice(deviceId, options = {}) {
             predictedZeroAt: {
               [Op.lte]: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
             },
+            battery: {
+              [Op.lte]: 0.3,
+            },
           },
         },
       ];
