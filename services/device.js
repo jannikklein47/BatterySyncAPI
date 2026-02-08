@@ -236,16 +236,7 @@ async function getDevices(userId, includeChargereminders = false) {
 async function getAllDevicesAtZero() {
   const devices = await Device.findAll({
     where: {
-      [Op.or]: [
-        {
-          battery: 0.0,
-        },
-        {
-          lastActivity: {
-            [Op.lte]: new Date(Date.now() - 12 * 60 * 60 * 1000),
-          },
-        },
-      ],
+      battery: 0.0,
     },
   });
   return devices;
