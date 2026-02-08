@@ -76,6 +76,11 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: Sequelize.literal("NOW()"),
         allowNull: false,
       },
+      getsRegularReminder: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
       requiresOtp: {
         type: DataTypes.VIRTUAL,
         get() {
@@ -89,7 +94,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Device",
-    }
+    },
   );
   return Device;
 };

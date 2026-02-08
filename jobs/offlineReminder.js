@@ -7,6 +7,7 @@ async function task() {
     const devices = await DeviceService.getAllDevicesAtZero();
     let sentNumber = 0;
     for (const device of devices) {
+      if (!device.getsRegularReminder) continue;
       await NotificationService.createNewNotification(
         "CONTENT",
         `Dein Gerät ist leer, hier ist deine Erinnerung es zu laden.`,

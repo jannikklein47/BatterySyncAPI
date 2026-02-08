@@ -60,4 +60,28 @@ router.patch("/isShown", async (req, res, next) => {
   }
 });
 
+router.patch("/regularReminder", async (req, res, next) => {
+  try {
+    const validationId = ValidationRules.id.validate(req.query.id);
+    const validationGetsRegularReminder =
+      ValidationRules.getsRegularReminder.validate(
+        req.query.getsRegularReminder,
+      );
+
+    if (validationId.error)
+      return next(APIError.errorValidation(validationId.error.message));
+    if (validationGetsRegularReminder.error)
+      return next(
+        APIError.errorValidation(validationGetsRegularReminder.error.message),
+      );
+
+    await DeviceService.updateDevice(req.query.id, {
+      getsRegularReminder: req.query.getsRegularReminder,
+    });
+    return res.send("Ok");
+  } catch (error) {
+    return next(error);
+  }
+});
+
 module.exports = router;

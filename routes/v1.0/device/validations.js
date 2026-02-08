@@ -8,6 +8,7 @@ module.exports = {
   otp: joi.string().length(6).required(),
   name: joi.string().min(2).required(),
   isShown: joi.boolean().required(),
+  getsRegularReminder: joi.boolean().required(),
   uuid: joi
     .string()
     .uuid({ version: ["uuidv4"] })
