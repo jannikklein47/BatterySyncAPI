@@ -6,9 +6,7 @@ const path = require("path");
 
 router.get("/android", async (req, res, next) => {
   try {
-    const file = await FileService.getFile(
-      path.join(__dirname, "..", "batterysync-android.apk"),
-    );
+    const file = await FileService.getFile("batterysync-android.apk");
     res.send(file.data);
   } catch (error) {
     return next(error);
@@ -17,9 +15,7 @@ router.get("/android", async (req, res, next) => {
 
 router.get("/macos", async (req, res, next) => {
   try {
-    const file = await FileService.getFile(
-      path.join(__dirname, "..", "batterysync-macos.dmg"),
-    );
+    const file = await FileService.getFile("batterysync-macos.dmg");
     res.send(file.data);
   } catch (error) {
     return next(error);
