@@ -25,7 +25,6 @@ async function task() {
 }
 
 module.exports = function () {
-  task();
   cron.schedule("0 */12 * * *", async () => {
     await task();
   });
