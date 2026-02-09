@@ -355,8 +355,16 @@ async function updateDeviceBatteryStatus(
   );
   debouncePrediction(deviceId);
 
+  // Sanitize the boolean values to string to keep it consistent
+  if (typeof chargingStatus === "boolean") {
+    chargingStatus = chargingStatus.toString();
+  }
+  if (typeof isPluggedIn === "boolean") {
+    isPluggedIn = isPluggedIn.toString();
+  }
+
   if (
-    (chargingStatus || isPluggedIn) &&
+    (chargingStatus === "true" || isPluggedIn === "true") &&
     device.predictedZeroAt < new Date(Date.now() + 2 * 60 * 60 * 1000)
   ) {
     const tempNotifications =
@@ -380,8 +388,8 @@ async function updateDeviceBatteryStatus(
       );
     }
   } else if (
-    chargingStatus &&
-    isPluggedIn &&
+    chargingStatus === "false" &&
+    isPluggedIn === "false" &&
     (device.chargingStatus || device.isPluggedIn) &&
     (await hasPermanentChargereminder(deviceId))
   ) {
