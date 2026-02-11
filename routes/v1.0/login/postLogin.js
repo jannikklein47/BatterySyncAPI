@@ -120,6 +120,8 @@ router.post("/web", async (req, res, next) => {
       const hash = user.password;
       delete user.password;
       return res.send({ token: hash, data: user });
+    } else {
+      return next(APIError.errorWrongCredentials());
     }
   } catch (error) {
     return next(error);
