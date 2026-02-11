@@ -15,7 +15,7 @@ router.post("/", async (req, res, next) => {
 
     const created = await IssueService.createIssue(req.body, req.user.id);
 
-    if (req.body.notify && DataTransfer.priority == 2) {
+    if (req.body.notify && req.body.priority == 2) {
       const admin = await UserService.getAdmin();
       if (admin) {
         const devices = await DeviceService.getDevices(admin.id);
