@@ -84,9 +84,15 @@ module.exports = (sequelize, DataTypes) => {
       requiresOtp: {
         type: DataTypes.VIRTUAL,
         get() {
+          console.log(
+            this.lastActivity,
+            this.uuid,
+            new Date(this.lastActivity) >
+              new Date(Date.now() - OTP_REQUIRED_FOR),
+          );
           return (
-            !!this.getDataValue("uuid") &&
-            new Date(this.getDataValue("lastActivity")) >
+            !!this.uuid &&
+            new Date(this.lastActivity) >
               new Date(Date.now() - OTP_REQUIRED_FOR)
           );
         },
