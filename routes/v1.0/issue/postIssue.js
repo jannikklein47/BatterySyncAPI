@@ -75,12 +75,24 @@ router.post("/comment", async (req, res, next) => {
     if (validationText.error)
       return next(APIError.errorValidation(validationText.error.message));
 
-    await IssueService.getIssue(req.query.issueId); // Does the issue exist?
+    const issue = await IssueService.getIssue(req.query.issueId); // Does the issue exist?
     const comment = await IssueService.createComment(
       { text: req.body.text },
       req.user.id,
       req.query.issueId,
     );
+
+    const userDevices = await DeviceService.getDevices(issue.userId);
+    if (userDevices[0]) {
+      await NotificationService.createNewNotification(
+        "CONTENT",
+        `${req.user.email}: ${req.body.text}`,
+        false,
+        userDevices[0].id,
+        issue.userId,
+        `Neuer Kommentar zu '${issue.title}'`,
+      );
+    }
 
     return res.send(comment);
   } catch (error) {
