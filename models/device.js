@@ -85,8 +85,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.VIRTUAL,
         get() {
           return (
-            !!this.uuid &&
-            new Date(this.lastActivity) > Date.now() - OTP_REQUIRED_FOR
+            !!this.getDataValue("uuid") &&
+            new Date(this.getDataValue("lastActivity")) >
+              Date.now() - OTP_REQUIRED_FOR
           );
         },
       },
