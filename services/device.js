@@ -166,9 +166,6 @@ async function getDevices(userId, includeChargereminders = false) {
     where: {
       userId,
     },
-    attributes: {
-      exclude: ["uuid"],
-    },
     order: [
       ["favorite", "DESC"],
       ["name", "ASC"],
@@ -218,7 +215,7 @@ async function getDevices(userId, includeChargereminders = false) {
         "CHARGEREMINDER",
         true,
       );
-
+    delete device.dataValues.uuid;
     processed.push({
       ...device.dataValues,
       healthStats,
