@@ -87,7 +87,7 @@ module.exports = (sequelize, DataTypes) => {
           return (
             !!this.getDataValue("uuid") &&
             new Date(this.getDataValue("lastActivity")) >
-              Date.now() - OTP_REQUIRED_FOR
+              new Date(Date.now() - OTP_REQUIRED_FOR)
           );
         },
       },
