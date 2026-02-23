@@ -43,7 +43,6 @@ router.get("/userStats", async (req, res, next) => {
     const stats = await MetricService.getUserStats(req.user.id);
     return res.send(stats);
   } catch (error) {
-    console.log(error);
     return next(error);
   }
 });
