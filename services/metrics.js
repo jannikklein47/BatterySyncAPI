@@ -308,6 +308,15 @@ async function getUserStats(userId) {
   const devices = await DeviceService.getDevices(userId);
   const deviceIds = devices.map((d) => d.id);
 
+  if (deviceIds.length === 0) {
+    return {
+      totalSyncs: 0,
+      totalCharges: 0,
+      longestWithoutCharge: { durationSeconds: 0, deviceName: "None" },
+      communityRank: await getUserPercentile(userId),
+    };
+  }
+
   const totalSyncs = await Logs.count({
     where: {
       userId: userId,

@@ -203,7 +203,11 @@ async function getDevices(userId, includeChargereminders = false) {
   }
 
   const devices = await Device.findAll(optionsObj);
-  if (!includeChargereminders) return devices;
+  if (!includeChargereminders)
+    return devices.map((device) => {
+      delete device.dataValues.uuid;
+      return device.dataValues;
+    });
 
   const processed = [];
 
