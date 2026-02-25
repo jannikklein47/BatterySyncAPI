@@ -156,4 +156,5 @@ module.exports = {
   validateLogin,
   updateUser,
   resetPassword,
+  getAdmin,
 };
