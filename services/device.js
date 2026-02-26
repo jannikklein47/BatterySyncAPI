@@ -205,8 +205,9 @@ async function getDevices(userId, includeChargereminders = false) {
   const devices = await Device.findAll(optionsObj);
   if (!includeChargereminders)
     return devices.map((device) => {
-      delete device.dataValues.uuid;
-      return device.dataValues;
+      const processedDevice = device.toJSON();
+      delete processedDevice.uuid;
+      return processedDevice;
     });
 
   const processed = [];
@@ -219,9 +220,10 @@ async function getDevices(userId, includeChargereminders = false) {
         "CHARGEREMINDER",
         true,
       );
-    delete device.dataValues.uuid;
+    const processedDevice = device.toJSON();
+    delete processedDevice.uuid;
     processed.push({
-      ...device.dataValues,
+      ...processedDevice,
       healthStats,
       permanentNotification: permanentNotification.length > 0,
     });
