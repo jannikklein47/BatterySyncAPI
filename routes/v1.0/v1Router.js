@@ -14,6 +14,7 @@ const postBattery = require("./battery/postBattery.js");
 const getDevice = require("./device/getDevice.js");
 const postDevice = require("./device/postDevice.js");
 const patchDevice = require("./device/patchDevice.js");
+const deleteDevice = require("./device/deleteDevice.js");
 
 const getIssue = require("./issue/getIssue.js");
 const postIssue = require("./issue/postIssue.js");
@@ -36,7 +37,14 @@ router.use("/login", postLogin, verifyToken(), getLogin, patchLogin);
 
 router.use("/battery", verifyToken(), getBattery, postBattery);
 
-router.use("/device", verifyToken(), getDevice, postDevice, patchDevice);
+router.use(
+  "/device",
+  verifyToken(),
+  getDevice,
+  postDevice,
+  patchDevice,
+  deleteDevice,
+);
 
 router.use("/notification", verifyToken(), getNotification, postNotification);
 

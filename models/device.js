@@ -81,6 +81,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: true,
       },
+      deleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       requiresOtp: {
         type: DataTypes.VIRTUAL,
         get() {
@@ -95,6 +100,18 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Device",
+      defaultScope: {
+        where: {
+          deleted: false,
+        },
+      },
+      scopes: {
+        deleted: {
+          where: {
+            deleted: true,
+          },
+        },
+      },
     },
   );
   return Device;

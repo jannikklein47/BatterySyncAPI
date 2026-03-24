@@ -540,7 +540,10 @@ async function checkDeviceInactive(deviceId) {
  * @throws {APIError} If the device does not exist.
  */
 async function deleteDeviceId(deviceId) {
-  const deleted = await Device.destroy({ where: { id: deviceId } });
+  const deleted = await Device.update(
+    { deleted: true },
+    { where: { id: deviceId } },
+  );
   if (deleted === 0) {
     throw APIError.errorNotFound();
   }
@@ -554,7 +557,10 @@ async function deleteDeviceId(deviceId) {
  * @throws {APIError} If the device does not exist.
  */
 async function deleteDeviceUUID(deviceUUID) {
-  const deleted = await Device.destroy({ where: { uuid: deviceUUID } });
+  const deleted = await Device.update(
+    { deleted: true },
+    { where: { uuid: deviceUUID } },
+  );
   if (deleted === 0) {
     throw APIError.errorNotFound();
   }
