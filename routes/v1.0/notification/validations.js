@@ -31,7 +31,10 @@ module.exports = {
         }
         return val;
       } catch (error) {
-        return helpers.error("language.json");
+        if (val.includes("build")) {
+          return val;
+        }
+        return helpers.error("any.invalid");
       }
     }, "JSON Array Validation"),
   ),
