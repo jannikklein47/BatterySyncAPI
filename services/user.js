@@ -1,6 +1,6 @@
 const models = require("../models");
 const downsampler = require("downsample-lttb");
-const { Op, fn, col, QueryTypes } = require("sequelize");
+const { Op, fn, col, QueryTypes, where } = require("sequelize");
 
 const APIError = require("../utils/error");
 
@@ -151,7 +151,7 @@ async function updateUser(email, data) {
  * Retrieves an array of user IDs with devices that have a build number matching the given build number and operator.
  * @param {number} buildNumer - The build number to search for.
  * @param {string} operator - The operator to use when searching for the build number. Can be one of: =, <, >, <=, >=.
- * @return {Promise<Array<number>>} A promise that resolves with an array of user IDs.
+ * @return {Promise<Array<User>>} A promise that resolves with an array of users.
  */
 async function getUsersByBuild(buildNumer, operator) {
   const devicesWithBuild = await Device.findAll({
@@ -162,7 +162,17 @@ async function getUsersByBuild(buildNumer, operator) {
     },
   });
 
-  return devicesWithBuild.map((device) => device.userId);
+  const ids = devicesWithBuild.map((device) => device.userId);
+
+  const users = await User.findAll({
+    where: {
+      id: {
+        [Op.in]: ids,
+      },
+    },
+  });
+
+  return users;
 }
 
 module.exports = {
