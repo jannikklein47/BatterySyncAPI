@@ -62,8 +62,22 @@ router.post("/uuid", async (req, res, next) => {
     const validationUUID = ValidationRules.uuid.validate(req.query.uuid);
     if (validationUUID.error)
       return next(APIError.errorValidation(validationUUID.error.message));
+    const validationBuildNumber = ValidationRules.buildNumber.validate(
+      req.query.build,
+    );
+    if (validationBuildNumber.error)
+      return next(
+        APIError.errorValidation(validationBuildNumber.error.message),
+      );
 
     const device = await DeviceService.getDeviceByUUID(req.query.uuid);
+    console.log("Build number in query: ", req.query.build);
+    if (req.query.build) {
+      console.log("Updating build number");
+      await DeviceService.updateDevice(device.id, {
+        build: req.query.build,
+      });
+    }
     return res.send({ name: device.name });
   } catch (error) {
     return next(error);

@@ -14,4 +14,5 @@ module.exports = {
     .uuid({ version: ["uuidv4"] })
     .required(),
   optionalUUID: joi.string().uuid({ version: ["uuidv4"] }),
+  buildNumber: joi.string().alphanum(),
 };
