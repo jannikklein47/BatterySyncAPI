@@ -71,9 +71,8 @@ router.post("/uuid", async (req, res, next) => {
       );
 
     const device = await DeviceService.getDeviceByUUID(req.query.uuid);
-    console.log("Build number in query: ", req.query.build);
+
     if (req.query.build) {
-      console.log("Updating build number");
       await DeviceService.updateDevice(device.id, {
         build: req.query.build,
       });
