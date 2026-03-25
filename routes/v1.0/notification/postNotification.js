@@ -5,6 +5,7 @@ const NotificationService = require("../../../services/notification");
 const DeviceService = require("../../../services/device");
 const ValidationRules = require("./validations");
 const UserService = require("../../../services/user");
+const { Op } = require("sequelize");
 
 /**
  * Create a new notification
@@ -69,6 +70,15 @@ router.post("/new/custom", async (req, res, next) => {
     let targetUsers = [];
     if (req.body.users === "all") {
       targetUsers = await UserService.getAllUsers();
+    } else if (req.body.users.includes("build>")) {
+      const bn = req.body.users.split("build>")[1];
+      targetUsers = await UserService.getUsersByBuild(bn, Op.gte);
+    } else if (req.body.users.includes("build<")) {
+      const bn = req.body.users.split("build<")[1];
+      targetUsers = await UserService.getUsersByBuild(bn, Op.lte);
+    } else if (req.body.users.includes("build=")) {
+      const bn = req.body.users.split("build=")[1];
+      targetUsers = await UserService.getUsersByBuild(bn, Op.gte);
     } else {
       targetUsers = await UserService.getUsersByIds(JSON.parse(req.body.users));
     }
