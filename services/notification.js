@@ -231,6 +231,7 @@ async function createNewNotification(
   deviceId,
   userId,
   title,
+  url = null,
 ) {
   if (type === "CHARGEREMINDER" && !deviceId) {
     throw new Error("No device id provided");
@@ -245,6 +246,7 @@ async function createNewNotification(
         content,
         permanent,
         title,
+        url,
       },
       { transaction: t },
     );
@@ -273,10 +275,16 @@ async function createNewNotification(
  * @param {number} deviceId The id of the device to create the notification for.
  * @param {string} content The content of the notification.
  * @param {string} title The title of the notification.
+ * @param {string} url The url of the notification.
  * @returns {Promise<any>} Resolves if the notification order is created successfully.
  * @throws {Error} If there is an error creating the notification order.
  */
-async function createTargetedNotification(deviceId, content, title) {
+async function createTargetedNotification(
+  deviceId,
+  content,
+  title,
+  url = null,
+) {
   await models.sequelize.transaction(async (t) => {
     const newOrderedNotification = await OrderedNotifications.create(
       {
@@ -284,6 +292,7 @@ async function createTargetedNotification(deviceId, content, title) {
         type: "CONTENT",
         content,
         title,
+        url,
       },
       { transaction: t },
     );

@@ -16,11 +16,14 @@ router.get("/due", async (req, res, next) => {
         ),
       );
 
-    let deviceId;
+    let deviceId, canShowLinks;
     if (validateId.error) {
       const device = await DeviceService.getDeviceByUUID(req.query.uuid);
       deviceId = device.id;
+      canShowLinks = device.build >= "2026032502";
     } else {
+      const device = await DeviceService.getDevice(req.query.id);
+      canShowLinks = device.build >= "2026032502";
       deviceId = req.query.id;
     }
     const notifications =
@@ -44,12 +47,15 @@ router.get("/due", async (req, res, next) => {
 
     const data = [
       ...notifications.map((noti) => {
+        const link =
+          "https://batterysync.de/devices?id=" + noti.notification?.device?.id;
         return {
           targetName: noti.notification?.device?.name || "",
           predictedZeroAt: noti.notification?.device?.predictedZeroAt || "",
           content: noti.notification?.content || "",
           type: noti.notification?.type || "",
           title: noti.notification?.title || "",
+          url: canShowLinks === true ? link : undefined,
         };
       }),
       ...otherNotifications.map((noti) => {
@@ -59,12 +65,14 @@ router.get("/due", async (req, res, next) => {
           content: noti.notification?.content || "",
           type: noti.notification?.type || "",
           title: noti.notification?.title || "",
+          url: canShowLinks === true ? noti.notification?.url || "" : undefined,
         };
       }),
     ];
 
     return res.send(data);
   } catch (error) {
+    console.error(error);
     return next(error);
   }
 });

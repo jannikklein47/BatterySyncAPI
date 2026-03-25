@@ -581,6 +581,7 @@ describe("NotificationService - createTargetedNotification", () => {
         type: "CONTENT",
         content: "Hello World",
         title: "Title",
+        url: null,
       },
       { transaction: "test-t" },
     );

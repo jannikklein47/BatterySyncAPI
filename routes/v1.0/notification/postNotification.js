@@ -34,6 +34,7 @@ router.post("/new", async (req, res, next) => {
       req.body.permanent,
       req.body.deviceId,
       req.user.id,
+      "https://batterysync.de/devices?id=" + req.body.deviceId,
     );
 
     return res.send("Ok");
@@ -55,12 +56,15 @@ router.post("/new/custom", async (req, res, next) => {
     );
     const validationTitle = ValidationRules.title.validate(req.body.title);
     const validationUsers = ValidationRules.users.validate(req.body.users);
+    const validationUrl = ValidationRules.url.validate(req.body.url);
     if (validationTitle.error)
       return next(APIError.errorValidation(validationTitle.error.message));
     if (validationContent.error)
       return next(APIError.errorValidation(validationContent.error.message));
     if (validationUsers.error)
       return next(APIError.errorValidation(validationUsers.error.message));
+    if (validationUrl.error)
+      return next(APIError.errorValidation(validationUrl.error.message));
 
     let targetUsers = [];
     if (req.body.users === "all") {
@@ -79,6 +83,7 @@ router.post("/new/custom", async (req, res, next) => {
         devices[0].id,
         user.id,
         req.body.title,
+        req.body.url,
       );
     }
     return res.send("Ok");

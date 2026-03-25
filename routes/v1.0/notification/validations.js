@@ -18,6 +18,7 @@ module.exports = {
   type: joi.string().valid("CHARGEREMINDER", "CONTENT"),
   title: joi.string(),
   content: joi.string(),
+  url: joi.string().uri(),
   users: joi.alternatives().try(
     joi.string().valid("all"),
 

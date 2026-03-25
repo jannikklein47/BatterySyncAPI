@@ -58,17 +58,13 @@ describe("Device DELETE Routes Integration", () => {
     it("should set the deleted flag to true of a device by id", async () => {
       const res = await request(app).delete("/device").query({ id: 10 });
 
-      console.log(res);
       expect(res.status).toBe(200);
       const deleted = await models.Device.findByPk(10);
       expect(deleted).toBeNull();
 
-      console.log("ok");
-
       const softDeleted = await models.Device.scope("deleted").findOne({
         where: { id: 10 },
       });
-      console.log(softDeleted);
       expect(softDeleted).not.toBeNull();
     });
   });

@@ -41,6 +41,7 @@ describe("Notification GET /due Integration", () => {
       uuid: testUuid,
       predictedZeroAt: new Date(Date.now() + 3600000), // 1 hour from now
       battery: 0.2,
+      build: "2026032502",
     });
 
     // 2. Create Charge Reminder Notification Template
@@ -88,8 +89,8 @@ describe("Notification GET /due Integration", () => {
       const res = await request(app)
         .get("/notification/due")
         .query({ id: deviceId });
-
-      console.log(res.body);
+      console.log("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+      console.log("received", res.body);
 
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
