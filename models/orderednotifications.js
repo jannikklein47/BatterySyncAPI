@@ -26,11 +26,12 @@ module.exports = (sequelize, DataTypes) => {
       content: DataTypes.TEXT,
       title: DataTypes.TEXT,
       permanent: DataTypes.BOOLEAN,
+      url: DataTypes.STRING,
     },
     {
       sequelize,
       modelName: "OrderedNotifications",
-    }
+    },
   );
   return OrderedNotifications;
 };
