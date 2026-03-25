@@ -86,6 +86,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: false,
       },
+      build: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "2026032501",
+      },
       requiresOtp: {
         type: DataTypes.VIRTUAL,
         get() {
