@@ -78,7 +78,7 @@ router.post("/new/custom", async (req, res, next) => {
       targetUsers = await UserService.getUsersByBuild(bn, Op.lte);
     } else if (req.body.users.includes("build=")) {
       const bn = req.body.users.split("build=")[1];
-      targetUsers = await UserService.getUsersByBuild(bn, Op.gte);
+      targetUsers = await UserService.getUsersByBuild(bn, Op.eq);
     } else {
       targetUsers = await UserService.getUsersByIds(JSON.parse(req.body.users));
     }
