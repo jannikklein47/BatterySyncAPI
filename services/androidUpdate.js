@@ -18,7 +18,7 @@ const GeneralUtils = require("../utils/general");
 
 async function getLatestBuildInfo() {
   const latestBuildInfo = await models.AndroidUpdate.findOne({
-    order: [["createdAt", "DESC"]],
+    order: [[" build", "DESC"]],
   });
 
   return latestBuildInfo;
