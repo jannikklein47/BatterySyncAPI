@@ -24,7 +24,7 @@ router.post("/updates/android", upload.single("file"), async (req, res) => {
 
   try {
     const newUpdate = await AndroidUpdate.create({
-      build,
+      build: version,
       name: req.file.filename, // Multer's generated name
       notes: notes,
     });
