@@ -1,8 +1,9 @@
 const MetricService = require("../../../services/metrics");
 const AndroidUpdateService = require("../../../services/androidUpdate");
 const express = require("express");
-const AndroidUpdate = require("../../../models/AndroidUpdate");
+const models = require("../../../models");
 const router = express.Router();
+const path = require("path");
 
 router.get("/syncs", async (req, res, next) => {
   try {
@@ -24,17 +25,17 @@ router.get("/updates/android/latest", async (req, res, next) => {
 });
 
 router.get("/updates/download/:version", async (req, res) => {
-  const update = await AndroidUpdate.findOne({
-    where: { version: req.params.version },
+  const update = await models.AndroidUpdate.findOne({
+    where: { build: req.params.version },
   });
 
   if (!update) return res.status(404).send("Version not found.");
 
-  const filePath = path.resolve(__dirname, "updates", update.filename);
+  const filePath = path.resolve("./updates", update.name);
 
   // Essential for Android to recognize the APK
   res.setHeader("Content-Type", "application/vnd.android.package-archive");
-  res.download(filePath, `batterysync-${update.version}.apk`);
+  res.download(filePath, `batterysync-${update.build}.apk`);
 });
 
 module.exports = router;

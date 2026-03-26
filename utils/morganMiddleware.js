@@ -18,6 +18,7 @@ var morganMiddleware = morgan(
       tokens.status(req, res),
       tokens.url(req, res)?.padEnd(70, " ").substring(0, 70),
       (tokens.res(req, res, "content-length") || "0")
+        .toString()
         .padEnd(11, " ")
         .substring(0, 11),
       tokens["response-time"](req, res)?.padEnd(8, " ").substring(0, 8),
