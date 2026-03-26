@@ -44,13 +44,6 @@ router.get("/updates/download/:version", async (req, res) => {
 
   const UPLOAD_DIR = "/usr/src/app/updates";
 
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    console.error(
-      `CRITICAL: Volume not found at ${UPLOAD_DIR}. Falling back to local folder.`,
-    );
-    next(APIError.errorUnknown());
-  }
-
   const filePath = path.resolve(UPLOAD_DIR, update.name);
 
   // Essential for Android to recognize the APK
