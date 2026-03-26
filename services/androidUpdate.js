@@ -24,6 +24,15 @@ async function getLatestBuildInfo() {
   return latestBuildInfo;
 }
 
+async function getAllBuilds() {
+  const allBuilds = await models.AndroidUpdate.findAll({
+    order: [["build", "DESC"]],
+  });
+
+  return allBuilds;
+}
+
 module.exports = {
   getLatestBuildInfo,
+  getAllBuilds,
 };
