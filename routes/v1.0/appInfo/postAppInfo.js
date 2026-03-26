@@ -7,9 +7,20 @@ const multer = require("multer");
 const models = require("../../../models");
 const APIError = require("../../../utils/error");
 
+const path = require("path");
+const fs = require("fs");
+
+const UPLOAD_DIR = "/usr/src/app/updates";
+
+if (!fs.existsSync(UPLOAD_DIR)) {
+  console.error(
+    `CRITICAL: Volume not found at ${UPLOAD_DIR}. Falling back to local folder.`,
+  );
+}
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "updates/");
+    cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
     const version = req.body.version;
@@ -23,7 +34,7 @@ router.post(
   upload.single("file"),
   async (req, res, next) => {
     const { version, notes } = req.body;
-    console.log(req.body);
+
     try {
       const newUpdate = await models.AndroidUpdate.create({
         build: version,

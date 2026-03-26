@@ -4,6 +4,7 @@ const express = require("express");
 const models = require("../../../models");
 const router = express.Router();
 const path = require("path");
+const fs = require("fs");
 
 router.get("/syncs", async (req, res, next) => {
   try {
@@ -31,7 +32,16 @@ router.get("/updates/download/:version", async (req, res) => {
 
   if (!update) return res.status(404).send("Version not found.");
 
-  const filePath = path.resolve("./updates", update.name);
+  const UPLOAD_DIR = "/usr/src/app/updates";
+
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    console.error(
+      `CRITICAL: Volume not found at ${UPLOAD_DIR}. Falling back to local folder.`,
+    );
+    next(APIError.errorUnknown());
+  }
+
+  const filePath = path.resolve(UPLOAD_DIR, update.name);
 
   // Essential for Android to recognize the APK
   res.setHeader("Content-Type", "application/vnd.android.package-archive");
