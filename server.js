@@ -41,6 +41,17 @@ let onError = (error) => {
 let onListening = () => {
   let addr = server.address();
   Logger.info(`Server is listening at ${addr.address} :${addr.port}`);
+  const path = require("path");
+  const fs = require("fs");
+
+  // Ensure the directory exists on startup
+  const uploadDir = path.join(__dirname, "updates");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    Logger.info("Updates directory created.");
+  } else {
+    Logger.info("Updates directory exists.");
+  }
   cleanupJob();
   reminderJob();
 };
