@@ -5,6 +5,7 @@ const router = express.Router();
 
 const multer = require("multer");
 const AndroidUpdate = require("../../../models/AndroidUpdate");
+const APIError = require("../../../utils/error");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -23,13 +24,14 @@ router.post("/updates/android", upload.single("file"), async (req, res) => {
 
   try {
     const newUpdate = await AndroidUpdate.create({
-      version,
-      filename: req.file.filename, // Multer's generated name
-      releaseNotes: notes,
+      build,
+      name: req.file.filename, // Multer's generated name
+      notes: notes,
     });
     res.status(201).json(newUpdate);
   } catch (err) {
-    res.status(400).json({ error: "Version already exists or upload failed." });
+    console.error(err);
+    next(APIError.errorUnknown());
   }
 });
 
