@@ -25,6 +25,16 @@ router.get("/updates/android/latest", async (req, res, next) => {
   }
 });
 
+router.get("/updates/android/all", async (req, res, next) => {
+  try {
+    const allBuilds = await AndroidUpdateService.getAllBuilds();
+
+    return res.send(allBuilds);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.get("/updates/download/:version", async (req, res) => {
   const update = await models.AndroidUpdate.findOne({
     where: { build: req.params.version },
