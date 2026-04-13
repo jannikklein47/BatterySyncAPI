@@ -28,6 +28,7 @@ const postNotification = require("./notification/postNotification.js");
 const getAppInfo = require("./appInfo/getAppInfo.js");
 const postAppInfo = require("./appInfo/postAppInfo.js");
 const deleteAppInfo = require("./appInfo/deleteAppInfo.js");
+const patchAppInfo = require("./appInfo/patchAppInfo.js");
 
 const getFile = require("./file/getFile.js");
 
@@ -50,7 +51,14 @@ router.use(
 
 router.use("/notification", verifyToken(), getNotification, postNotification);
 
-router.use("/appInfo", getAppInfo, verifyToken(), postAppInfo, deleteAppInfo);
+router.use(
+  "/appInfo",
+  getAppInfo,
+  verifyToken(),
+  postAppInfo,
+  deleteAppInfo,
+  patchAppInfo,
+);
 
 router.use("/file", getFile);
 
