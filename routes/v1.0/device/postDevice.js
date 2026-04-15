@@ -77,7 +77,7 @@ router.post("/uuid", async (req, res, next) => {
         build: req.query.build,
       });
     }
-    return res.send({ name: device.name });
+    return res.send({ name: device.name, id: device.id });
   } catch (error) {
     return next(error);
   }
