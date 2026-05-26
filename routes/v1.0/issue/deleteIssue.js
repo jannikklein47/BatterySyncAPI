@@ -22,7 +22,7 @@ router.delete("/", async (req, res, next) => {
         'Dein Issue "' + result.title.substring(0, 30) + '" wurde archiviert.',
         false,
         userDevices[0].id,
-        req.user.id,
+        result.userId,
         "Issue Update",
       );
     }
