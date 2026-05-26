@@ -14,7 +14,7 @@ router.delete("/", async (req, res, next) => {
 
     await IssueService.archiveIssue(req.query.id);
     const result = await IssueService.getIssue(req.query.id);
-    const userDevices = await DeviceService.getDevices(req.user.id);
+    const userDevices = await DeviceService.getDevices(result.userId);
     if (userDevices[0]) {
       // Only send a notification if the user owns any devices
       await NotificationService.createNewNotification(
