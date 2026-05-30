@@ -6,6 +6,7 @@ const https = require("https");
 const app = require("./app");
 const cleanupJob = require("./jobs/notificationCleanup");
 const reminderJob = require("./jobs/offlineReminder");
+const healthStatsJob = require("./jobs/batteryHealthStats");
 const port = process.env.PORT || 3000;
 const fs = require("fs");
 let server;
@@ -54,6 +55,7 @@ let onListening = () => {
   }
   cleanupJob();
   reminderJob();
+  healthStatsJob();
 };
 
 // Path of SSL ceritificates
