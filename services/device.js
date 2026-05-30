@@ -144,12 +144,6 @@ async function getDeviceHealthStats(deviceId) {
   else if (healthScore >= 50) verdict = "Mittelmäßig";
   else verdict = "Schlecht";
 
-  console.table({
-    batteryHealthScoreCached: healthScore,
-    percentHealthyChargesCached: Math.round(safePercent),
-    cyclesCached: Math.round(totalCharged / 100),
-  });
-
   // Update the device cache
   await updateDevice(deviceId, {
     batteryHealthScoreCached: healthScore,
