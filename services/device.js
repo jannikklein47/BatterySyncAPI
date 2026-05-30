@@ -144,6 +144,13 @@ async function getDeviceHealthStats(deviceId) {
   else if (healthScore >= 50) verdict = "Mittelmäßig";
   else verdict = "Schlecht";
 
+  // Update the device cache
+  await updateDevice(deviceId, {
+    batteryHealthScoreCached: healthScore,
+    percentHealthyChargesCached: Math.round(safePercent),
+    cyclesCached: Math.round(totalCharged) / 100,
+  });
+
   return {
     healthScore,
     totalCharged: Math.round(totalCharged), // e.g., 15430 (%)
@@ -272,6 +279,22 @@ async function getDeviceByUUID(uuid) {
   if (!device) throw APIError.errorNotFound();
 
   return device;
+}
+
+/**
+ * Retrieves all devices that record an activity after the given date.
+ * @param {Date} from
+ * @returns
+ */
+async function getAllActiveDevices(from) {
+  const devices = await Device.findAll({
+    where: {
+      lastActivity: {
+        [Op.gt]: from,
+      },
+    },
+  });
+  return devices;
 }
 
 /**
@@ -590,4 +613,5 @@ module.exports = {
   deleteDeviceUUID,
   checkDeviceInactive,
   revokeAllDeviceRegistrations,
+  getAllActiveDevices,
 };
