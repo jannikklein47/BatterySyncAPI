@@ -4,7 +4,7 @@ const DeviceService = require("../services/device");
 async function task() {
   try {
     const devices = await DeviceService.getAllActiveDevices(
-      new Date(Date.now() - 100 * 24 * 60 * 60 * 1000),
+      new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     );
 
     for (device of devices) {
