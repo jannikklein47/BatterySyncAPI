@@ -91,6 +91,25 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "2026032501",
       },
+
+      batteryHealthScoreCached: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 100,
+      },
+
+      percentHealthyChargesCached: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 100,
+      },
+
+      cyclesCached: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+
       requiresOtp: {
         type: DataTypes.VIRTUAL,
         get() {

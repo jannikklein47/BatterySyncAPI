@@ -147,14 +147,14 @@ async function getDeviceHealthStats(deviceId) {
   console.table({
     batteryHealthScoreCached: healthScore,
     percentHealthyChargesCached: Math.round(safePercent),
-    cyclesCached: Math.round(totalCharged) / 100,
+    cyclesCached: Math.round(totalCharged / 100),
   });
 
   // Update the device cache
   await updateDevice(deviceId, {
     batteryHealthScoreCached: healthScore,
     percentHealthyChargesCached: Math.round(safePercent),
-    cyclesCached: Math.round(totalCharged) / 100,
+    cyclesCached: Math.round(totalCharged / 100),
   });
 
   return {
