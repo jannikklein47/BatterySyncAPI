@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const DeviceService = require("../../../services/device");
+const BatteryLogsService = require("../../../services/batteryLogs");
 const ValidationRules = require("./validations");
 const APIError = require("../../../utils/error");
 
