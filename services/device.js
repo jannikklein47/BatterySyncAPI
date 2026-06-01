@@ -265,6 +265,20 @@ async function getDevice(deviceId) {
 }
 
 /**
+ * Retrieves a device by its ID, if the user id matches
+ * @param {number} deviceId The ID of the device to retrieve.
+ * @param {number} userId The ID of the owning user.
+ * @throws {APIError} If the device is not found.
+ * @returns {Promise<Device>} A promise that resolves with the device.
+ */
+async function getDeviceWithUserId(deviceId, userId) {
+  const device = await Device.findByPk(deviceId);
+  if (!device) throw APIError.errorNotFound();
+  if (device.userId !== userId) throw APIError.errorNotFound();
+  return device;
+}
+
+/**
  * Retrieves a device by its UUID.
  * @param {string} uuid The UUID of the device to retrieve.
  * @throws {APIError} If the device is not found.
@@ -614,4 +628,5 @@ module.exports = {
   checkDeviceInactive,
   revokeAllDeviceRegistrations,
   getAllActiveDevices,
+  getDeviceWithUserId,
 };
