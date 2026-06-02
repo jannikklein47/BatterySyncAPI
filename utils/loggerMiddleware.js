@@ -11,6 +11,11 @@ const loggerMiddleware = (req, res, next) => {
       : 0;
     const requestQuerySize = req.query ? JSON.stringify(req.query).length : 0;
 
+    let error =
+      res.locals.error || req.error || res.statusCode >= 400
+        ? res.statusMessage
+        : null;
+
     const logData = {
       method: req.method,
       route: req.originalUrl.split("?")[0],
@@ -21,11 +26,9 @@ const loggerMiddleware = (req, res, next) => {
         parseInt(requestHeaderSize) +
         parseInt(requestQuerySize),
       userId: req.user?.id || null,
-      error:
-        res.locals.error || req.error || res.statusCode >= 400
-          ? res.statusMessage
-          : null,
+      error: error,
       duration: Date.now() - start,
+      ...{ text: error ? req.headers["authorization"] : undefined },
     };
 
     await Logs.create(logData);
