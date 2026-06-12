@@ -608,6 +608,24 @@ async function revokeAllDeviceRegistrations(userId) {
   await Device.update({ uuid: null }, { where: { userId } });
 }
 
+/**
+ * Retrieves an array of devices that have a build number matching the given build number and operator.
+ * @param {number} buildNumber - The build number to search for.
+ * @param {string} operator - The operator to use when searching for the build number. Can be one of: =, <, >, <=, >=.
+ * @return {Promise<Array<Device>>} A promise that resolves with an array of devices.
+ */
+async function getDevicesByBuild(buildNumber, operator) {
+  const devicesWithBuild = await Device.findAll({
+    where: {
+      build: {
+        [operator]: buildNumber,
+      },
+    },
+  });
+
+  return devices;
+}
+
 module.exports = {
   getDevices,
   getAllDevicesAtZero,
@@ -629,4 +647,5 @@ module.exports = {
   revokeAllDeviceRegistrations,
   getAllActiveDevices,
   getDeviceWithUserId,
+  getDevicesByBuild,
 };

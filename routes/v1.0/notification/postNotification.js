@@ -67,34 +67,50 @@ router.post("/new/custom", async (req, res, next) => {
     if (validationUrl.error)
       return next(APIError.errorValidation(validationUrl.error.message));
 
-    let targetUsers = [];
+    let targetUsers = null;
+    let targetDevices = [];
     if (req.body.users === "all") {
       targetUsers = await UserService.getAllUsers();
     } else if (req.body.users.includes("build>")) {
       const bn = req.body.users.split("build>")[1];
-      targetUsers = await UserService.getUsersByBuild(bn, Op.gte);
+      targetDevices = await DeviceService.getDevicesByBuild(bn, Op.gt);
     } else if (req.body.users.includes("build<")) {
       const bn = req.body.users.split("build<")[1];
-      targetUsers = await UserService.getUsersByBuild(bn, Op.lte);
+      targetDevices = await DeviceService.getDevicesByBuild(bn, Op.lt);
     } else if (req.body.users.includes("build=")) {
       const bn = req.body.users.split("build=")[1];
-      targetUsers = await UserService.getUsersByBuild(bn, Op.eq);
+      targetDevices = await DeviceService.getDevicesByBuild(bn, Op.eq);
     } else {
       targetUsers = await UserService.getUsersByIds(JSON.parse(req.body.users));
     }
 
-    for (const user of targetUsers) {
-      const devices = await DeviceService.getDevices(user.id);
-      if (!devices[0]) continue;
-      await NotificationService.createNewNotification(
-        type,
-        req.body.content,
-        req.body.permanent,
-        devices[0].id,
-        user.id,
-        req.body.title,
-        req.body.url,
-      );
+    if (targetUsers == null) {
+      for (const device of targetDevices) {
+        await NotificationService.createNewNotification(
+          type,
+          req.body.content,
+          req.body.permanent,
+          device.id,
+          null,
+          req.body.title,
+          req.body.url,
+        );
+      }
+      return res.send("Ok");
+    } else {
+      for (const user of targetUsers) {
+        const devices = await DeviceService.getDevices(user.id);
+        if (!devices[0]) continue;
+        await NotificationService.createNewNotification(
+          type,
+          req.body.content,
+          req.body.permanent,
+          devices[0].id,
+          user.id,
+          req.body.title,
+          req.body.url,
+        );
+      }
     }
     return res.send("Ok");
   } catch (error) {
