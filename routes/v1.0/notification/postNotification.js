@@ -91,7 +91,7 @@ router.post("/new/custom", async (req, res, next) => {
           req.body.content,
           req.body.permanent,
           device.id,
-          null,
+          device.userId,
           req.body.title,
           req.body.url,
         );
