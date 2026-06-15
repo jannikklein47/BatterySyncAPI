@@ -2,7 +2,7 @@ name: Docker CI/CD Pipeline
 
 on:
   push:
-    branches: ["add-cicd"]
+    branches: ["main"]
 
 jobs:
   test:
