@@ -140,3 +140,52 @@ describe("DeviceService", () => {
     });
   });
 });
+
+const { getDevicesByBuild } = require("../services/device");
+
+describe("getDevicesByBuild", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should call Device.findAll with the correct query parameters and return devices", async () => {
+    // Arrange
+    const mockBuildNumber = 1024;
+    const mockOperator = "gte"; // In Sequelize, this could be Op.gte, which works perfectly as a dynamic key
+    const mockDevices = [
+      { id: 1, name: "Device A", build: 1024 },
+      { id: 2, name: "Device B", build: 1025 },
+    ];
+
+    // Mock the resolved value of Device.findAll
+    Device.findAll.mockResolvedValue(mockDevices);
+
+    // Act
+    const result = await getDevicesByBuild(mockBuildNumber, mockOperator);
+
+    // Assert
+    expect(Device.findAll).toHaveBeenCalledTimes(1);
+    expect(Device.findAll).toHaveBeenCalledWith({
+      where: {
+        build: {
+          [mockOperator]: mockBuildNumber,
+        },
+      },
+    });
+    expect(result).toEqual(mockDevices);
+  });
+
+  it("should throw an error if Device.findAll fails", async () => {
+    // Arrange
+    const mockBuildNumber = 500;
+    const mockOperator = "eq";
+    const databaseError = new Error("Database connection failed");
+
+    Device.findAll.mockRejectedValue(databaseError);
+
+    // Act & Assert
+    await expect(
+      getDevicesByBuild(mockBuildNumber, mockOperator),
+    ).rejects.toThrow("Database connection failed");
+  });
+});

@@ -93,51 +93,127 @@ describe("Notification POST Routes Integration", () => {
   });
 
   describe("POST /notification/new/custom", () => {
-    it("should create notifications for specific users via ID array", async () => {
+    // Update beforeEach inside your file to include build numbers
+    beforeEach(async () => {
+      // Clear out any leftovers first
+      await models.Device.destroy({ where: {}, truncate: { cascade: true } });
+      await models.OrderedNotifications.destroy({
+        where: {},
+        truncate: { cascade: true },
+      });
+
+      // Seed devices with specific build numbers for targeting tests
+      await models.Device.create({
+        id: deviceId,
+        name: "Test Device Admin",
+        userId: 1,
+        build: 100, // Setup for operator testing
+      });
+      await models.Device.create({
+        id: 61,
+        name: "User 2 Device",
+        userId: 2,
+        build: 200, // Setup for operator testing
+      });
+    });
+
+    const validPayload = {
+      title: "Admin Message",
+      content: "Hello Team",
+      users: "all",
+      url: "https://example.com",
+      permanent: false,
+    };
+
+    it("should return 403 if the user is not an admin", async () => {
+      isAdmin = false; // Toggle global mock flag
+      const res = await request(app)
+        .post("/notification/new/custom")
+        .send({ ...validPayload, users: JSON.stringify([2]) });
+
+      expect(res.status).toBe(403);
+      isAdmin = true; // Reset flag for other tests
+    });
+
+    it('should create notifications for "all" users', async () => {
+      const res = await request(app)
+        .post("/notification/new/custom")
+        .send({ ...validPayload, users: "all" });
+
+      expect(res.status).toBe(200);
+      expect(res.text).toBe("Ok");
+
+      const count = await models.OrderedNotifications.count();
+      // Both user 1 and user 2 have devices, so 2 notifications should be created
+      expect(count).toBe(2);
+    });
+
+    it("should create notifications for specific users via standard JSON ID array", async () => {
       const res = await request(app)
         .post("/notification/new/custom")
         .send({
-          title: "Admin Message",
-          content: "Hello User 2",
-          users: JSON.stringify([2]), // Route expects a JSON string
-          permanent: false,
+          ...validPayload,
+          content: "Targeted to User 2",
+          users: JSON.stringify([2]),
         });
 
       expect(res.status).toBe(200);
 
       const notif = await models.OrderedNotifications.findOne({
-        where: { title: "Admin Message", content: "Hello User 2" },
+        where: {
+          content: "Targeted to User 2",
+        },
       });
-      expect(notif.content).toBe("Hello User 2");
+      expect(notif).not.toBeNull();
+      expect(notif.content).toBe("Targeted to User 2");
     });
 
-    it('should create notifications for "all" users', async () => {
-      const res = await request(app).post("/notification/new/custom").send({
-        title: "Global Alert",
-        content: "Maintenance tonight",
-        users: "all",
-        permanent: false,
-      });
-
-      expect(res.status).toBe(200);
-
-      const count = await models.OrderedNotifications.count();
-      expect(count).toBeGreaterThanOrEqual(2);
-    });
-
-    it("should return 403 if the user is not an admin", async () => {
-      isAdmin = false;
+    it("should target devices with build greater than a value (build>)", async () => {
       const res = await request(app)
         .post("/notification/new/custom")
         .send({
-          title: "Admin Message",
-          content: "Hello User 2",
-          users: JSON.stringify([2]), // Route expects a JSON string
-          permanent: false,
+          ...validPayload,
+          title: "Upgrade Notice",
+          users: "build>150", // Should match device 61 (build 200) but skip device 60 (build 100)
         });
 
-      expect(res.status).toBe(403);
-      isAdmin = true;
+      expect(res.status).toBe(200);
+
+      const notifications = await models.OrderedNotifications.findAll();
+      expect(notifications.length).toBe(1);
+      expect(notifications[0].deviceId).toBe(61);
+    });
+
+    it("should target devices with build less than a value (build<)", async () => {
+      const res = await request(app)
+        .post("/notification/new/custom")
+        .send({
+          ...validPayload,
+          title: "Legacy Patch",
+          users: "build<150", // Should match device 60 (build 100)
+        });
+
+      expect(res.status).toBe(200);
+
+      const notifications = await models.OrderedNotifications.findAll();
+      expect(notifications.length).toBe(1);
+      expect(notifications[0].deviceId).toBe(deviceId); // deviceId is 60
+    });
+
+    it("should target devices with build exactly equal to a value (build=)", async () => {
+      const res = await request(app)
+        .post("/notification/new/custom")
+        .send({
+          ...validPayload,
+          title: "Exact Build Match",
+          users: "build=200", // Should match device 61
+        });
+
+      expect(res.status).toBe(200);
+
+      const notifications = await models.OrderedNotifications.findAll();
+      expect(notifications.length).toBe(1);
+      expect(notifications[0].deviceId).toBe(61);
     });
   });
 
