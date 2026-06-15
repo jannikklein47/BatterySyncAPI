@@ -615,7 +615,7 @@ async function revokeAllDeviceRegistrations(userId) {
  * @return {Promise<Array<Device>>} A promise that resolves with an array of devices.
  */
 async function getDevicesByBuild(buildNumber, operator) {
-  const devicesWithBuild = await Device.findAll({
+  const devices = await Device.findAll({
     where: {
       build: {
         [operator]: buildNumber,
