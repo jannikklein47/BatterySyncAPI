@@ -2,9 +2,6 @@
 FROM node:22-alpine
 
 RUN apk add --no-cache postgresql-client
-RUN apk add --update python3 make g++\
-   && rm -rf /var/cache/apk/*
-
 # Arbeitsverzeichnis im Container
 WORKDIR /app
 
@@ -15,9 +12,6 @@ COPY package*.json ./
 RUN npm install
 
 RUN npm install sequelize-cli
-
-# bcrypt fix?
-RUN npm rebuild bcrypt --build-from-source
 
 # Den Rest des Anwendungs-Codes kopieren
 COPY . .
