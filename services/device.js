@@ -205,6 +205,9 @@ async function getDevices(userId, includeChargereminders = false) {
       "favorite",
       "lastActivity",
       "requiresOtp",
+      "batteryHealthScoreCached",
+      "percentHealthyChargesCached",
+      "cyclesCached",
       [fn("ARRAY_AGG", col("orderedNotifications.id")), "notificationIds"],
     ];
   }
@@ -220,7 +223,6 @@ async function getDevices(userId, includeChargereminders = false) {
   const processed = [];
 
   for (const device of devices) {
-    const healthStats = await getDeviceHealthStats(device.id);
     const permanentNotification =
       await NotificationService.getOrderedNotifcationsForDevice(
         device.id,
@@ -228,10 +230,10 @@ async function getDevices(userId, includeChargereminders = false) {
         true,
       );
     const processedDevice = device.toJSON();
+
     delete processedDevice.uuid;
     processed.push({
       ...processedDevice,
-      healthStats,
       permanentNotification: permanentNotification.length > 0,
     });
   }

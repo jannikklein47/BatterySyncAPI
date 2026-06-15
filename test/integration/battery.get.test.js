@@ -110,10 +110,10 @@ describe("Battery GET Routes Integration", () => {
       expect(res.status).toBe(200);
 
       expect(res.body[0]).toHaveProperty("notificationIds");
-      expect(res.body[0]).toHaveProperty("healthStats");
+      expect(res.body[0]).toHaveProperty("batteryHealthScoreCached");
+      expect(res.body[0]).toHaveProperty("cyclesCached");
+      expect(res.body[0]).toHaveProperty("percentHealthyChargesCached");
       expect(res.body[0]).toHaveProperty("permanentNotification");
-      expect(res.body[0].healthStats).toHaveProperty("healthScore");
-      expect(res.body[0].healthStats).toHaveProperty("totalCharged");
     });
   });
 });
