@@ -31,8 +31,9 @@ router.post("/secure", async (req, res, next) => {
       );
 
     const device = await DeviceService.getDeviceByUUID(req.query.uuid);
+
     await DeviceService.updateDeviceBatteryStatus(
-      device.id,
+      device,
       req.query.battery,
       req.query.chargingStatus,
       req.query.isPluggedIn,

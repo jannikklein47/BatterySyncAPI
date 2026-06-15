@@ -91,12 +91,7 @@ describe("DeviceService", () => {
         .mockResolvedValueOnce([]); // for true (perm)
 
       // 3. Act
-      await deviceService.updateDeviceBatteryStatus(
-        mockDeviceId,
-        80,
-        true,
-        true,
-      );
+      await deviceService.updateDeviceBatteryStatus(mockDevice, 80, true, true);
 
       // 4. Assert
       expect(

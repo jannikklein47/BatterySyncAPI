@@ -374,7 +374,7 @@ async function updateDevice(deviceId, data) {
  * it deletes all temporary charger reminder notifications and all permanent charger reminder notifications scheduled for the device.
  * If the device is charging or plugged in and has a predicted zero at time, and it has a permanent charger reminder notification,
  * it reschedules the permanent charger reminder notification for the device.
- * @param {number} deviceId The ID of the device to update.
+ * @param {Device} device The device object
  * @param {number} battery The current battery level of the device in percent.
  * @param {boolean} chargingStatus Whether the device is currently charging.
  * @param {boolean} isPluggedIn Whether the device is currently plugged in.
@@ -382,19 +382,21 @@ async function updateDevice(deviceId, data) {
  * @throws {APIError} If the device does not exist.
  */
 async function updateDeviceBatteryStatus(
-  deviceId,
+  device,
   battery,
   chargingStatus,
   isPluggedIn,
 ) {
-  const device = await Device.findByPk(deviceId);
+  let deviceId = device.id;
   await updateDevice(deviceId, { battery, chargingStatus, isPluggedIn });
+
   await BatteryLogService.addBatteryLog(
     deviceId,
     battery,
     chargingStatus,
     isPluggedIn,
   );
+
   debouncePrediction(deviceId);
 
   // Sanitize the boolean values to string to keep it consistent
