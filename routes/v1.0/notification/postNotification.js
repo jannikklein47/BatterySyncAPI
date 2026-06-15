@@ -86,12 +86,9 @@ router.post("/new/custom", async (req, res, next) => {
 
     if (targetUsers == null) {
       for (const device of targetDevices) {
-        await NotificationService.createNewNotification(
-          type,
-          req.body.content,
-          req.body.permanent,
+        await NotificationService.createTargetedNotification(
           device.id,
-          device.userId,
+          req.body.content,
           req.body.title,
           req.body.url,
         );
