@@ -15,6 +15,12 @@ module.exports = (sequelize, DataTypes) => {
   }
   Downvotes.init(
     {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: DataTypes.INTEGER,
+      },
       userId: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -27,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Downvotes",
-    }
+    },
   );
   return Downvotes;
 };

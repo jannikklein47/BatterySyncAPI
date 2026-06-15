@@ -1,31 +1,29 @@
+const v1_0 = require("./v1.0/v1Router");
+const APIError = require("../utils/error");
 const express = require("express");
 const router = express.Router();
+const Logger = require("../utils/logger");
 
-const login = require("./login.js");
-const battery = require("./battery.js");
-const device = require("./device.js");
-const notification = require("./notification.js");
-const appinfo = require("./appinfo.js");
-const metrics = require("./metrics.js");
-const issue = require("./issue.js");
-const prediction = require("./prediction.js");
-const sql = require("./sql.js");
+module.exports = (app) => {
+  router.use(v1_0);
+  router.use(error404);
+  router.use(errorHandler);
 
-const file = require("./file.js");
+  app.use(router);
+};
 
-router.use("/battery", battery);
-router.use("/login", login);
-router.use("/device", device);
-router.use("/notification", notification);
-router.use("/appinfo", appinfo);
-router.use("/metrics", metrics);
-router.use("/issue", issue);
-router.use("/file", file);
-router.use("/prediction", prediction);
-router.use("/sql", sql);
+const error404 = (req, res, next) => {
+  next(APIError.errorNotFound());
+};
 
-router.use("/debug", async (req, res) => {
-  res.send("Ok");
-});
-
-module.exports = router;
+const errorHandler = (error, req, res, next) => {
+  Logger.error(
+    `${error.message}: responding with ${
+      error.statusCode || 500
+    } / success => ${error.success || false} | ${process.env.NODE_ENV !== "production" ? error.stack : "-"}`,
+  );
+  if (process.env.NODE_ENV !== "development") {
+    delete error.stack;
+  }
+  res.status(error.statusCode || 500).send(error);
+};

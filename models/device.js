@@ -1,5 +1,7 @@
 "use strict";
 const { Model, Sequelize } = require("sequelize");
+
+const OTP_REQUIRED_FOR = 12 * 60 * 60 * 1000;
 module.exports = (sequelize, DataTypes) => {
   class Device extends Model {
     /**
@@ -74,11 +76,67 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: Sequelize.literal("NOW()"),
         allowNull: false,
       },
+      getsRegularReminder: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
+      deleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      build: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "2026032501",
+      },
+
+      batteryHealthScoreCached: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 100,
+      },
+
+      percentHealthyChargesCached: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 100,
+      },
+
+      cyclesCached: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+
+      requiresOtp: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return (
+            !!this.uuid &&
+            new Date(this.lastActivity) >
+              new Date(Date.now() - OTP_REQUIRED_FOR)
+          );
+        },
+      },
     },
     {
       sequelize,
       modelName: "Device",
-    }
+      defaultScope: {
+        where: {
+          deleted: false,
+        },
+      },
+      scopes: {
+        deleted: {
+          where: {
+            deleted: true,
+          },
+        },
+      },
+    },
   );
   return Device;
 };

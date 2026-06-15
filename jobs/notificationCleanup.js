@@ -3,8 +3,6 @@ const cron = require("node-cron");
 
 const { Op } = require("sequelize");
 
-const log = require("../services/logsystem");
-
 async function cleanup() {
   try {
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
@@ -18,9 +16,9 @@ async function cleanup() {
       },
     });
 
-    log("CRON: " + deleted + " notifications cleaned up.");
+    console.log("CRON: " + deleted + " notifications cleaned up.");
   } catch (error) {
-    log("CRON failure", null, null, null, null, null, error);
+    console.log("CRON failure", error);
   }
 }
 
@@ -32,5 +30,5 @@ module.exports = function () {
   cron.schedule("0 * * * *", async () => {
     await cleanup();
   });
-  log("CRON 0 * * * * scheduled.");
+  console.log("CRON 0 * * * * scheduled.");
 };
