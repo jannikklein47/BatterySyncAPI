@@ -1,5 +1,9 @@
 # Wähle eine Node-Version
-FROM node:20.6.0
+FROM node:22-alpine
+
+RUN apk add --no-cache postgresql-client
+RUN apk add --update python3 make g++\
+   && rm -rf /var/cache/apk/*
 
 # Arbeitsverzeichnis im Container
 WORKDIR /app
@@ -10,11 +14,22 @@ COPY package*.json ./
 # Abhängigkeiten installieren
 RUN npm install
 
-# Restlichen Code kopieren
+RUN npm install sequelize-cli
+
+# bcrypt fix?
+RUN npm rebuild bcrypt --build-from-source
+
+# Den Rest des Anwendungs-Codes kopieren
 COPY . .
 
-# Port freigeben (falls du z. B. 3000 nutzt)
+# Exponieren des Ports (falls Ihr Backend einen bestimmten Port nutzt)
 EXPOSE 3000
 
-# Startbefehl
-CMD ["node", "."]
+# Skript zum Anwenden von Migrationen und Starten des Servers
+# Dieses Skript wird im nächsten Schritt erstellt
+COPY ./docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+# Standardbefehl zum Starten des Servers (wird nach dem Entrypoint ausgeführt)
+CMD ["npm", "start"]

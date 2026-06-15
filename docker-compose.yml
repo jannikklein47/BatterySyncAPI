@@ -1,10 +1,12 @@
 services:
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: batterysync-db
     restart: always
     environment:
-      "DATABASE_URL": "postgres://postgres:postgres@db:5432/BatterySync"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: BatterySync
     ports:
       - "5432:5432"
     volumes:
@@ -16,12 +18,17 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    volumes:
+      - /home/ubuntu/ssl/batterysync:/etc/ssl/batterysync:ro
+      - /home/ubuntu/batterysyncUpdates:/usr/src/app/updates
     depends_on:
       - db
     environment:
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=BatterySync
+      - DB_PORT=5432
       - NODE_ENV=production
-    volumes:
-      - .:/app
-
 volumes:
   postgres_data:

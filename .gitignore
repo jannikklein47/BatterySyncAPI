@@ -1,1 +1,10 @@
 node_modules
+.DS_Store
+localhost-key.pem
+localhost.pem
+.env
+batterysync-android.apk
+batterysync-macos.dmg
+.VSCodeCounter
+coverage
+updates
