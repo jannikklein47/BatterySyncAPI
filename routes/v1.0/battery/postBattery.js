@@ -4,8 +4,9 @@ const DeviceService = require("../../../services/device");
 const BatteryLogsService = require("../../../services/batteryLogs");
 const ValidationRules = require("./validations");
 const APIError = require("../../../utils/error");
+const { batteryPushLimiter } = require("../../../services/rateLimiter");
 
-router.post("/secure", async (req, res, next) => {
+router.post("/secure", batteryPushLimiter, async (req, res, next) => {
   try {
     const validationUUID = ValidationRules.uuid.validate(req.query.uuid);
     const validationBattery = ValidationRules.battery.validate(
