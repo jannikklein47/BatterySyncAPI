@@ -20,8 +20,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 const limiter = rateLimit({
-  windowMs: 1000,
-  max: 10,
+  windowMs: 10000,
+  max: 50,
 });
 
 app.use(limiter);
